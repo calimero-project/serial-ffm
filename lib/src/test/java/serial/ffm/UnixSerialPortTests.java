@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.lang.foreign.MemorySession;
+import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -46,7 +46,7 @@ class UnixSerialPortTests {
 
 	private UnixSerialPort port;
 
-	private final MemorySession session = MemorySession.openConfined();
+	private final Arena arena = Arena.openConfined();
 
 
 	@BeforeEach
@@ -56,7 +56,7 @@ class UnixSerialPortTests {
 
 	@AfterEach
 	void cleanup() {
-		session.close();
+		arena.close();
 	}
 
 	@Test
@@ -66,8 +66,8 @@ class UnixSerialPortTests {
 
 		Files.createFile(file);
 
-		final var forName = session.allocateUtf8String(file.toString());
-		final var linkName = session.allocateUtf8String(link.toString());
+		final var forName = arena.allocateUtf8String(file.toString());
+		final var linkName = arena.allocateUtf8String(link.toString());
 		port.tryLink(forName, linkName);
 
 		assertTrue(Files.exists(link));

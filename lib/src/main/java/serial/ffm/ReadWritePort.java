@@ -29,8 +29,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.MemorySession;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandles;
 import java.util.HexFormat;
@@ -62,8 +62,8 @@ abstract class ReadWritePort implements SerialPort {
 	public final SerialPort baudRate(final int baudrate) throws IOException {
 		logger.log(TRACE, "set baudrate {0}", baudrate);
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			baudRate(session, baudrate);
+		try (var arena = Arena.openConfined()) {
+			baudRate(arena, baudrate);
 		}
 		finally {
 			lock.unlock();
@@ -71,28 +71,28 @@ abstract class ReadWritePort implements SerialPort {
 		return this;
 	}
 
-	abstract void baudRate(MemorySession session, int baudrate) throws IOException;
+	abstract void baudRate(Arena arena, int baudrate) throws IOException;
 
 	@Override
 	public final int baudRate() throws IOException {
 		logger.log(TRACE, "get baudrate");
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			return baudRate(session);
+		try (var arena = Arena.openConfined()) {
+			return baudRate(arena);
 		}
 		finally {
 			lock.unlock();
 		}
 	}
 
-	abstract int baudRate(MemorySession session) throws IOException;
+	abstract int baudRate(Arena arena) throws IOException;
 
 	@Override
 	public final SerialPort parity(final Parity parity) throws IOException {
 		logger.log(TRACE, "set parity {0}", parity);
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			parity(session, parity);
+		try (var arena = Arena.openConfined()) {
+			parity(arena, parity);
 		}
 		finally {
 			lock.unlock();
@@ -100,28 +100,28 @@ abstract class ReadWritePort implements SerialPort {
 		return this;
 	}
 
-	abstract void parity(MemorySession session, Parity parity) throws IOException;
+	abstract void parity(Arena arena, Parity parity) throws IOException;
 
 	@Override
 	public final Parity parity() throws IOException {
 		logger.log(TRACE, "get parity");
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			return parity(session);
+		try (var arena = Arena.openConfined()) {
+			return parity(arena);
 		}
 		finally {
 			lock.unlock();
 		}
 	}
 
-	abstract Parity parity(MemorySession session) throws IOException;
+	abstract Parity parity(Arena arena) throws IOException;
 
 	@Override
 	public final SerialPort dataBits(final int databits) throws IOException {
 		logger.log(TRACE, "set databits {0}", databits);
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			dataBits(session, databits);
+		try (var arena = Arena.openConfined()) {
+			dataBits(arena, databits);
 		}
 		finally {
 			lock.unlock();
@@ -129,28 +129,28 @@ abstract class ReadWritePort implements SerialPort {
 		return this;
 	}
 
-	abstract void dataBits(MemorySession session, int databits) throws IOException;
+	abstract void dataBits(Arena arena, int databits) throws IOException;
 
 	@Override
 	public final int dataBits() throws IOException {
 		logger.log(TRACE, "get databits");
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			return dataBits(session);
+		try (var arena = Arena.openConfined()) {
+			return dataBits(arena);
 		}
 		finally {
 			lock.unlock();
 		}
 	}
 
-	abstract int dataBits(MemorySession session) throws IOException;
+	abstract int dataBits(Arena arena) throws IOException;
 
 	@Override
 	public final SerialPort stopBits(final StopBits stopbits) throws IOException {
 		logger.log(TRACE, "set stopbits {0}", stopbits);
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			stopBits(session, stopbits);
+		try (var arena = Arena.openConfined()) {
+			stopBits(arena, stopbits);
 		}
 		finally {
 			lock.unlock();
@@ -158,28 +158,28 @@ abstract class ReadWritePort implements SerialPort {
 		return this;
 	}
 
-	abstract void stopBits(MemorySession session, StopBits stopbits) throws IOException;
+	abstract void stopBits(Arena arena, StopBits stopbits) throws IOException;
 
 	@Override
 	public final StopBits stopBits() throws IOException {
 		logger.log(TRACE, "get stopbits");
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			return stopBits(session);
+		try (var arena = Arena.openConfined()) {
+			return stopBits(arena);
 		}
 		finally {
 			lock.unlock();
 		}
 	}
 
-	abstract StopBits stopBits(MemorySession session) throws IOException;
+	abstract StopBits stopBits(Arena arena) throws IOException;
 
 	@Override
 	public final SerialPort flowControl(final FlowControl flowControl) throws IOException {
 		logger.log(TRACE, "set flow control {0}", flowControl);
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			flowControl(session, flowControl);
+		try (var arena = Arena.openConfined()) {
+			flowControl(arena, flowControl);
 		}
 		finally {
 			lock.unlock();
@@ -187,28 +187,28 @@ abstract class ReadWritePort implements SerialPort {
 		return this;
 	}
 
-	abstract void flowControl(MemorySession session, FlowControl flowControl) throws IOException;
+	abstract void flowControl(Arena arena, FlowControl flowControl) throws IOException;
 
 	@Override
 	public final FlowControl flowControl() throws IOException {
 		logger.log(TRACE, "get flow control");
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			return flowControl(session);
+		try (var arena = Arena.openConfined()) {
+			return flowControl(arena);
 		}
 		finally {
 			lock.unlock();
 		}
 	}
 
-	abstract FlowControl flowControl(MemorySession session) throws IOException;
+	abstract FlowControl flowControl(Arena arena) throws IOException;
 
 	@Override
 	public final SerialPort timeouts(final Timeouts timeouts) throws IOException {
 		logger.log(TRACE, "set {0}", timeouts);
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			timeouts(session, timeouts);
+		try (var arena = Arena.openConfined()) {
+			timeouts(arena, timeouts);
 		}
 		finally {
 			lock.unlock();
@@ -216,20 +216,20 @@ abstract class ReadWritePort implements SerialPort {
 		return this;
 	}
 
-	abstract void timeouts(MemorySession session, Timeouts timeouts) throws IOException;
+	abstract void timeouts(Arena arena, Timeouts timeouts) throws IOException;
 
 	final Timeouts timeouts() throws IOException {
 		logger.log(TRACE, "get timeouts");
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			return timeouts(session);
+		try (var arena = Arena.openConfined()) {
+			return timeouts(arena);
 		}
 		finally {
 			lock.unlock();
 		}
 	}
 
-	abstract Timeouts timeouts(MemorySession session) throws IOException;
+	abstract Timeouts timeouts(Arena arena) throws IOException;
 
 	@Override
 	public final InputStream inputStream() {
@@ -245,8 +245,8 @@ abstract class ReadWritePort implements SerialPort {
 	public final int status(final Status type) throws IOException {
 		logger.log(TRACE, "get status {0}", type);
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			return status(session, type);
+		try (var arena = Arena.openConfined()) {
+			return status(arena, type);
 		}
 		finally {
 			lock.unlock();
@@ -256,8 +256,8 @@ abstract class ReadWritePort implements SerialPort {
 	void open(final String portId) throws IOException {
 		logger.log(TRACE, "open {0}", portId);
 		lock.lock();
-		try (var session = MemorySession.openConfined()) {
-			open(session, portId);
+		try (var arena = Arena.openConfined()) {
+			open(arena, portId);
 			eventLooper = Thread.startVirtualThread(this::waitEventLoop);
 		}
 		finally {
@@ -265,14 +265,14 @@ abstract class ReadWritePort implements SerialPort {
 		}
 	}
 
-	abstract void open(MemorySession session, String portId) throws IOException;
+	abstract void open(Arena arena, String portId) throws IOException;
 
-	abstract int status(MemorySession session, Status type) throws IOException;
+	abstract int status(Arena arena, Status type) throws IOException;
 
 	final int read() throws IOException {
-		try (var session = MemorySession.openConfined()) {
-			/*uint8_t*/ final MemorySegment in = session.allocate(1);
-			final long ret = readBytes(session, in);
+		try (var arena = Arena.openConfined()) {
+			/*uint8_t*/ final MemorySegment in = arena.allocate(1);
+			final long ret = readBytes(arena, in);
 			if (ret == 0)
 				return -1;
 			return in.get(ValueLayout.JAVA_BYTE, 0) & 0xff;
@@ -280,11 +280,11 @@ abstract class ReadWritePort implements SerialPort {
 	}
 
 	final int readBytes(final byte[] bytes, final int offset, final int length) throws IOException {
-		try (var session = MemorySession.openConfined()) {
+		try (var arena = Arena.openConfined()) {
 //			logger.log(TRACE, "start read");
 			final long start = System.nanoTime();
-			final var buf = session.allocate(length);
-			final int r = readBytes(session, buf);
+			final var buf = arena.allocate(length);
+			final int r = readBytes(arena, buf);
 			MemorySegment.copy(buf, ValueLayout.JAVA_BYTE, 0, bytes, offset, r);
 
 			if (debug() && r > 0) {
@@ -298,12 +298,12 @@ abstract class ReadWritePort implements SerialPort {
 		}
 	}
 
-	abstract int readBytes(MemorySession session, MemorySegment bytes) throws IOException;
+	abstract int readBytes(Arena arena, MemorySegment bytes) throws IOException;
 
 	final void write(final int bite) throws IOException {
-		try (var session = MemorySession.openConfined()) {
-			final var out = session.allocate(ValueLayout.JAVA_BYTE, (byte) bite);
-			final int written = writeBytes(session, out);
+		try (var arena = Arena.openConfined()) {
+			final var out = arena.allocate(ValueLayout.JAVA_BYTE, (byte) bite);
+			final int written = writeBytes(arena, out);
 			if (written != 1)
 				throw new IOException("write failed");
 		}
@@ -312,17 +312,17 @@ abstract class ReadWritePort implements SerialPort {
 	final int writeBytes(final byte[] bytes, final int offset, final int length) throws IOException {
 		final var hex = HexFormat.ofDelimiter(" ").formatHex(bytes, offset, offset + length);
 		logger.log(TRACE, "start write (length {0}): {1}", length, hex);
-		try (var session = MemorySession.openConfined()) {
-			final var buf = session.allocate(length);
+		try (var arena = Arena.openConfined()) {
+			final var buf = arena.allocate(length);
 			MemorySegment.copy(bytes, offset, buf, ValueLayout.JAVA_BYTE, 0, length);
-			return writeBytes(session, buf);
+			return writeBytes(arena, buf);
 		}
 		finally {
 			logger.log(TRACE, "end write");
 		}
 	}
 
-	abstract int writeBytes(MemorySession session, MemorySegment bytes) throws IOException;
+	abstract int writeBytes(Arena arena, MemorySegment bytes) throws IOException;
 
 	abstract boolean isClosed();
 

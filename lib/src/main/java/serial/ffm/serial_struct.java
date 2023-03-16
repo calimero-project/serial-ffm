@@ -6,7 +6,6 @@
 package serial.ffm;
 
 import java.lang.foreign.GroupLayout;
-import java.lang.foreign.MemoryAddress;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
@@ -256,16 +255,16 @@ class serial_struct {
 	public static VarHandle iomem_base$VH() {
 		return serial_struct.iomem_base$VH;
 	}
-	public static MemoryAddress iomem_base$get(final MemorySegment seg) {
-		return (java.lang.foreign.MemoryAddress)serial_struct.iomem_base$VH.get(seg);
+	public static MemorySegment iomem_base$get(final MemorySegment seg) {
+		return (java.lang.foreign.MemorySegment)serial_struct.iomem_base$VH.get(seg);
 	}
-	public static void iomem_base$set( final MemorySegment seg, final MemoryAddress x) {
+	public static void iomem_base$set( final MemorySegment seg, final MemorySegment x) {
 		serial_struct.iomem_base$VH.set(seg, x);
 	}
-	public static MemoryAddress iomem_base$get(final MemorySegment seg, final long index) {
-		return (java.lang.foreign.MemoryAddress)serial_struct.iomem_base$VH.get(seg.asSlice(index*sizeof()));
+	public static MemorySegment iomem_base$get(final MemorySegment seg, final long index) {
+		return (java.lang.foreign.MemorySegment)serial_struct.iomem_base$VH.get(seg.asSlice(index*sizeof()));
 	}
-	public static void iomem_base$set(final MemorySegment seg, final long index, final MemoryAddress x) {
+	public static void iomem_base$set(final MemorySegment seg, final long index, final MemorySegment x) {
 		serial_struct.iomem_base$VH.set(seg.asSlice(index*sizeof()), x);
 	}
 	static final VarHandle iomem_reg_shift$VH = $struct$LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("iomem_reg_shift"));
