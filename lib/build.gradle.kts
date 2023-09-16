@@ -130,8 +130,8 @@ tasks.jextract {
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:${project.extra["junitJupiterVersion"]}")
 
-    testRuntimeOnly("org.apache.logging.log4j:log4j-jpl:2.20.0")
-    testRuntimeOnly("org.apache.logging.log4j:log4j-core:2.20.0")
+    testRuntimeOnly("org.slf4j:slf4j-jdk-platform-logging:2.0.9")
+    testRuntimeOnly("org.slf4j:slf4j-simple:2.0.9")
 }
 
 publishing {
