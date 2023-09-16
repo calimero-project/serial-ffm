@@ -100,8 +100,8 @@ tasks.jextract {
 	val os = System.getProperty("os.name").lowercase(Locale.ENGLISH)
 
 	var headersDir = "unix"
-	var path = ""
-	var tgtPkg = "org.unix"
+	val path: String
+    var tgtPkg = "org.unix"
 	var clsName = "Linux"
 
 	if (os.contains("windows")) {
