@@ -53,7 +53,7 @@ tasks.withType<Javadoc> {
 }
 
 tasks.withType<Jar> {
-	from("${projectDir}/../LICENSE") {
+	from("${projectDir}/LICENSE") {
         into("META-INF")
     }
     if (name == "sourcesJar") {
@@ -62,7 +62,7 @@ tasks.withType<Jar> {
 		    include("README.md")
         }
     }
-    archiveBaseName.set(rootProject.name)
+//    archiveBaseName.set(rootProject.name)
 }
 
 testing {
@@ -141,7 +141,7 @@ publishing {
             from(components["java"])
             pom {
                 name.set("Serial communication FFM")
-                description.set("Serial comummication using the Foreign Function and Memory API")
+                description.set("Serial communication using the Foreign Function and Memory API")
                 url.set("https://github.com/calimero-project/serial-ffm")
                 inceptionYear.set("2022")
                 licenses {

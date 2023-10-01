@@ -8,8 +8,8 @@
 # Eclipse
 .project
 .classpath
-lib/.settings/
-lib/bin/
+.settings/
+bin/
 
 # Compiled class file
 *.class
