@@ -98,12 +98,12 @@ final class WinSerialPort extends ReadWritePort {
 		logger.log(TRACE, "query serial port names from registry");
 		final var portNames = new ArrayList<String>();
 
-		try (var arena = Arena.openConfined()) {
+		try (var arena = Arena.ofConfined()) {
 			final var subKey = arena.allocateUtf8String("HARDWARE\\DEVICEMAP\\SERIALCOMM");
 			final var serialCommKey = HKEY__.allocate(arena);
 
-			int ret = Windows_7.RegOpenKeyExA(Windows_13.HKEY_LOCAL_MACHINE(), subKey, 0, Windows_8.KEY_READ(), serialCommKey);
-			if (ret == Windows_9.ERROR_SUCCESS()) {
+			int ret = Windows.RegOpenKeyExA(Windows.HKEY_LOCAL_MACHINE(), subKey, 0, Windows.KEY_READ(), serialCommKey);
+			if (ret == Windows.ERROR_SUCCESS()) {
 				final int size = 256;
 				final var deviceName = arena.allocate(size);
 				final var deviceNameLength = arena.allocate(ValueLayout.JAVA_INT, size);
@@ -114,13 +114,13 @@ final class WinSerialPort extends ReadWritePort {
 					// reinit chars with size on every iteration
 					deviceNameLength.set(ValueLayout.JAVA_INT, 0, size);
 					portNameLength.set(ValueLayout.JAVA_INT, 0, size);
-					ret = Windows_7.RegEnumValueA(MemorySegment.ofAddress(HKEY__.unused$get(serialCommKey)), i, deviceName,
-							deviceNameLength, Windows_8.NULL(), Windows_8.NULL(), portName, portNameLength);
+					ret = Windows.RegEnumValueA(MemorySegment.ofAddress(HKEY__.unused$get(serialCommKey)), i, deviceName,
+							deviceNameLength, Windows.NULL(), Windows.NULL(), portName, portNameLength);
 
-					if (ret == Windows_9.ERROR_NO_MORE_ITEMS())
+					if (ret == Windows.ERROR_NO_MORE_ITEMS())
 						break;
 
-					if (ret == Windows_9.ERROR_SUCCESS()) {
+					if (ret == Windows.ERROR_SUCCESS()) {
 						final String port = extractString(portName, portNameLength);
 						logger.log(TRACE, "{0} = {1}", extractString(deviceName, deviceNameLength), port);
 						portNames.add(port);
@@ -129,7 +129,7 @@ final class WinSerialPort extends ReadWritePort {
 						logger.log(WARNING, "RegEnumValueA error: {0}", formatWinError(ret));
 					}
 				}
-				Windows_7.RegCloseKey(serialCommKey);
+				Windows.RegCloseKey(serialCommKey);
 			}
 			else {
 				logger.log(TRACE, "RegOpenKeyExA error: {0}", formatWinError(ret));
@@ -166,23 +166,23 @@ final class WinSerialPort extends ReadWritePort {
 
 		this.h = h;
 		try {
-			final int fileType = Windows_5.GetFileType(h.handle());
-			if (fileType != Windows_2.FILE_TYPE_CHAR() && fileType != Windows_2.FILE_TYPE_UNKNOWN())
+			final int fileType = Windows.GetFileType(h.handle());
+			if (fileType != Windows.FILE_TYPE_CHAR() && fileType != Windows.FILE_TYPE_UNKNOWN())
 				throw newIoException(name);
 
 			final var cp = _COMMPROP.allocate(arena);
-			if (Windows_6.GetCommProperties(h.handle(), cp) == 0)
+			if (Windows.GetCommProperties(h.handle(), cp) == 0)
 				throw newIoException(name);
 			if (debug()) {
 				// set rx and tx queues (rx will usually keep some default buffer, 4K or similar...)
-				Windows_6.SetupComm(h.handle(), 200, 200);
-				if (Windows_6.GetCommProperties(h.handle(), cp) == 0)
+				Windows.SetupComm(h.handle(), 200, 200);
+				if (Windows.GetCommProperties(h.handle(), cp) == 0)
 					throw newIoException(name);
 				final int tx = _COMMPROP.dwCurrentTxQueue$get(cp);
 				final int rx = _COMMPROP.dwCurrentRxQueue$get(cp);
 				logger.log(TRACE, "set queue tx {0} rx {1}", tx, rx);
 			}
-			if (Windows_6.EscapeCommFunction(h.handle(), Windows_2.SETDTR()) == 0)
+			if (Windows.EscapeCommFunction(h.handle(), Windows.SETDTR()) == 0)
 				throw newIoException();
 
 			maxBaudRate = _COMMPROP.dwMaxBaud$get(cp);
@@ -201,7 +201,7 @@ final class WinSerialPort extends ReadWritePort {
 		final var dcb = commState(arena);
 		_DCB.BaudRate$set(dcb, baudrate);
 		setDcbBits(dcb, "fAbortOnError", Windows.FALSE());
-		if (Windows_6.SetCommState(h.handle(), dcb) == 0)
+		if (Windows.SetCommState(h.handle(), dcb) == 0)
 			throw newIoException();
 	}
 
@@ -215,7 +215,7 @@ final class WinSerialPort extends ReadWritePort {
 	void parity(final Arena arena, final Parity parity) throws IOException {
 		final var dcb = commState(arena);
 		_DCB.Parity$set(dcb, (byte) parity.value());
-		setDcbBits(dcb, "fParity", parity.value() != Windows_2.NOPARITY() ? 1 : 0);
+		setDcbBits(dcb, "fParity", parity.value() != Windows.NOPARITY() ? 1 : 0);
 		setDcbBits(dcb, "fAbortOnError", Windows.FALSE());
 
 		final char parityReplace = '\0';
@@ -228,7 +228,7 @@ final class WinSerialPort extends ReadWritePort {
 			_DCB.ErrorChar$set(dcb, (byte) parityReplace);
 		}
 
-		if (Windows_6.SetCommState(h.handle(), dcb) == 0)
+		if (Windows.SetCommState(h.handle(), dcb) == 0)
 			throw newIoException();
 	}
 
@@ -243,7 +243,7 @@ final class WinSerialPort extends ReadWritePort {
 		final var dcb = commState(arena);
 		_DCB.ByteSize$set(dcb, (byte) databits);
 		setDcbBits(dcb, "fAbortOnError", Windows.FALSE());
-		if (Windows_6.SetCommState(h.handle(), dcb) == 0)
+		if (Windows.SetCommState(h.handle(), dcb) == 0)
 			throw newIoException();
 	}
 
@@ -258,7 +258,7 @@ final class WinSerialPort extends ReadWritePort {
 		final var dcb = commState(arena);
 		_DCB.StopBits$set(dcb, (byte) platformStopBits(stopbits));
 		setDcbBits(dcb, "fAbortOnError", Windows.FALSE());
-		if (Windows_6.SetCommState(h.handle(), dcb) == 0)
+		if (Windows.SetCommState(h.handle(), dcb) == 0)
 			throw newIoException();
 	}
 
@@ -272,7 +272,7 @@ final class WinSerialPort extends ReadWritePort {
 	void flowControl(final Arena arena, final FlowControl flowControl) throws IOException {
 		final var dcb = commState(arena);
 		setDcbBits(dcb, "fOutxDsrFlow", Windows.FALSE());
-		setDcbBits(dcb, "fDtrControl", Windows_2.DTR_CONTROL_DISABLE());
+		setDcbBits(dcb, "fDtrControl", Windows.DTR_CONTROL_DISABLE());
 		setDcbBits(dcb, "fDsrSensitivity", Windows.FALSE());
 		setDcbBits(dcb, "fTXContinueOnXoff", Windows.FALSE());
 		setDcbBits(dcb, "fOutX", Windows.FALSE());
@@ -282,16 +282,16 @@ final class WinSerialPort extends ReadWritePort {
 		switch (flowControl) {
 			case CtsRts -> {
 				setDcbBits(dcb, "fOutxCtsFlow", Windows.TRUE());
-				setDcbBits(dcb, "fRtsControl", Windows_2.RTS_CONTROL_HANDSHAKE());
+				setDcbBits(dcb, "fRtsControl", Windows.RTS_CONTROL_HANDSHAKE());
 			}
 			case None -> {
 				setDcbBits(dcb, "fOutxCtsFlow", Windows.FALSE());
-				setDcbBits(dcb, "fRtsControl", Windows_2.RTS_CONTROL_DISABLE());
+				setDcbBits(dcb, "fRtsControl", Windows.RTS_CONTROL_DISABLE());
 			}
 		}
 
 		setDcbBits(dcb, "fAbortOnError", Windows.FALSE());
-		if (Windows_6.SetCommState(h.handle(), dcb) == 0)
+		if (Windows.SetCommState(h.handle(), dcb) == 0)
 			throw newIoException();
 	}
 
@@ -305,7 +305,7 @@ final class WinSerialPort extends ReadWritePort {
 	private MemorySegment commState(final Arena arena) throws IOException {
 		final var dcb = _DCB.allocate(arena);
 		_DCB.DCBlength$set(dcb, (int) _DCB.sizeof());
-		if (Windows_6.GetCommState(h.handle(), dcb) == 0)
+		if (Windows.GetCommState(h.handle(), dcb) == 0)
 			throw newIoException();
 		return dcb;
 	}
@@ -315,7 +315,7 @@ final class WinSerialPort extends ReadWritePort {
 	public void close() {
 		if (h.valid()) {
 			logger.log(TRACE, "close handle {0}", h);
-			final boolean closed = Windows_6.CloseHandle(h.handle()) == Windows.TRUE();
+			final boolean closed = Windows.CloseHandle(h.handle()) == Windows.TRUE();
 			h = HANDLE.Invalid;
 			if (!closed)
 				logger.log(ERROR, "closing serial port: {0}", formatWinError(QUERY_GETLASTERROR));
@@ -329,15 +329,15 @@ final class WinSerialPort extends ReadWritePort {
 
 	private HANDLE open(final String portId, final boolean overlapped, /*DWORD*/ final AtomicInteger lastError) {
 		logger.log(TRACE, "open {0}", portId);
-		try (var arena = Arena.openConfined()) {
+		try (var arena = Arena.ofConfined()) {
 			// clearing last error not necessary, but jvm/debugger sometimes have set some error code
 //			Windows.SetLastError(0);
-			final var h = Windows_5.CreateFileA(arena.allocateUtf8String(portId),
-					Windows_8.GENERIC_READ() | Windows_8.GENERIC_WRITE(), 0, Windows_8.NULL(), Windows_2.OPEN_EXISTING(),
-					Windows_1.FILE_ATTRIBUTE_NORMAL() | (overlapped ? Windows_2.FILE_FLAG_OVERLAPPED() : 0),
-					Windows_8.NULL());
+			final var h = Windows.CreateFileA(arena.allocateUtf8String(portId),
+					Windows.GENERIC_READ() | Windows.GENERIC_WRITE(), 0, Windows.NULL(), Windows.OPEN_EXISTING(),
+					Windows.FILE_ATTRIBUTE_NORMAL() | (overlapped ? Windows.FILE_FLAG_OVERLAPPED() : 0),
+					Windows.NULL());
 			if (lastError != null)
-				lastError.set(Windows_5.GetLastError());
+				lastError.set(Windows.GetLastError());
 			return HANDLE.of(h);
 		}
 	}
@@ -348,8 +348,8 @@ final class WinSerialPort extends ReadWritePort {
 		// if handle is valid, port exists, otherwise it depends on last error: on existing, but
 		// used port, we would get ERROR_ACCESS_DENIED or ERROR_SHARING_VIOLATION (or similar)
 		if (h.valid())
-			Windows_6.CloseHandle(h.handle());
-		else if (error.get() == Windows_9.ERROR_FILE_NOT_FOUND() || error.get() == Windows_9.ERROR_PATH_NOT_FOUND())
+			Windows.CloseHandle(h.handle());
+		else if (error.get() == Windows.ERROR_FILE_NOT_FOUND() || error.get() == Windows.ERROR_PATH_NOT_FOUND())
 			return false;
 		else
 			logger.log(Level.DEBUG, "opening {0}: {1}", portId, formatWinError(error.get()));
@@ -359,15 +359,15 @@ final class WinSerialPort extends ReadWritePort {
 
 	private static int platformStopBits(final StopBits stopbits) {
 		return switch (stopbits) {
-			case One -> Windows_2.ONESTOPBIT();
-			case Two -> Windows_2.TWOSTOPBITS();
+			case One -> Windows.ONESTOPBIT();
+			case Two -> Windows.TWOSTOPBITS();
 		};
 	}
 
 	private static StopBits genericStopBits(final int stopbits) {
-		if (stopbits == Windows_2.ONESTOPBIT())
+		if (stopbits == Windows.ONESTOPBIT())
 			return StopBits.One;
-		if (stopbits == Windows_2.TWOSTOPBITS())
+		if (stopbits == Windows.TWOSTOPBITS())
 			return StopBits.Two;
 		throw new RuntimeException("unsupported stopbits " + stopbits);
 	}
@@ -444,14 +444,14 @@ final class WinSerialPort extends ReadWritePort {
 		final MemorySegment transferred) throws IOException {
 //		logger.log(TRACE, "wait pending I/O");
 		// the only status tolerated is I/O pending
-		if (Windows_5.GetLastError() != Windows_9.NO_ERROR() && Windows_5.GetLastError() != Windows_9.ERROR_IO_PENDING())
+		if (Windows.GetLastError() != Windows.NO_ERROR() && Windows.GetLastError() != Windows.ERROR_IO_PENDING())
 			// some I/O problem, throw error
 			throw newIoException();
 
 		// wait for operation completion, and check result
-		/*DWORD*/ final int res = Windows_6.WaitForSingleObject(_OVERLAPPED.hEvent$get(overlapped), Windows_9.INFINITE());
-		if (res == Windows_9.WAIT_OBJECT_0()
-				&& Windows_6.GetOverlappedResult(h.handle(), overlapped, transferred, Windows.FALSE()) != 0) {
+		/*DWORD*/ final int res = Windows.WaitForSingleObject(_OVERLAPPED.hEvent$get(overlapped), Windows.INFINITE());
+		if (res == Windows.WAIT_OBJECT_0()
+				&& Windows.GetOverlappedResult(h.handle(), overlapped, transferred, Windows.FALSE()) != 0) {
 			// completed successfully
 			return;
 		}
@@ -460,8 +460,8 @@ final class WinSerialPort extends ReadWritePort {
 	}
 
 	private static int write(final Arena arena, final HANDLE h, final MemorySegment bytes) throws IOException {
-		final var event = Windows_6.CreateEventA(Windows_8.NULL(), Windows.TRUE(), Windows.FALSE(), Windows_8.NULL());
-		if (event.equals(Windows_8.NULL()))
+		final var event = Windows.CreateEventA(Windows.NULL(), Windows.TRUE(), Windows.FALSE(), Windows.NULL());
+		if (event.equals(Windows.NULL()))
 			throw newIoException();
 
 		final var written = arena.allocate(ValueLayout.JAVA_INT, 0);
@@ -469,12 +469,12 @@ final class WinSerialPort extends ReadWritePort {
 			final var o = _OVERLAPPED.allocate(arena);
 			_OVERLAPPED.hEvent$set(o, event);
 
-			if (Windows_6.WriteFile(h.handle(), bytes, (int) bytes.byteSize(), written, o) == 0)
+			if (Windows.WriteFile(h.handle(), bytes, (int) bytes.byteSize(), written, o) == 0)
 				waitPendingIO(h, o, written);
-			Windows_6.FlushFileBuffers(h.handle());
+			Windows.FlushFileBuffers(h.handle());
 		}
 		finally {
-			Windows_6.CloseHandle(event);
+			Windows.CloseHandle(event);
 		}
 		return (int) bytes.byteSize();
 		// in overlapped mode, the param for number of bytes written is useless
@@ -487,8 +487,8 @@ final class WinSerialPort extends ReadWritePort {
 	}
 
 	private static int read(final Arena arena, final HANDLE h, final MemorySegment bytes) throws IOException {
-		final var event = Windows_6.CreateEventA(Windows_8.NULL(), Windows.TRUE(), Windows.FALSE(), Windows_8.NULL());
-		if (event.equals(Windows_8.NULL()))
+		final var event = Windows.CreateEventA(Windows.NULL(), Windows.TRUE(), Windows.FALSE(), Windows.NULL());
+		if (event.equals(Windows.NULL()))
 			throw newIoException();
 
 		final var o = _OVERLAPPED.allocate(arena);
@@ -496,11 +496,11 @@ final class WinSerialPort extends ReadWritePort {
 
 		final /*DWORD*/ var read = arena.allocate(ValueLayout.JAVA_INT, 0);
 		try {
-			if (Windows_6.ReadFile(h.handle(), bytes, (int) bytes.byteSize(), read, o) == 0)
+			if (Windows.ReadFile(h.handle(), bytes, (int) bytes.byteSize(), read, o) == 0)
 				waitPendingIO(h, o, read);
 		}
 		finally {
-			Windows_6.CloseHandle(event);
+			Windows.CloseHandle(event);
 		}
 		return (int) bytes.byteSize();
 		// in overlapped mode, the param for number of bytes read is useless
@@ -515,14 +515,14 @@ final class WinSerialPort extends ReadWritePort {
 	@Override
 	public void setEvents(final int eventMask, final boolean enable) throws IOException {
 		logger.log(TRACE, "set event: mask 0x{0}, enable={1}",  Integer.toUnsignedString(eventMask, 16), enable);
-		try (var arena = Arena.openConfined()) {
+		try (var arena = Arena.ofConfined()) {
 			/*DWORD*/ final var mask = arena.allocate(ValueLayout.JAVA_INT, 0);
-			if (Windows_6.GetCommMask(h.handle(), mask) == 0)
+			if (Windows.GetCommMask(h.handle(), mask) == 0)
 				throw newIoException();
 
 			final int m = mask.get(ValueLayout.JAVA_INT, 0);
 			final int set = enable ? m | eventMask : m & ~eventMask;
-			if (Windows_6.SetCommMask(h.handle(), set) == 0)
+			if (Windows.SetCommMask(h.handle(), set) == 0)
 				throw newIoException();
 		}
 	}
@@ -530,18 +530,18 @@ final class WinSerialPort extends ReadWritePort {
 	@Override
 	public int waitEvent() throws IOException {
 		logger.log(TRACE, "wait comm event");
-		try (var arena = Arena.openConfined()) {
-			final var event = Windows_6.CreateEventA(Windows_8.NULL(), Windows.TRUE(), Windows.FALSE(), Windows_8.NULL());
-			if (event.equals(Windows_8.NULL()))
+		try (var arena = Arena.ofConfined()) {
+			final var event = Windows.CreateEventA(Windows.NULL(), Windows.TRUE(), Windows.FALSE(), Windows.NULL());
+			if (event.equals(Windows.NULL()))
 				throw newIoException();
 
 			final var o = _OVERLAPPED.allocate(arena);
 			_OVERLAPPED.hEvent$set(o, event);
 			final /*DWORD*/ var eventMask = arena.allocate(ValueLayout.JAVA_INT, 0);
 			final /*DWORD*/ var undefined = arena.allocate(ValueLayout.JAVA_INT, 0);
-			if (Windows_6.WaitCommEvent(h.handle(), eventMask, o) == 0)
+			if (Windows.WaitCommEvent(h.handle(), eventMask, o) == 0)
 				waitPendingIO(h, o, undefined);
-			Windows_6.CloseHandle(_OVERLAPPED.hEvent$get(o));
+			Windows.CloseHandle(_OVERLAPPED.hEvent$get(o));
 			// note if event mask was changed while waiting for event we return 0
 			return eventMask.get(ValueLayout.JAVA_INT, 0);
 		}
@@ -558,16 +558,16 @@ final class WinSerialPort extends ReadWritePort {
 				// 0x0020 : DSR (data-set-ready) signal is on
 				// 0x0040 : ring indicator signal is on
 				// 0x0080 : RLSD (receive-line-signal-detect) signal is on
-				ret = Windows_6.GetCommModemStatus(h.handle(), value);
+				ret = Windows.GetCommModemStatus(h.handle(), value);
 				yield value.get(ValueLayout.JAVA_INT, 0);
 			}
 			case AvailableInput -> {
 				final var stat = _COMSTAT.allocate(arena);
-				ret = Windows_6.ClearCommError(h.handle(), value, stat);
+				ret = Windows.ClearCommError(h.handle(), value, stat);
 				yield _COMSTAT.cbInQue$get(stat);
 			}
 			case Error -> {
-				ret = Windows_6.ClearCommError(h.handle(), value, Windows_8.NULL());
+				ret = Windows.ClearCommError(h.handle(), value, Windows.NULL());
 				final int errors = value.get(ValueLayout.JAVA_INT, 0);
 				commErrors(errors);
 				yield errors;
@@ -586,14 +586,14 @@ final class WinSerialPort extends ReadWritePort {
 		_COMMTIMEOUTS.ReadTotalTimeoutConstant$set(to, timeouts.readTotalConstant());
 		_COMMTIMEOUTS.WriteTotalTimeoutMultiplier$set(to, timeouts.writeTotalMultiplier());
 		_COMMTIMEOUTS.WriteTotalTimeoutConstant$set(to, timeouts.writeTotalConstant());
-		if (Windows_6.SetCommTimeouts(h.handle(), to) == 0)
+		if (Windows.SetCommTimeouts(h.handle(), to) == 0)
 			throw newIoException();
 	}
 
 	@Override
 	Timeouts timeouts(final Arena arena) throws IOException {
 		final var to = _COMMTIMEOUTS.allocate(arena);
-		if (Windows_6.GetCommTimeouts(h.handle(), to) == 0)
+		if (Windows.GetCommTimeouts(h.handle(), to) == 0)
 			throw newIoException();
 		return new Timeouts(_COMMTIMEOUTS.ReadIntervalTimeout$get(to),
 				_COMMTIMEOUTS.ReadTotalTimeoutMultiplier$get(to), _COMMTIMEOUTS.ReadTotalTimeoutConstant$get(to),
@@ -603,53 +603,53 @@ final class WinSerialPort extends ReadWritePort {
 	@Override
 	void dispatchEvents(final int eventMask) {
 		// data events
-		if (isSet(eventMask, Windows_2.EV_RXCHAR()))
+		if (isSet(eventMask, Windows.EV_RXCHAR()))
 			logger.log(TRACE, "EV_RXCHAR");
-		if (isSet(eventMask, Windows_2.EV_RXFLAG()))
+		if (isSet(eventMask, Windows.EV_RXFLAG()))
 			logger.log(TRACE, "EV_RXFLAG");
 
 		// pin events
-		if (isSet(eventMask, Windows_2.EV_CTS()))
+		if (isSet(eventMask, Windows.EV_CTS()))
 			logger.log(TRACE, "EV_CTS");
-		if (isSet(eventMask, Windows_2.EV_DSR()))
+		if (isSet(eventMask, Windows.EV_DSR()))
 			logger.log(TRACE, "EV_DSR");
-		if (isSet(eventMask, Windows_2.EV_RLSD()))
+		if (isSet(eventMask, Windows.EV_RLSD()))
 			logger.log(TRACE, "EV_RLSD");
-		if (isSet(eventMask, Windows_2.EV_BREAK()))
+		if (isSet(eventMask, Windows.EV_BREAK()))
 			logger.log(TRACE, "EV_BREAK");
-		if (isSet(eventMask, Windows_2.EV_RING()))
+		if (isSet(eventMask, Windows.EV_RING()))
 			logger.log(TRACE, "EV_RING");
 
 		// error event
-		if (isSet(eventMask, Windows_2.EV_ERR()))
+		if (isSet(eventMask, Windows.EV_ERR()))
 			logger.log(TRACE, "EV_ERR");
 	}
 
 	private void commErrors(final int errors) {
-		if (isSet(errors, Windows_2.CE_RXOVER()))
+		if (isSet(errors, Windows.CE_RXOVER()))
 			logger.log(TRACE, "CE_RXOVER");
-		if (isSet(errors, Windows_2.CE_OVERRUN()))
+		if (isSet(errors, Windows.CE_OVERRUN()))
 			logger.log(TRACE, "CE_OVERRUN");
-		if (isSet(errors, Windows_2.CE_RXPARITY()))
+		if (isSet(errors, Windows.CE_RXPARITY()))
 			logger.log(TRACE, "CE_RXPARITY");
-		if (isSet(errors, Windows_2.CE_FRAME()))
+		if (isSet(errors, Windows.CE_FRAME()))
 			logger.log(TRACE, "CE_FRAME");
-		if (isSet(errors, Windows_2.CE_BREAK()))
+		if (isSet(errors, Windows.CE_BREAK()))
 			logger.log(TRACE, "CE_BREAK");
 	}
 
 	private static final int QUERY_GETLASTERROR = -1;
 
 	private static String formatWinError(/*DWORD*/ final int error) {
-		final int err = error == QUERY_GETLASTERROR ? Windows_5.GetLastError() : error;
+		final int err = error == QUERY_GETLASTERROR ? Windows.GetLastError() : error;
 		final int size = 256;
 
-		try (var arena = Arena.openConfined()) {
+		try (var arena = Arena.ofConfined()) {
 			final var buf = arena.allocateArray(ValueLayout.JAVA_BYTE, size);
-			int len = Windows_6.FormatMessageA(
-					Windows_2.FORMAT_MESSAGE_FROM_SYSTEM() | Windows_2.FORMAT_MESSAGE_IGNORE_INSERTS()
-					| Windows_2.FORMAT_MESSAGE_MAX_WIDTH_MASK(),
-					Windows_8.NULL(), err, 0, buf, size, Windows_8.NULL());
+			int len = Windows.FormatMessageA(
+					Windows.FORMAT_MESSAGE_FROM_SYSTEM() | Windows.FORMAT_MESSAGE_IGNORE_INSERTS()
+					| Windows.FORMAT_MESSAGE_MAX_WIDTH_MASK(),
+					Windows.NULL(), err, 0, buf, size, Windows.NULL());
 			while (len > 3 && (buf.get(ValueLayout.JAVA_BYTE, len - 1) == ' '
 					|| buf.get(ValueLayout.JAVA_BYTE, len - 1) == '.'))
 				--len;

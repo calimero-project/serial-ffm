@@ -46,7 +46,7 @@ class UnixSerialPortTests {
 
 	private UnixSerialPort port;
 
-	private final Arena arena = Arena.openConfined();
+	private final Arena arena = Arena.ofConfined();
 
 
 	@BeforeEach

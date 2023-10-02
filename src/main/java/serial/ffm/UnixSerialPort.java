@@ -124,19 +124,19 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private static Set<String> checkPortsDir(final String dir) {
-		try (var arena = Arena.openConfined()) {
+		try (var arena = Arena.ofConfined()) {
 			final var logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
 			final var ports = new HashSet<String>();
 
-			var /*DIR*/ addr = Linux_1.opendir(arena.allocateUtf8String(dir));
-			if (addr.equals(Linux_1.NULL())) {
+			var /*DIR*/ addr = Linux.opendir(arena.allocateUtf8String(dir));
+			if (addr.equals(Linux.NULL())) {
 				logger.log(WARNING, "can't open {0}: ", dir, errnoMsg());
 				return ports;
 			}
 
 			final var dirp = addr;
-			while (!(addr = Linux_1.readdir(dirp)).equals(Linux_1.NULL())) {
-				final var entry = dirent.ofAddress(addr, arena.scope());
+			while (!(addr = Linux.readdir(dirp)).equals(Linux.NULL())) {
+				final var entry = dirent.ofAddress(addr, arena);
 				final String name = dirent.d_name$slice(entry).getUtf8String(0);
 				// ignore entries '.' and '..'
 				if (name.charAt(0) == '.' && name.length() <= 2)
@@ -149,7 +149,7 @@ final class UnixSerialPort extends ReadWritePort {
 				logger.log(TRACE, "test {0}", filename);
 				final var cfilename = arena.allocateUtf8String(filename);
 				final var stbuf = stat.allocate(arena);
-				if (Linux_1.stat(cfilename, stbuf) == -1) {
+				if (Linux.stat(cfilename, stbuf) == -1) {
 					logger.log(WARNING, "stat failed for {0}: {1}", filename, errnoMsg());
 					continue;
 				}
@@ -157,7 +157,7 @@ final class UnixSerialPort extends ReadWritePort {
 					ports.add(filename);
 			}
 
-			Linux_1.closedir(dirp);
+			Linux.closedir(dirp);
 			return ports;
 		}
 	}
@@ -184,15 +184,15 @@ final class UnixSerialPort extends ReadWritePort {
 	void baudRate(final Arena arena, final int baudrate) throws IOException {
 		final var options = tcgetattr(arena);
 		final int termiosBaudrate = termiosBaudrate(baudrate);
-		Linux_1.cfsetispeed(options, termiosBaudrate);
-		Linux_1.cfsetospeed(options, termiosBaudrate);
+		Linux.cfsetispeed(options, termiosBaudrate);
+		Linux.cfsetospeed(options, termiosBaudrate);
 		tcsetattr(options);
 	}
 
 	@Override
 	int baudRate(final Arena arena) throws IOException {
 		final var options = tcgetattr(arena);
-		return genericBaudrate(Linux_1.cfgetispeed(options));
+		return genericBaudrate(Linux.cfgetispeed(options));
 	}
 
 	@Override
@@ -275,9 +275,9 @@ final class UnixSerialPort extends ReadWritePort {
 			// set rx and tx queues
 			final var size = arena.allocate(Linux.C_INT, 200);
 			// ??? how to set buffers
-			if (Linux_1.ioctl(fd.value(), TXSETIHOG, size.address()) == -1)
+			if (Linux.ioctl(fd.value(), TXSETIHOG, size.address()) == -1)
 				perror("TXSETIHOG");
-			if (Linux_1.ioctl(fd.value(), TXSETOHOG, size.address()) == -1)
+			if (Linux.ioctl(fd.value(), TXSETOHOG, size.address()) == -1)
 				perror("TXSETOHOG");
 
 			final String out = "set queue tx %d rx %d".formatted(0, 0);
@@ -285,10 +285,10 @@ final class UnixSerialPort extends ReadWritePort {
 		}
 
 		final var status = arena.allocate(Linux.C_INT);
-		int ret = Linux_1.ioctl(fd.value(), Linux_1.TIOCMGET(), status.address());
+		int ret = Linux.ioctl(fd.value(), Linux.TIOCMGET(), status.address());
 		if (ret != -1) {
 			status.set(Linux.C_INT, 0, status.get(Linux.C_INT, 0) | Linux.TIOCM_DTR());
-			ret = Linux_1.ioctl(fd.value(), Linux_1.TIOCMSET(), status.address());
+			ret = Linux.ioctl(fd.value(), Linux.TIOCMSET(), status.address());
 		}
 		if (ret == -1) {
 			final int err = errno();
@@ -325,14 +325,14 @@ final class UnixSerialPort extends ReadWritePort {
 	// this will open the port, alternatives might be to use /dev/serial or /proc/tty
 	boolean portExists(final String portId) {
 		final var error = new AtomicInteger();
-		try (var arena = Arena.openConfined()) {
+		try (var arena = Arena.ofConfined()) {
 			final fd_t fd = openPort(arena, portId, false, error);
 
 			boolean valid = false;
 
 			if (definedTIOCGSERIAL()) {
 				final var info = serial_struct.allocate(arena);
-				if (Linux_1.ioctl(fd.value(), TIOCGSERIAL, info.address()) == 0) {
+				if (Linux.ioctl(fd.value(), TIOCGSERIAL, info.address()) == 0) {
 					if (serial_struct.type$get(info) != PORT_UNKNOWN)
 						valid = true;
 					else if (hasDevSerialLink(arena, portId))
@@ -343,7 +343,7 @@ final class UnixSerialPort extends ReadWritePort {
 			}
 			else {
 				final var status = arena.allocate(Linux.C_INT);
-				final int ret = Linux_1.ioctl(fd.value(), Linux_1.TIOCMGET(), status.address());
+				final int ret = Linux.ioctl(fd.value(), Linux.TIOCMGET(), status.address());
 				valid = ret == 0;
 				logger.log(TRACE, "check port type: {0}", errnoMsg());
 			}
@@ -365,12 +365,12 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	boolean tryLink(final MemorySegment forName, final MemorySegment linkName) {
-		if (Linux_1.link(forName, linkName) == -1) {
+		if (Linux.link(forName, linkName) == -1) {
 			logger.log(TRACE, "create link {0} failed ({1}), try stat", linkName.getUtf8String(0), errnoMsg());
-			try (var arena = Arena.openConfined()) {
+			try (var arena = Arena.ofConfined()) {
 				// we are nevertheless successful if lock count states 2 locks
 				final var seg = stat.allocate(arena);
-				if (Linux_1.stat(forName, seg) == -1) {
+				if (Linux.stat(forName, seg) == -1) {
 					logger.log(TRACE, "stat {0} failed: {1}", forName, errnoMsg());
 					return false;
 				}
@@ -380,7 +380,7 @@ final class UnixSerialPort extends ReadWritePort {
 					return false;
 			}
 		}
-		Linux_1.unlink(forName);
+		Linux.unlink(forName);
 		return true;
 	}
 
@@ -403,17 +403,17 @@ final class UnixSerialPort extends ReadWritePort {
 			p = p.substring(5);
 		final long myPid = ProcessHandle.current().pid();
 		final String pidFile = createLockName(lockDir, pidPrefix, "" + myPid);
-		try (var arena = Arena.openConfined()) {
+		try (var arena = Arena.ofConfined()) {
 			final var mpidFile = arena.allocateUtf8String(pidFile);
-			final fd_t fd = fd_t.of(Linux_1.open(mpidFile, Linux.O_RDWR() | Linux.O_EXCL() | Linux.O_CREAT(), 0644));
+			final fd_t fd = fd_t.of(Linux.open(mpidFile, Linux.O_RDWR() | Linux.O_EXCL() | Linux.O_CREAT(), 0644));
 			if (fd.equals(fd_t.Invalid)) {
 				logger.log(WARNING, "open {0}", pidFile);
 				return false;
 			}
 
 			final var mstrPid = arena.allocateUtf8String(Long.toString(myPid));
-			/*ssize_t wr = */Linux_1.write(fd.value(), mstrPid, Linux_1.strlen(mstrPid));
-			Linux_1.close(fd.value());
+			/*ssize_t wr = */Linux.write(fd.value(), mstrPid, Linux.strlen(mstrPid));
+			Linux.close(fd.value());
 			// additional locking check, because O_EXCL in open is only
 			// supported when using NFSv3 or later on kernel 2.6 or later
 			// (see man open(2) )
@@ -433,8 +433,8 @@ final class UnixSerialPort extends ReadWritePort {
 					locked = true;
 				}
 				// check the read pid, if stale, try to remove lock file
-				else if (Linux_1.kill(pid, 0) == -1 && errno() != Linux.EPERM()) {
-					Linux_1.unlink(mlckFile);
+				else if (Linux.kill(pid, 0) == -1 && errno() != Linux.EPERM()) {
+					Linux.unlink(mlckFile);
 					if (tryLink(mpidFile, mlckFile)) {
 						lockedPort = port;
 						return true;
@@ -445,7 +445,7 @@ final class UnixSerialPort extends ReadWritePort {
 				logger.log(WARNING, "error reading pid from {0}: {1}", lckFile, e.toString());
 			}
 			// we might already have locked the port
-			Linux_1.unlink(mpidFile);
+			Linux.unlink(mpidFile);
 			return locked;
 		}
 	}
@@ -459,19 +459,19 @@ final class UnixSerialPort extends ReadWritePort {
 //		logger.log(TRACE, "release lock {0}", lockFile);
 		lockedPort = "";
 		final int pid = readPid(Path.of(lockFile));
-		if (pid != -1 && pid == Linux_1.getpid())
+		if (pid != -1 && pid == Linux.getpid())
 			Files.deleteIfExists(Path.of(lockFile));
 	}
 
 	private boolean setPortDefaults(final int fd) {
-		try (var arena = Arena.openConfined()) {
+		try (var arena = Arena.ofConfined()) {
 			final var options = termios.allocate(arena);
-			if (Linux_1.tcgetattr(fd, options) == -1) {
+			if (Linux.tcgetattr(fd, options) == -1) {
 				logger.log(WARNING, "setting port defaults, tcgetattr: {0}", errnoMsg());
 				return false;
 			}
-			Linux_1.cfsetispeed(options, Linux.B9600());
-			Linux_1.cfsetospeed(options, Linux.B9600());
+			Linux.cfsetispeed(options, Linux.B9600());
+			Linux.cfsetospeed(options, Linux.B9600());
 			long cflag = termios.c_cflag$get(options);
 			cflag |= Linux.CREAD() | Linux.CLOCAL();
 			cflag &= ~Linux.CSIZE();
@@ -482,11 +482,11 @@ final class UnixSerialPort extends ReadWritePort {
 			termios.c_oflag$set(options, 0);
 			termios.c_cc$slice(options).set(Linux.C_CHAR, Linux.VMIN(), (byte) 0);
 			termios.c_cc$slice(options).set(Linux.C_CHAR, Linux.VTIME(), (byte) 0);
-			if (Linux_1.tcsetattr(fd, Linux.TCSANOW(), options) == -1) {
+			if (Linux.tcsetattr(fd, Linux.TCSANOW(), options) == -1) {
 				logger.log(WARNING, "setting port defaults, tcsetattr: {0}", errnoMsg());
 				return false;
 			}
-			Linux_1.fcntl(fd, Linux.F_SETOWN(), Linux_1.getpid());
+			Linux.fcntl(fd, Linux.F_SETOWN(), Linux.getpid());
 		}
 		return true;
 	}
@@ -502,7 +502,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 			do {
 				// we set the port exclusive below, not here
-				fd = fd_t.of(Linux_1.open(port, /*O_EXCL |*/Linux.O_RDWR() | Linux.O_NOCTTY() | Linux.O_NONBLOCK()));
+				fd = fd_t.of(Linux.open(port, /*O_EXCL |*/Linux.O_RDWR() | Linux.O_NOCTTY() | Linux.O_NONBLOCK()));
 				if (!fd.equals(fd_t.Invalid))
 					break;
 			}
@@ -524,7 +524,7 @@ final class UnixSerialPort extends ReadWritePort {
 		}
 
 		// we continue if we are not able to set exclusive mode
-		if (Linux_1.ioctl(fd.value(), Linux_1.TIOCEXCL()) == -1) {
+		if (Linux.ioctl(fd.value(), Linux.TIOCEXCL()) == -1) {
 			error = errno();
 			perror("set exclusive");
 		}
@@ -533,7 +533,7 @@ final class UnixSerialPort extends ReadWritePort {
 			// we continue if we are not able to save old port settings
 			// TODO actually restore them on close
 			final var saved = termios.allocate(arena);
-			if (Linux_1.tcgetattr(fd.value(), saved) == -1) {
+			if (Linux.tcgetattr(fd.value(), saved) == -1) {
 				error = errno();
 				perror("save old port settings");
 			}
@@ -547,15 +547,15 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private boolean hasDevSerialLink(final Arena arena, final String portId) {
 		final String dir = "/dev/serial/by-id";
-		var /*DIR*/ addr = Linux_1.opendir(arena.allocateUtf8String(dir));
-		if (addr.equals(Linux_1.NULL())) {
+		var /*DIR*/ addr = Linux.opendir(arena.allocateUtf8String(dir));
+		if (addr.equals(Linux.NULL())) {
 			logger.log(WARNING, "can't open {0}: ", dir, errnoMsg());
 			return false;
 		}
 
 		final var dirp = addr;
-		while (!(addr = Linux_1.readdir(dirp)).equals(Linux_1.NULL())) {
-			final var entry = dirent.ofAddress(addr, arena.scope());
+		while (!(addr = Linux.readdir(dirp)).equals(Linux.NULL())) {
+			final var entry = dirent.ofAddress(addr, arena);
 			final String name = dirent.d_name$slice(entry).getUtf8String(0);
 			// ignore entries '.' and '..'
 			if (name.charAt(0) == '.' && name.length() <= 2)
@@ -564,22 +564,22 @@ final class UnixSerialPort extends ReadWritePort {
 			final String filename = dir + "/" + name;
 			final var cfilename = arena.allocateUtf8String(filename);
 			final var stbuf = stat.allocate(arena);
-			if (Linux_1.stat(cfilename, stbuf) == -1) {
+			if (Linux.stat(cfilename, stbuf) == -1) {
 				logger.log(WARNING, "stat failed for {0}: {1}", filename, errnoMsg());
 				continue;
 			}
 
-			final var cresolved = arena.allocate(Linux_1.PATH_MAX());
-			Linux_1.realpath(cfilename, cresolved);
+			final var cresolved = arena.allocate(Linux.PATH_MAX());
+			Linux.realpath(cfilename, cresolved);
 			final String resolved = cresolved.getUtf8String(0);
 
 			if (portId.equals(resolved)) {
 				logger.log(TRACE, "{0} -> {1}", name, resolved);
-				Linux_1.closedir(dirp);
+				Linux.closedir(dirp);
 				return true;
 			}
 		}
-		Linux_1.closedir(dirp);
+		Linux.closedir(dirp);
 		return false;
 	}
 
@@ -602,7 +602,7 @@ final class UnixSerialPort extends ReadWritePort {
 		logger.log(TRACE, "close handle {0}", fd);
 		boolean closed;
 		do {
-			closed = Linux_1.close(fd) == 0;
+			closed = Linux.close(fd) == 0;
 			if (closed)
 				break;
 		}
@@ -614,7 +614,7 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private void tcsetattr(final MemorySegment options) throws IOException {
-		if (Linux_1.tcsetattr(fd.value(), Linux.TCSANOW(), options) == -1) {
+		if (Linux.tcsetattr(fd.value(), Linux.TCSANOW(), options) == -1) {
 			logger.log(WARNING, "tcsetattr: {0}", errnoMsg());
 			throw newException(errno());
 		}
@@ -622,7 +622,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private MemorySegment tcgetattr(final Arena arena) throws IOException {
 		final var options = termios.allocate(arena);
-		if (Linux_1.tcgetattr(fd.value(), options) == -1)
+		if (Linux.tcgetattr(fd.value(), options) == -1)
 			throw newException(errno());
 		return options;
 	}
@@ -949,7 +949,7 @@ final class UnixSerialPort extends ReadWritePort {
 //		#define HW_FLOWCTL 0
 //	#endif
 
-		HW_FLOWCTL = Linux_1.CRTSCTS();
+		HW_FLOWCTL = Linux.CRTSCTS();
 	}
 
 	// NYI SW flow control missing
@@ -962,7 +962,7 @@ final class UnixSerialPort extends ReadWritePort {
 	private static boolean drain(final fd_t fd) {
 		int ret;
 		do {
-			ret = Linux_1.tcdrain(fd.value());
+			ret = Linux.tcdrain(fd.value());
 		}
 		while (ret != 0 && errno() == Linux.EINTR());
 		return ret == 0;
@@ -998,7 +998,7 @@ final class UnixSerialPort extends ReadWritePort {
 			final var timeout = timeval.allocate(arena);
 			timeval.tv_sec$set(timeout, 0);
 			timeval.tv_usec$set(timeout, receiveTimeout * 1000);
-			final int n = Linux_1.select(maxFd, input, MemorySegment.NULL, MemorySegment.NULL, timeout);
+			final int n = Linux.select(maxFd, input, MemorySegment.NULL, MemorySegment.NULL, timeout);
 			if (n == -1) {
 				perror("select failed");
 				// EINTR: simply continue with the byte counting loop, since we have to calculate
@@ -1020,16 +1020,16 @@ final class UnixSerialPort extends ReadWritePort {
 					// get number of bytes that are immediately available for reading:
 					// if 0, this indicates other errors, e.g., disconnected usb adapter
 					final /*size_t*/ var nread = arena.allocate(ValueLayout.JAVA_LONG, 0);
-					Linux_1.ioctl(fd.value(), Linux_2.FIONREAD(), nread.address());
+					Linux.ioctl(fd.value(), Linux.FIONREAD(), nread.address());
 					if (nread.get(ValueLayout.JAVA_LONG, 0) == 0)
 						return -1;
 
-					final long ret = Linux_1.read(fd.value(), MemorySegment.ofAddress(buffer.address() + offset), remaining);
+					final long ret = Linux.read(fd.value(), MemorySegment.ofAddress(buffer.address() + offset), remaining);
 					if (ret == -1) {
 						perror("read");
 						// retry if error is EAGAIN or Linux.EINTR(), otherwise bail out
 						//#ifdef EWOULDBLOCK
-						if (errno() == Linux_2.EWOULDBLOCK()) // alias for EAGAIN
+						if (errno() == Linux.EWOULDBLOCK()) // alias for EAGAIN
 							;
 						else
 							//#endif // EWOULDBLOCK
@@ -1063,7 +1063,7 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private long write(final fd_t fd, /*uint8_t*/ final MemorySegment buf) throws IOException {
-		final long written = Linux_1.write(fd.value(), buf, buf.byteSize());
+		final long written = Linux.write(fd.value(), buf, buf.byteSize());
 		if (written < 0)
 			throw newException(errno());
 		else if (!drain(fd))
@@ -1073,9 +1073,9 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private static /*uint*/ long isInputWaiting(final Arena arena, final fd_t fd) throws IOException {
-		Linux_1.fcntl(fd.value(), Linux.F_SETFL(), Linux.O_NONBLOCK());
+		Linux.fcntl(fd.value(), Linux.F_SETFL(), Linux.O_NONBLOCK());
 		/*uint*/ final var bytes = arena.allocate(ValueLayout.JAVA_INT);
-		if (Linux_1.ioctl(fd.value(), Linux_2.FIONREAD(), bytes.address()) == -1) {
+		if (Linux.ioctl(fd.value(), Linux.FIONREAD(), bytes.address()) == -1) {
 
 			//#if defined FIORDCHK
 			if (definedFIORDCHK()) {
@@ -1181,11 +1181,11 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private MemorySegment queryInterruptCounters() throws IOException {
 		logger.log(TRACE, "queryInterruptCounters");
-		try (var arena = Arena.openConfined()) {
+		try (var arena = Arena.ofConfined()) {
 			final var icount = serial_icounter_struct.allocate(arena);
 			int ret;
 			do {
-				ret = Linux_1.ioctl(fd.value(), TIOCGICOUNT, icount);
+				ret = Linux.ioctl(fd.value(), TIOCGICOUNT, icount);
 			}
 			while (ret == -1 && errno() == Linux.EINTR());
 			if (ret == -1)
@@ -1198,9 +1198,9 @@ final class UnixSerialPort extends ReadWritePort {
 	private static final int TIOCSER_TEMT = 0x01;		/* Transmitter physically empty */
 
 	private boolean lsr() {
-		try (var arena = Arena.openConfined()) {
+		try (var arena = Arena.ofConfined()) {
 			final var lsr = arena.allocate(1);
-			if (Linux_1.ioctl(fd.value(), TIOCSERGETLSR, lsr) == -1)
+			if (Linux.ioctl(fd.value(), TIOCSERGETLSR, lsr) == -1)
 				return false;
 			// output buffer empty?
 			return (lsr.get(ValueLayout.JAVA_BYTE, 0) & TIOCSER_TEMT) != 0;
@@ -1219,7 +1219,7 @@ final class UnixSerialPort extends ReadWritePort {
 			final int mask = ioctlEventMask;
 			int ret;
 			do {
-				ret = Linux_1.ioctl(fd.value(), TIOCMIWAIT, mask);
+				ret = Linux.ioctl(fd.value(), TIOCMIWAIT, mask);
 				if (ret == -1 && errno() == Linux.EINTR())
 					logger.log(TRACE, "waitEvent interrupted");
 			}
@@ -1237,7 +1237,7 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private int polledWaitEvent() throws IOException {
-		try (var arena = Arena.openConfined()) {
+		try (var arena = Arena.ofConfined()) {
 			final int maxFd = fd().value() + 1;
 			final var fdset = fd_set.allocate(arena);
 			final var timeout = timeval.allocate(arena);
@@ -1248,7 +1248,7 @@ final class UnixSerialPort extends ReadWritePort {
 				timeval.tv_usec$set(timeout, eventPollInterval.toNanosPart() / 1000);
 				int ret;
 				do {
-					ret = Linux_1.select(maxFd, fdset, Linux_1.NULL(), Linux_1.NULL(), timeout);
+					ret = Linux.select(maxFd, fdset, Linux.NULL(), Linux.NULL(), timeout);
 				} while (ret == -1 && errno() == Linux.EINTR());
 
 				if ((currentEventMask & (EVENT_CTS | EVENT_DSR | EVENT_RING | EVENT_RLSD)) != 0) {
@@ -1309,7 +1309,7 @@ final class UnixSerialPort extends ReadWritePort {
 		return (int) /*uint*/ switch (type) {
 			case Line -> {
 				/*uint*/ final var mstatus = arena.allocate(ValueLayout.JAVA_INT);
-				final int ret = Linux_1.ioctl(fd.value(), Linux_1.TIOCMGET(), mstatus.address());
+				final int ret = Linux.ioctl(fd.value(), Linux.TIOCMGET(), mstatus.address());
 				if (ret == -1)
 					throw newException(errno());
 
@@ -1360,7 +1360,7 @@ final class UnixSerialPort extends ReadWritePort {
 		// in tenths of seconds. If VTIME is 0, read waits indefinitely unless the NDELAY option is set.
 
 		final var options = termios.allocate(arena);
-		if (Linux_1.tcgetattr(fd.value(), options) == -1)
+		if (Linux.tcgetattr(fd.value(), options) == -1)
 			throw newException(errno());
 
 		int vmin = 0;
@@ -1400,7 +1400,7 @@ final class UnixSerialPort extends ReadWritePort {
 		termios.c_cc$slice(options).set(ValueLayout.JAVA_BYTE, Linux.VMIN(), (byte) vmin);
 		termios.c_cc$slice(options).set(ValueLayout.JAVA_BYTE, Linux.VTIME(), (byte) vtime);
 
-		if (Linux_1.tcsetattr(fd.value(), Linux.TCSANOW(), options) == -1) {
+		if (Linux.tcsetattr(fd.value(), Linux.TCSANOW(), options) == -1) {
 			logger.log(WARNING, "set timeouts, tcsetattr: {0}", errnoMsg());
 			throw newException(errno());
 		}
@@ -1409,7 +1409,7 @@ final class UnixSerialPort extends ReadWritePort {
 	@Override
 	Timeouts timeouts(final Arena arena) throws IOException {
 		final var options = termios.allocate(arena);
-		if (Linux_1.tcgetattr(fd.value(), options) == -1) {
+		if (Linux.tcgetattr(fd.value(), options) == -1) {
 			logger.log(WARNING, "get timeouts, tcgetattr {0}", errnoMsg());
 			throw newException(errno());
 		}
@@ -1553,7 +1553,7 @@ final class UnixSerialPort extends ReadWritePort {
 		// instead of XSI/GNU strerror_r functions
 		// while strerror_r is thread-safe, it is not available on all systems
 		//String str = strerror_r(error, msg, 100);
-		final MemorySegment str = Linux_1.strerror(error);
+		final MemorySegment str = Linux.strerror(error);
 		return str.getUtf8String(0);
 	}
 }

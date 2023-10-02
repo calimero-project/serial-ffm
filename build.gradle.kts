@@ -4,7 +4,7 @@ import java.util.Locale
 plugins {
     id("java-library")
 	id("com.github.ben-manes.versions") version "0.48.0"
-    id("io.github.krakowski.jextract") version "0.3.2"
+    id("io.github.krakowski.jextract") version "0.4.1"
     id("maven-publish")
     signing
 }
@@ -20,7 +20,7 @@ extra["junitJupiterVersion"] = "5.10.0"
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(20))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
     withSourcesJar()
     withJavadocJar()
@@ -94,7 +94,7 @@ tasks.test {
 	})
 }
 
-project.gradle.startParameter.excludedTaskNames.add("jextract")
+//project.gradle.startParameter.excludedTaskNames.add("jextract")
 
 tasks.jextract {
 	val os = System.getProperty("os.name").lowercase(Locale.ENGLISH)
@@ -110,7 +110,7 @@ tasks.jextract {
 		tgtPkg = "org.win"
 		clsName = "Windows"
 	}
-	else if (os.contains("linux")) { 
+	else if (os.contains("linux")) {
 		path = "/usr/include"
 	}
 	else if (os.contains("mac")) {
