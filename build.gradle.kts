@@ -3,7 +3,7 @@ import java.util.Locale
 
 plugins {
     id("java-library")
-	id("com.github.ben-manes.versions") version "0.48.0"
+	id("com.github.ben-manes.versions") version "0.49.0"
     id("io.github.krakowski.jextract") version "0.4.1"
     id("maven-publish")
     signing
