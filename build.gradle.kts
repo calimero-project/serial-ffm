@@ -3,7 +3,7 @@ import java.util.Locale
 
 plugins {
     id("java-library")
-	id("com.github.ben-manes.versions") version "0.49.0"
+	id("com.github.ben-manes.versions") version "0.50.0"
     id("io.github.krakowski.jextract") version "0.4.1"
     id("maven-publish")
     signing
@@ -16,7 +16,7 @@ repositories {
 group = "io.calimero"
 version = "0.1-SNAPSHOT"
 
-extra["junitJupiterVersion"] = "5.10.0"
+extra["junitJupiterVersion"] = "5.10.1"
 
 java {
     toolchain {
