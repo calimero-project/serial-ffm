@@ -20,7 +20,7 @@ extra["junitJupiterVersion"] = "5.10.1"
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(22))
     }
     withSourcesJar()
     withJavadocJar()
@@ -32,23 +32,20 @@ tasks.javadoc { options.encoding = "UTF-8" }
 
 tasks.compileJava {
     options.compilerArgs = listOf(
-        "-Xlint:all,-serial",
-        "--limit-modules", "java.base",
-        "--enable-preview"
+        "-Xlint:all,-serial,-restricted",
+        "--limit-modules", "java.base"
     )
 }
 
 tasks.compileTestJava {
     options.compilerArgs = listOf(
         "-Xlint:all",
-        "-Xlint:-try",
-        "--enable-preview")
+        "-Xlint:-try")
 }
 
 tasks.withType<Javadoc> {
     val docOpts = (options as StandardJavadocDocletOptions)
     docOpts.addStringOption("Xdoclint:-missing", "-quiet")
-    docOpts.addBooleanOption("-enable-preview", true)
     docOpts.addStringOption("-release", java.toolchain.languageVersion.get().toString())
 }
 
@@ -70,11 +67,6 @@ testing {
         // Configure the built-in test suite
         val test by getting(JvmTestSuite::class) {
             useJUnitJupiter(project.extra["junitJupiterVersion"].toString())
-            targets.all {
-                testTask.configure {
-                    jvmArgs(listOf("--enable-preview"))
-                }
-            }
         }
     }
 }
@@ -100,30 +92,29 @@ tasks.jextract {
 	val os = System.getProperty("os.name").lowercase(Locale.ENGLISH)
 
 	var headersDir = "unix"
-	val path: String
+	val paths: List<String>
     var tgtPkg = "org.unix"
 	var clsName = "Linux"
 
-	if (os.contains("windows")) {
-		headersDir = "win"
-		path = "C:/mingw64/x86_64-w64-mingw32/include"
-		tgtPkg = "org.win"
-		clsName = "Windows"
-	}
-	else if (os.contains("linux")) {
-		path = "/usr/include"
-	}
-	else if (os.contains("mac")) {
-		path = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include"
-	}
-	else {
-		throw RuntimeException("Unsupported platform \"$os\"")
-	}
+    when {
+        os.contains("windows") -> {
+            headersDir = "win"
+//            paths = listOf("C:/mingw64/x86_64-w64-mingw32/include")
+            val sdkDir = "C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0"
+            paths = listOf("$sdkDir/um", "$sdkDir/shared", "$sdkDir/ucrt")
+            tgtPkg = "org.win"
+            clsName = "Windows"
+        }
+        os.contains("linux") -> paths = listOf("/usr/include")
+        os.contains("mac") ->
+            paths = listOf("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include")
+        else -> throw RuntimeException("Unsupported platform \"$os\"")
+    }
 
 	header("${project.projectDir}/src/include/$headersDir/headers.h") {
 		targetPackage.set(tgtPkg)
 		className.set(clsName)
-		includes.set(listOf(path))
+		includes.set(paths)
 	}
 }
 

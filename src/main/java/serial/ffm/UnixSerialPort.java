@@ -128,7 +128,7 @@ final class UnixSerialPort extends ReadWritePort {
 			final var logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
 			final var ports = new HashSet<String>();
 
-			var /*DIR*/ addr = Linux.opendir(arena.allocateUtf8String(dir));
+			var /*DIR*/ addr = Linux.opendir(arena.allocateFrom(dir));
 			if (addr.equals(Linux.NULL())) {
 				logger.log(WARNING, "can't open {0}: ", dir, errnoMsg());
 				return ports;
@@ -137,7 +137,7 @@ final class UnixSerialPort extends ReadWritePort {
 			final var dirp = addr;
 			while (!(addr = Linux.readdir(dirp)).equals(Linux.NULL())) {
 				final var entry = dirent.ofAddress(addr, arena);
-				final String name = dirent.d_name$slice(entry).getUtf8String(0);
+				final String name = dirent.d_name$slice(entry).getString(0);
 				// ignore entries '.' and '..'
 				if (name.charAt(0) == '.' && name.length() <= 2)
 					continue;
@@ -147,7 +147,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 				final String filename = dir + "/" + name;
 				logger.log(TRACE, "test {0}", filename);
-				final var cfilename = arena.allocateUtf8String(filename);
+				final var cfilename = arena.allocateFrom(filename);
 				final var stbuf = stat.allocate(arena);
 				if (Linux.stat(cfilename, stbuf) == -1) {
 					logger.log(WARNING, "stat failed for {0}: {1}", filename, errnoMsg());
@@ -366,7 +366,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 	boolean tryLink(final MemorySegment forName, final MemorySegment linkName) {
 		if (Linux.link(forName, linkName) == -1) {
-			logger.log(TRACE, "create link {0} failed ({1}), try stat", linkName.getUtf8String(0), errnoMsg());
+			logger.log(TRACE, "create link {0} failed ({1}), try stat", linkName.getString(0), errnoMsg());
 			try (var arena = Arena.ofConfined()) {
 				// we are nevertheless successful if lock count states 2 locks
 				final var seg = stat.allocate(arena);
@@ -404,21 +404,21 @@ final class UnixSerialPort extends ReadWritePort {
 		final long myPid = ProcessHandle.current().pid();
 		final String pidFile = createLockName(lockDir, pidPrefix, "" + myPid);
 		try (var arena = Arena.ofConfined()) {
-			final var mpidFile = arena.allocateUtf8String(pidFile);
+			final var mpidFile = arena.allocateFrom(pidFile);
 			final fd_t fd = fd_t.of(Linux.open(mpidFile, Linux.O_RDWR() | Linux.O_EXCL() | Linux.O_CREAT(), 0644));
 			if (fd.equals(fd_t.Invalid)) {
 				logger.log(WARNING, "open {0}", pidFile);
 				return false;
 			}
 
-			final var mstrPid = arena.allocateUtf8String(Long.toString(myPid));
+			final var mstrPid = arena.allocateFrom(Long.toString(myPid));
 			/*ssize_t wr = */Linux.write(fd.value(), mstrPid, Linux.strlen(mstrPid));
 			Linux.close(fd.value());
 			// additional locking check, because O_EXCL in open is only
 			// supported when using NFSv3 or later on kernel 2.6 or later
 			// (see man open(2) )
 			final String lckFile = createLockName(lockDir, lckPrefix, p);
-			final var mlckFile = arena.allocateUtf8String(lckFile);
+			final var mlckFile = arena.allocateFrom(lckFile);
 			if (tryLink(mpidFile, mlckFile)) {
 				lockedPort = port;
 				return true;
@@ -493,12 +493,12 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private fd_t openPort(final Arena arena, final String portId, final boolean configurePort,
 		final AtomicInteger lastError) throws IOException {
-		fd_t fd = fd_t.Invalid;
+		fd_t fd;
 //		errno(0);
 		int error = 0;
 
 		if (ensureLock(portId)) {
-			final var port = arena.allocateUtf8String(portId);
+			final var port = arena.allocateFrom(portId);
 
 			do {
 				// we set the port exclusive below, not here
@@ -547,7 +547,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private boolean hasDevSerialLink(final Arena arena, final String portId) {
 		final String dir = "/dev/serial/by-id";
-		var /*DIR*/ addr = Linux.opendir(arena.allocateUtf8String(dir));
+		var /*DIR*/ addr = Linux.opendir(arena.allocateFrom(dir));
 		if (addr.equals(Linux.NULL())) {
 			logger.log(WARNING, "can't open {0}: ", dir, errnoMsg());
 			return false;
@@ -556,13 +556,13 @@ final class UnixSerialPort extends ReadWritePort {
 		final var dirp = addr;
 		while (!(addr = Linux.readdir(dirp)).equals(Linux.NULL())) {
 			final var entry = dirent.ofAddress(addr, arena);
-			final String name = dirent.d_name$slice(entry).getUtf8String(0);
+			final String name = dirent.d_name$slice(entry).getString(0);
 			// ignore entries '.' and '..'
 			if (name.charAt(0) == '.' && name.length() <= 2)
 				continue;
 
 			final String filename = dir + "/" + name;
-			final var cfilename = arena.allocateUtf8String(filename);
+			final var cfilename = arena.allocateFrom(filename);
 			final var stbuf = stat.allocate(arena);
 			if (Linux.stat(cfilename, stbuf) == -1) {
 				logger.log(WARNING, "stat failed for {0}: {1}", filename, errnoMsg());
@@ -571,7 +571,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 			final var cresolved = arena.allocate(Linux.PATH_MAX());
 			Linux.realpath(cfilename, cresolved);
-			final String resolved = cresolved.getUtf8String(0);
+			final String resolved = cresolved.getString(0);
 
 			if (portId.equals(resolved)) {
 				logger.log(TRACE, "{0} -> {1}", name, resolved);
@@ -918,7 +918,6 @@ final class UnixSerialPort extends ReadWritePort {
 			case 5 -> Linux.CS5();
 			case 6 -> Linux.CS6();
 			case 7 -> Linux.CS7();
-			case 8 -> Linux.CS8();
 			default -> Linux.CS8();
 		};
 		termios.c_cflag$set(flags, (int) cflags);
@@ -1554,6 +1553,6 @@ final class UnixSerialPort extends ReadWritePort {
 		// while strerror_r is thread-safe, it is not available on all systems
 		//String str = strerror_r(error, msg, 100);
 		final MemorySegment str = Linux.strerror(error);
-		return str.getUtf8String(0);
+		return str.getString(0);
 	}
 }

@@ -66,8 +66,8 @@ class UnixSerialPortTests {
 
 		Files.createFile(file);
 
-		final var forName = arena.allocateUtf8String(file.toString());
-		final var linkName = arena.allocateUtf8String(link.toString());
+		final var forName = arena.allocateFrom(file.toString());
+		final var linkName = arena.allocateFrom(link.toString());
 		port.tryLink(forName, linkName);
 
 		assertTrue(Files.exists(link));

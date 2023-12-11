@@ -40,14 +40,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.win.HKEY__;
 import org.win.Windows;
-import org.win.Windows_1;
-import org.win.Windows_13;
-import org.win.Windows_2;
-import org.win.Windows_5;
-import org.win.Windows_6;
-import org.win.Windows_7;
-import org.win.Windows_8;
-import org.win.Windows_9;
 import org.win._COMMPROP;
 import org.win._COMMTIMEOUTS;
 import org.win._COMSTAT;
@@ -99,7 +91,7 @@ final class WinSerialPort extends ReadWritePort {
 		final var portNames = new ArrayList<String>();
 
 		try (var arena = Arena.ofConfined()) {
-			final var subKey = arena.allocateUtf8String("HARDWARE\\DEVICEMAP\\SERIALCOMM");
+			final var subKey = arena.allocateFrom("HARDWARE\\DEVICEMAP\\SERIALCOMM");
 			final var serialCommKey = HKEY__.allocate(arena);
 
 			int ret = Windows.RegOpenKeyExA(Windows.HKEY_LOCAL_MACHINE(), subKey, 0, Windows.KEY_READ(), serialCommKey);
@@ -332,7 +324,7 @@ final class WinSerialPort extends ReadWritePort {
 		try (var arena = Arena.ofConfined()) {
 			// clearing last error not necessary, but jvm/debugger sometimes have set some error code
 //			Windows.SetLastError(0);
-			final var h = Windows.CreateFileA(arena.allocateUtf8String(portId),
+			final var h = Windows.CreateFileA(arena.allocateFrom(portId),
 					Windows.GENERIC_READ() | Windows.GENERIC_WRITE(), 0, Windows.NULL(), Windows.OPEN_EXISTING(),
 					Windows.FILE_ATTRIBUTE_NORMAL() | (overlapped ? Windows.FILE_FLAG_OVERLAPPED() : 0),
 					Windows.NULL());
@@ -516,7 +508,7 @@ final class WinSerialPort extends ReadWritePort {
 	public void setEvents(final int eventMask, final boolean enable) throws IOException {
 		logger.log(TRACE, "set event: mask 0x{0}, enable={1}",  Integer.toUnsignedString(eventMask, 16), enable);
 		try (var arena = Arena.ofConfined()) {
-			/*DWORD*/ final var mask = arena.allocate(ValueLayout.JAVA_INT, 0);
+			/*DWORD*/ final var mask = arena.allocate(ValueLayout.JAVA_INT, 1);
 			if (Windows.GetCommMask(h.handle(), mask) == 0)
 				throw newIoException();
 
@@ -549,8 +541,8 @@ final class WinSerialPort extends ReadWritePort {
 
 	@Override
 	int status(final Arena arena, final Status type) throws IOException {
-		/*DWORD*/ final var value = arena.allocate(ValueLayout.JAVA_INT, 0);
-		int ret = 0;
+		/*DWORD*/ final var value = arena.allocate(ValueLayout.JAVA_INT, 1);
+		int ret;
 		final int status = switch (type) {
 			case Line -> {
 				// line status bit field
@@ -645,7 +637,7 @@ final class WinSerialPort extends ReadWritePort {
 		final int size = 256;
 
 		try (var arena = Arena.ofConfined()) {
-			final var buf = arena.allocateArray(ValueLayout.JAVA_BYTE, size);
+			final var buf = arena.allocate(ValueLayout.JAVA_BYTE, size);
 			int len = Windows.FormatMessageA(
 					Windows.FORMAT_MESSAGE_FROM_SYSTEM() | Windows.FORMAT_MESSAGE_IGNORE_INSERTS()
 					| Windows.FORMAT_MESSAGE_MAX_WIDTH_MASK(),
@@ -654,7 +646,7 @@ final class WinSerialPort extends ReadWritePort {
 					|| buf.get(ValueLayout.JAVA_BYTE, len - 1) == '.'))
 				--len;
 			buf.set(ValueLayout.JAVA_BYTE, len, (byte) 0);
-			return buf.getUtf8String(0) + " (error 0x" + Integer.toUnsignedString(err, 16) + ")";
+			return buf.getString(0) + " (error 0x" + Integer.toUnsignedString(err, 16) + ")";
 		}
 	}
 
