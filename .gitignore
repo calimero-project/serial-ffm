@@ -8,9 +8,6 @@
 
 !src/**/build/
 
-!gradle-wrapper.jar
-!gradle-wrapper.properties
-
 # Eclipse
 .project
 .classpath
@@ -28,3 +25,6 @@ bin/
 *.zip
 *.tar.gz
 *.rar
+
+!gradle-wrapper.jar
+!gradle-wrapper.properties
