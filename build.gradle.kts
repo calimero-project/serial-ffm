@@ -95,6 +95,10 @@ tasks.jextract {
 	val paths: List<String>
     var tgtPkg = "org.unix"
 	var clsName = "Linux"
+	// filters for extracted header file definitions
+    var funcFilter = listOf<String>()
+	var structFilter = listOf<String>()
+	var constantFilter = listOf<String>()
 
     when {
         os.contains("windows") -> {
@@ -104,6 +108,24 @@ tasks.jextract {
             paths = listOf("$sdkDir/um", "$sdkDir/shared", "$sdkDir/ucrt")
             tgtPkg = "org.win"
             clsName = "Windows"
+
+            funcFilter = listOf("RegOpenKeyExA", "RegEnumValueA", "RegCloseKey",
+                "GetFileType", "CloseHandle", "CreateFileA", "ReadFile", "WriteFile", "FlushFileBuffers", "GetLastError",
+                "SetupComm", "GetCommProperties", "EscapeCommFunction", "GetCommState", "SetCommState", "ClearCommError",
+                "GetCommMask", "GetCommModemStatus", "SetCommMask", "WaitCommEvent", "GetCommTimeouts", "SetCommTimeouts",
+                "FormatMessageA", "GetOverlappedResult", "CreateEventA", "WaitForSingleObject")
+            structFilter = listOf("HKEY__", "_COMMPROP", "_COMMTIMEOUTS", "_COMSTAT", "_DCB", "_OVERLAPPED")
+            constantFilter = listOf("FALSE", "TRUE", "NULL",
+                "HKEY_LOCAL_MACHINE", "KEY_READ",
+                "FILE_TYPE_CHAR", "GENERIC_READ", "GENERIC_WRITE", "FILE_ATTRIBUTE_NORMAL", "OPEN_EXISTING", "FILE_FLAG_OVERLAPPED",
+                "WAIT_OBJECT_0", "INFINITE",
+                "NO_ERROR", "ERROR_SUCCESS", "ERROR_PATH_NOT_FOUND", "ERROR_NO_MORE_ITEMS", "ERROR_IO_PENDING",
+                "INVALID_HANDLE_VALUE", "FILE_TYPE_UNKNOWN", "ERROR_FILE_NOT_FOUND",
+                "NOPARITY", "ONESTOPBIT", "TWOSTOPBITS",
+                "RTS_CONTROL_HANDSHAKE", "RTS_CONTROL_DISABLE", "DTR_CONTROL_DISABLE", "SETDTR",
+                "EV_RLSD", "EV_DSR", "EV_RXCHAR", "EV_RXFLAG", "EV_CTS", "EV_BREAK", "EV_RING", "EV_ERR",
+                "CE_BREAK", "CE_RXOVER", "CE_OVERRUN", "CE_RXPARITY", "CE_FRAME",
+                "FORMAT_MESSAGE_FROM_SYSTEM", "FORMAT_MESSAGE_IGNORE_INSERTS", "FORMAT_MESSAGE_MAX_WIDTH_MASK")
         }
         os.contains("linux") -> paths = listOf("/usr/include")
         os.contains("mac") ->
@@ -115,6 +137,9 @@ tasks.jextract {
 		targetPackage.set(tgtPkg)
 		className.set(clsName)
 		includes.set(paths)
+        functions.set(funcFilter)
+        structs.set(structFilter)
+        constants.set(constantFilter)
 	}
 }
 
