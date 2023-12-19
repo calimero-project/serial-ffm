@@ -45,8 +45,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.unix.Linux;
-import org.unix.Linux_1;
-import org.unix.Linux_2;
 import org.unix.dirent;
 import org.unix.fd_set;
 import org.unix.stat;
