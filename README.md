@@ -1,12 +1,11 @@
-Serial port communication Java library using the Foreign Function and Memory API
+Serial port communication using the Foreign Function and Memory API
 =====
 
-Serial port access for Linux, macOS, and Windows using Java's [Foreign Function and Memory (FFM) API](https://openjdk.org/jeps/442).
+This Java library provides serial port access for Linux, macOS, and Windows using Java's [Foreign Function and Memory (FFM) API](https://openjdk.org/jeps/442).
 
 [Project Panama](https://openjdk.org/projects/panama/) aims at improving interoperability between Java and native libraries. It provides the new Foreign Function & Memory API, and enables access to native code in pure Java.
-The FFM API is available as Java preview feature. 
 
-This library requires Java 22 (_java.base_) or newer. The implementation is a port of the [serial-native](https://github.com/calimero-project/serial-native) C libraries written to use JNI.
+Serial-ffm requires Java 22 (_java.base_) or newer. The implementation is a port of the [serial-native](https://github.com/calimero-project/serial-native) C libraries written to use JNI.
 
 The header files are generated using [jextract](https://github.com/openjdk/jextract), leveraging the [gradle-jextract](https://plugins.gradle.org/plugin/io.github.krakowski.jextract) plugin in the gradle build file.
 
@@ -20,7 +19,7 @@ The header files are generated using [jextract](https://github.com/openjdk/jextr
 
 Using a serial port named _portId_ in a try-with-resources statement:
 
-```
+```java
 try (var port = SerialPort.open(portId)
 		.baudrate(19_200)
 		.databits(8)
