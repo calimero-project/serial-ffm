@@ -95,10 +95,20 @@ tasks.jextract {
 	val paths: List<String>
     var tgtPkg = "org.unix"
 	var clsName = "Linux"
-	// filters for extracted header file definitions
-    var funcFilter = listOf<String>()
-	var structFilter = listOf<String>()
-	var constantFilter = listOf<String>()
+	// filters for extracted header file definitions, initialized for Unix (Linux, macOS)
+    var funcFilter = listOf("opendir", "readdir", "realpath", "stat", "closedir",
+        "cfgetispeed", "cfsetispeed", "cfsetospeed", "cfget", "ioctl",
+        "link", "unlink", "open", "read", "write", "close", "strlen", "getpid",
+        "tcgetattr", "tcsetattr", "tcdrain", "fcntl", "select", "strerror", "kill")
+    var structFilter = listOf("dirent", "fd_set", "stat", "termios", "timeval")
+    var constantFilter = listOf("NULL", "IXON", "IXOFF", "IXANY",
+        "EBUSY", "EBADF", "EWOULDBLOCK", "EAGAIN", "EPERM", "ENOENT", "EINTR", "PATH_MAX", "C_INT",
+        "O_RDWR", "O_EXCL", "O_CREAT", "O_NOCTTY", "O_NONBLOCK",
+        "CREAD", "CLOCAL", "CSIZE", "CS5", "CS6", "CS7", "CS8", "F_SETOWN", "F_SETFL", "FIONREAD",
+        "TIOCEXCL", "TIOCM_CTS", "TIOCM_DSR", "TIOCM_CAR", "TIOCM_DTR", "TIOCM_RTS", "TIOCM_CTS", "TIOCM_RNG", "TIOCMGET", "TIOCMSET",
+        "TCSANOW", "CSTOPB", "PARENB", "PARODD", "CRTSCTS", "INPCK", "VMIN", "VTIME",
+        "B0", "B50", "B75", "B110", "B134", "B150", "B200", "B300", "B600", "B1200", "B1800", "B2400", "B4800", "B9600", "B19200", "B38400", "B57600", "B115200", "B230400")
+
 
     when {
         os.contains("windows") -> {
@@ -109,6 +119,7 @@ tasks.jextract {
             tgtPkg = "org.win"
             clsName = "Windows"
 
+            // adjust filters for Windows
             funcFilter = listOf("RegOpenKeyExA", "RegEnumValueA", "RegCloseKey",
                 "GetFileType", "CloseHandle", "CreateFileA", "ReadFile", "WriteFile", "FlushFileBuffers", "GetLastError",
                 "SetupComm", "GetCommProperties", "EscapeCommFunction", "GetCommState", "SetCommState", "ClearCommError",
@@ -127,7 +138,10 @@ tasks.jextract {
                 "CE_BREAK", "CE_RXOVER", "CE_OVERRUN", "CE_RXPARITY", "CE_FRAME",
                 "FORMAT_MESSAGE_FROM_SYSTEM", "FORMAT_MESSAGE_IGNORE_INSERTS", "FORMAT_MESSAGE_MAX_WIDTH_MASK")
         }
-        os.contains("linux") -> paths = listOf("/usr/include")
+        os.contains("linux") -> {
+            paths = listOf("/usr/include")
+            structFilter = structFilter + listOf("serial_icounter_struct", "serial_struct")
+        }
         os.contains("mac") ->
             paths = listOf("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include")
         else -> throw RuntimeException("Unsupported platform \"$os\"")
