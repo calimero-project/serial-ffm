@@ -50,6 +50,8 @@ import org.unix.fd_set;
 import org.unix.stat;
 import org.unix.termios;
 import org.unix.timeval;
+import serial.ffm.linux.serial_icounter_struct;
+import serial.ffm.linux.serial_struct;
 
 
 /**

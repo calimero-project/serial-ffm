@@ -19,4 +19,6 @@
 #include <stdlib.h>
 
 // not available on macOS
+#ifdef __linux__
 //#include <linux/serial.h> // serial_icounter_struct
+#endif
