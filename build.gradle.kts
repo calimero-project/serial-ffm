@@ -35,6 +35,7 @@ tasks.compileJava {
         "-Xlint:all,-serial,-restricted",
         "--limit-modules", "java.base"
     )
+    options.debugOptions.debugLevel = "none" // { source, lines, vars } or "none"
 }
 
 tasks.compileTestJava {
