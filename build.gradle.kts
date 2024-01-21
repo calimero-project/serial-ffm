@@ -90,7 +90,9 @@ tasks.test {
 //project.gradle.startParameter.excludedTaskNames.add("jextract")
 
 tasks.jextract {
-	val os = System.getProperty("os.name").lowercase(Locale.ENGLISH)
+    sourceMode = false // option --source does not exist any longer, source mode is always default
+
+    val os = System.getProperty("os.name").lowercase(Locale.ENGLISH)
 
 	var headersDir = "unix"
 	val paths: List<String>
