@@ -2,194 +2,139 @@
 
 package org.win;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.VarHandle;
-import java.nio.ByteOrder;
+import java.lang.invoke.*;
 import java.lang.foreign.*;
+import java.nio.ByteOrder;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
 import static java.lang.foreign.ValueLayout.*;
+import static java.lang.foreign.MemoryLayout.PathElement.*;
+
 /**
- * {@snippet :
+ * {@snippet lang=c :
  * struct _OVERLAPPED {
- *     unsigned long long Internal;
- *     unsigned long long InternalHigh;
+ *     ULONG_PTR Internal;
+ *     ULONG_PTR InternalHigh;
  *     union {
- *         struct {
- *             unsigned long Offset;
- *             unsigned long OffsetHigh;
+ *         struct S {
+ *             DWORD Offset;
+ *             DWORD OffsetHigh;
  *         };
- *         void* Pointer;
+ *         PVOID Pointer;
  *     };
- *     void* hEvent;
- * };
+ *     HANDLE hEvent;
+ * }
  * }
  */
 public class _OVERLAPPED {
 
-    public static MemoryLayout $LAYOUT() {
-        return constants$0.const$2;
+    _OVERLAPPED() {
+        // Suppresses public default constructor, ensuring non-instantiability,
+        // but allows generated subclasses in same package.
     }
-    public static VarHandle Internal$VH() {
-        return constants$0.const$3;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned long long Internal;
-     * }
-     */
-    public static long Internal$get(MemorySegment seg) {
-        return (long)constants$0.const$3.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned long long Internal;
-     * }
-     */
-    public static void Internal$set(MemorySegment seg, long x) {
-        constants$0.const$3.set(seg, 0L, x);
-    }
-    public static long Internal$get(MemorySegment seg, long index) {
-        return (long)constants$0.const$3.get(seg, index * sizeof());    }
-    public static void Internal$set(MemorySegment seg, long index, long x) {
-        constants$0.const$3.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle InternalHigh$VH() {
-        return constants$0.const$4;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned long long InternalHigh;
-     * }
-     */
-    public static long InternalHigh$get(MemorySegment seg) {
-        return (long)constants$0.const$4.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned long long InternalHigh;
-     * }
-     */
-    public static void InternalHigh$set(MemorySegment seg, long x) {
-        constants$0.const$4.set(seg, 0L, x);
-    }
-    public static long InternalHigh$get(MemorySegment seg, long index) {
-        return (long)constants$0.const$4.get(seg, index * sizeof());    }
-    public static void InternalHigh$set(MemorySegment seg, long index, long x) {
-        constants$0.const$4.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle Offset$VH() {
-        return constants$0.const$5;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned long Offset;
-     * }
-     */
-    public static int Offset$get(MemorySegment seg) {
-        return (int)constants$0.const$5.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned long Offset;
-     * }
-     */
-    public static void Offset$set(MemorySegment seg, int x) {
-        constants$0.const$5.set(seg, 0L, x);
-    }
-    public static int Offset$get(MemorySegment seg, long index) {
-        return (int)constants$0.const$5.get(seg, index * sizeof());    }
-    public static void Offset$set(MemorySegment seg, long index, int x) {
-        constants$0.const$5.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle OffsetHigh$VH() {
-        return constants$1.const$0;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned long OffsetHigh;
-     * }
-     */
-    public static int OffsetHigh$get(MemorySegment seg) {
-        return (int)constants$1.const$0.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned long OffsetHigh;
-     * }
-     */
-    public static void OffsetHigh$set(MemorySegment seg, int x) {
-        constants$1.const$0.set(seg, 0L, x);
-    }
-    public static int OffsetHigh$get(MemorySegment seg, long index) {
-        return (int)constants$1.const$0.get(seg, index * sizeof());    }
-    public static void OffsetHigh$set(MemorySegment seg, long index, int x) {
-        constants$1.const$0.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle Pointer$VH() {
-        return constants$1.const$1;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * void* Pointer;
-     * }
-     */
-    public static MemorySegment Pointer$get(MemorySegment seg) {
-        return (java.lang.foreign.MemorySegment)constants$1.const$1.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * void* Pointer;
-     * }
-     */
-    public static void Pointer$set(MemorySegment seg, MemorySegment x) {
-        constants$1.const$1.set(seg, 0L, x);
-    }
-    public static MemorySegment Pointer$get(MemorySegment seg, long index) {
-        return (java.lang.foreign.MemorySegment)constants$1.const$1.get(seg, index * sizeof());    }
-    public static void Pointer$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$1.const$1.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle hEvent$VH() {
-        return constants$1.const$2;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * void* hEvent;
-     * }
-     */
-    public static MemorySegment hEvent$get(MemorySegment seg) {
-        return (java.lang.foreign.MemorySegment)constants$1.const$2.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * void* hEvent;
-     * }
-     */
-    public static void hEvent$set(MemorySegment seg, MemorySegment x) {
-        constants$1.const$2.set(seg, 0L, x);
-    }
-    public static MemorySegment hEvent$get(MemorySegment seg, long index) {
-        return (java.lang.foreign.MemorySegment)constants$1.const$2.get(seg, index * sizeof());    }
-    public static void hEvent$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$1.const$2.set(seg, index * sizeof(), x);
-    }
-    public static long sizeof() { return $LAYOUT().byteSize(); }
-    public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }
-    public static MemorySegment allocateArray(long len, SegmentAllocator allocator) {
-        return allocator.allocate(MemoryLayout.sequenceLayout(len, $LAYOUT()));
-    }
-    public static MemorySegment ofAddress(MemorySegment addr, Arena scope) { return RuntimeHelper.asArray(addr, $LAYOUT(), 1, scope); }
-}
 
+    private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
+        Windows.C_LONG_LONG.withName("Internal"),
+        Windows.C_LONG_LONG.withName("InternalHigh"),
+        MemoryLayout.paddingLayout(8),
+        Windows.C_POINTER.withName("hEvent")
+    ).withName("_OVERLAPPED");
+
+    public static final GroupLayout layout() {
+        return $LAYOUT;
+    }
+
+    private static final long Internal$OFFSET = 0;
+    private static final OfLong Internal$LAYOUT = (OfLong)$LAYOUT.select(groupElement("Internal"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * ULONG_PTR Internal
+     * }
+     */
+    public static long Internal(MemorySegment struct) {
+        return struct.get(Internal$LAYOUT, Internal$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * ULONG_PTR Internal
+     * }
+     */
+    public static void Internal(MemorySegment struct, long fieldValue) {
+        struct.set(Internal$LAYOUT, Internal$OFFSET, fieldValue);
+    }
+
+    private static final long InternalHigh$OFFSET = 8;
+    private static final OfLong InternalHigh$LAYOUT = (OfLong)$LAYOUT.select(groupElement("InternalHigh"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * ULONG_PTR InternalHigh
+     * }
+     */
+    public static long InternalHigh(MemorySegment struct) {
+        return struct.get(InternalHigh$LAYOUT, InternalHigh$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * ULONG_PTR InternalHigh
+     * }
+     */
+    public static void InternalHigh(MemorySegment struct, long fieldValue) {
+        struct.set(InternalHigh$LAYOUT, InternalHigh$OFFSET, fieldValue);
+    }
+
+    private static final long hEvent$OFFSET = 24;
+    private static final AddressLayout hEvent$LAYOUT = (AddressLayout)$LAYOUT.select(groupElement("hEvent"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * HANDLE hEvent
+     * }
+     */
+    public static MemorySegment hEvent(MemorySegment struct) {
+        return struct.get(hEvent$LAYOUT, hEvent$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * HANDLE hEvent
+     * }
+     */
+    public static void hEvent(MemorySegment struct, MemorySegment fieldValue) {
+        struct.set(hEvent$LAYOUT, hEvent$OFFSET, fieldValue);
+    }
+
+    public static MemorySegment asSlice(MemorySegment array, long index) {
+        return array.asSlice(layout().byteSize() * index);
+    }
+
+    public static long sizeof() { return layout().byteSize(); }
+
+    public static MemorySegment allocate(SegmentAllocator allocator) {
+        return allocator.allocate(layout());
+    }
+
+    public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
+        return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
+        return reinterpret(addr, 1, arena, cleanup);
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
+        return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
+    }
+}
 

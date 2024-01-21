@@ -2,90 +2,115 @@
 
 package org.win;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.VarHandle;
-import java.nio.ByteOrder;
+import java.lang.invoke.*;
 import java.lang.foreign.*;
+import java.nio.ByteOrder;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
 import static java.lang.foreign.ValueLayout.*;
+import static java.lang.foreign.MemoryLayout.PathElement.*;
+
 /**
- * {@snippet :
+ * {@snippet lang=c :
  * struct _COMSTAT {
- *      *     unsigned long fCtsHold;
- *     unsigned long fDsrHold;
- *     unsigned long fRlsdHold;
- *     unsigned long fXoffHold;
- *     unsigned long fXoffSent;
- *     unsigned long fEof;
- *     unsigned long fTxim;
- *     unsigned long fReserved;
- *     unsigned long cbInQue;
- *     unsigned long cbOutQue;
- * };
+ *     DWORD fCtsHold : 1;
+ *     DWORD fDsrHold : 1;
+ *     DWORD fRlsdHold : 1;
+ *     DWORD fXoffHold : 1;
+ *     DWORD fXoffSent : 1;
+ *     DWORD fEof : 1;
+ *     DWORD fTxim : 1;
+ *     DWORD fReserved : 25;
+ *     DWORD cbInQue;
+ *     DWORD cbOutQue;
+ * }
  * }
  */
 public class _COMSTAT {
 
-    public static MemoryLayout $LAYOUT() {
-        return constants$7.const$0;
+    _COMSTAT() {
+        // Suppresses public default constructor, ensuring non-instantiability,
+        // but allows generated subclasses in same package.
     }
-    public static VarHandle cbInQue$VH() {
-        return constants$7.const$1;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned long cbInQue;
-     * }
-     */
-    public static int cbInQue$get(MemorySegment seg) {
-        return (int)constants$7.const$1.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned long cbInQue;
-     * }
-     */
-    public static void cbInQue$set(MemorySegment seg, int x) {
-        constants$7.const$1.set(seg, 0L, x);
-    }
-    public static int cbInQue$get(MemorySegment seg, long index) {
-        return (int)constants$7.const$1.get(seg, index * sizeof());    }
-    public static void cbInQue$set(MemorySegment seg, long index, int x) {
-        constants$7.const$1.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle cbOutQue$VH() {
-        return constants$7.const$2;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned long cbOutQue;
-     * }
-     */
-    public static int cbOutQue$get(MemorySegment seg) {
-        return (int)constants$7.const$2.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned long cbOutQue;
-     * }
-     */
-    public static void cbOutQue$set(MemorySegment seg, int x) {
-        constants$7.const$2.set(seg, 0L, x);
-    }
-    public static int cbOutQue$get(MemorySegment seg, long index) {
-        return (int)constants$7.const$2.get(seg, index * sizeof());    }
-    public static void cbOutQue$set(MemorySegment seg, long index, int x) {
-        constants$7.const$2.set(seg, index * sizeof(), x);
-    }
-    public static long sizeof() { return $LAYOUT().byteSize(); }
-    public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }
-    public static MemorySegment allocateArray(long len, SegmentAllocator allocator) {
-        return allocator.allocate(MemoryLayout.sequenceLayout(len, $LAYOUT()));
-    }
-    public static MemorySegment ofAddress(MemorySegment addr, Arena scope) { return RuntimeHelper.asArray(addr, $LAYOUT(), 1, scope); }
-}
 
+    private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
+        MemoryLayout.paddingLayout(4),
+        Windows.C_LONG.withName("cbInQue"),
+        Windows.C_LONG.withName("cbOutQue")
+    ).withName("_COMSTAT");
+
+    public static final GroupLayout layout() {
+        return $LAYOUT;
+    }
+
+    private static final long cbInQue$OFFSET = 4;
+    private static final OfInt cbInQue$LAYOUT = (OfInt)$LAYOUT.select(groupElement("cbInQue"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * DWORD cbInQue
+     * }
+     */
+    public static int cbInQue(MemorySegment struct) {
+        return struct.get(cbInQue$LAYOUT, cbInQue$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * DWORD cbInQue
+     * }
+     */
+    public static void cbInQue(MemorySegment struct, int fieldValue) {
+        struct.set(cbInQue$LAYOUT, cbInQue$OFFSET, fieldValue);
+    }
+
+    private static final long cbOutQue$OFFSET = 8;
+    private static final OfInt cbOutQue$LAYOUT = (OfInt)$LAYOUT.select(groupElement("cbOutQue"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * DWORD cbOutQue
+     * }
+     */
+    public static int cbOutQue(MemorySegment struct) {
+        return struct.get(cbOutQue$LAYOUT, cbOutQue$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * DWORD cbOutQue
+     * }
+     */
+    public static void cbOutQue(MemorySegment struct, int fieldValue) {
+        struct.set(cbOutQue$LAYOUT, cbOutQue$OFFSET, fieldValue);
+    }
+
+    public static MemorySegment asSlice(MemorySegment array, long index) {
+        return array.asSlice(layout().byteSize() * index);
+    }
+
+    public static long sizeof() { return layout().byteSize(); }
+
+    public static MemorySegment allocate(SegmentAllocator allocator) {
+        return allocator.allocate(layout());
+    }
+
+    public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
+        return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
+        return reinterpret(addr, 1, arena, cleanup);
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
+        return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
+    }
+}
 

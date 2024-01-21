@@ -2,55 +2,81 @@
 
 package org.win;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.VarHandle;
-import java.nio.ByteOrder;
+import java.lang.invoke.*;
 import java.lang.foreign.*;
+import java.nio.ByteOrder;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
 import static java.lang.foreign.ValueLayout.*;
+import static java.lang.foreign.MemoryLayout.PathElement.*;
+
 /**
- * {@snippet :
+ * {@snippet lang=c :
  * struct HKEY__ {
  *     int unused;
- * };
+ * }
  * }
  */
 public class HKEY__ {
 
-    public static MemoryLayout $LAYOUT() {
-        return constants$0.const$0;
+    HKEY__() {
+        // Suppresses public default constructor, ensuring non-instantiability,
+        // but allows generated subclasses in same package.
     }
-    public static VarHandle unused$VH() {
-        return constants$0.const$1;
+
+    private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
+        Windows.C_INT.withName("unused")
+    ).withName("HKEY__");
+
+    public static final GroupLayout layout() {
+        return $LAYOUT;
     }
+
+    private static final long unused$OFFSET = 0;
+    private static final OfInt unused$LAYOUT = (OfInt)$LAYOUT.select(groupElement("unused"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * int unused;
+     * {@snippet lang=c :
+     * int unused
      * }
      */
-    public static int unused$get(MemorySegment seg) {
-        return (int)constants$0.const$1.get(seg, 0L);
+    public static int unused(MemorySegment struct) {
+        return struct.get(unused$LAYOUT, unused$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * int unused;
+     * {@snippet lang=c :
+     * int unused
      * }
      */
-    public static void unused$set(MemorySegment seg, int x) {
-        constants$0.const$1.set(seg, 0L, x);
+    public static void unused(MemorySegment struct, int fieldValue) {
+        struct.set(unused$LAYOUT, unused$OFFSET, fieldValue);
     }
-    public static int unused$get(MemorySegment seg, long index) {
-        return (int)constants$0.const$1.get(seg, index * sizeof());    }
-    public static void unused$set(MemorySegment seg, long index, int x) {
-        constants$0.const$1.set(seg, index * sizeof(), x);
-    }
-    public static long sizeof() { return $LAYOUT().byteSize(); }
-    public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }
-    public static MemorySegment allocateArray(long len, SegmentAllocator allocator) {
-        return allocator.allocate(MemoryLayout.sequenceLayout(len, $LAYOUT()));
-    }
-    public static MemorySegment ofAddress(MemorySegment addr, Arena scope) { return RuntimeHelper.asArray(addr, $LAYOUT(), 1, scope); }
-}
 
+    public static MemorySegment asSlice(MemorySegment array, long index) {
+        return array.asSlice(layout().byteSize() * index);
+    }
+
+    public static long sizeof() { return layout().byteSize(); }
+
+    public static MemorySegment allocate(SegmentAllocator allocator) {
+        return allocator.allocate(layout());
+    }
+
+    public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
+        return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
+        return reinterpret(addr, 1, arena, cleanup);
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
+        return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
+    }
+}
 

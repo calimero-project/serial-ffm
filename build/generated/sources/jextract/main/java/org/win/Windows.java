@@ -2,789 +2,1389 @@
 
 package org.win;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.VarHandle;
-import java.nio.ByteOrder;
+import java.lang.invoke.*;
 import java.lang.foreign.*;
-import static java.lang.foreign.ValueLayout.*;
-public class Windows  {
+import java.nio.ByteOrder;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
-    public static final OfByte C_CHAR = JAVA_BYTE;
-    public static final OfShort C_SHORT = JAVA_SHORT;
-    public static final OfInt C_INT = JAVA_INT;
-    public static final OfInt C_LONG = JAVA_INT;
-    public static final OfLong C_LONG_LONG = JAVA_LONG;
-    public static final OfFloat C_FLOAT = JAVA_FLOAT;
-    public static final OfDouble C_DOUBLE = JAVA_DOUBLE;
-    public static final AddressLayout C_POINTER = RuntimeHelper.POINTER;
+import static java.lang.foreign.ValueLayout.*;
+import static java.lang.foreign.MemoryLayout.PathElement.*;
+
+public class Windows {
+
+    static final SymbolLookup SYMBOL_LOOKUP
+            = SymbolLookup.loaderLookup().or(Linker.nativeLinker().defaultLookup());
+
+    Windows() {
+        // Suppresses public default constructor, ensuring non-instantiability,
+        // but allows generated subclasses in same package.
+    }
+
+    public static final ValueLayout.OfBoolean C_BOOL = ValueLayout.JAVA_BOOLEAN;
+    public static final ValueLayout.OfByte C_CHAR = ValueLayout.JAVA_BYTE;
+    public static final ValueLayout.OfShort C_SHORT = ValueLayout.JAVA_SHORT;
+    public static final ValueLayout.OfInt C_INT = ValueLayout.JAVA_INT;
+    public static final ValueLayout.OfLong C_LONG_LONG = ValueLayout.JAVA_LONG;
+    public static final ValueLayout.OfFloat C_FLOAT = ValueLayout.JAVA_FLOAT;
+    public static final ValueLayout.OfDouble C_DOUBLE = ValueLayout.JAVA_DOUBLE;
+    public static final AddressLayout C_POINTER = ValueLayout.ADDRESS
+            .withTargetLayout(MemoryLayout.sequenceLayout(java.lang.Long.MAX_VALUE, JAVA_BYTE));
+    public static final ValueLayout.OfInt C_LONG = ValueLayout.JAVA_INT;
+    public static final ValueLayout.OfDouble C_LONG_DOUBLE = ValueLayout.JAVA_DOUBLE;
+
+    static final boolean TRACE_DOWNCALLS = Boolean.getBoolean("jextract.trace.downcalls");
+
+    static void traceDowncall(String name, Object... args) {
+         String traceArgs = Arrays.stream(args)
+                       .map(Object::toString)
+                       .collect(Collectors.joining(", "));
+         System.out.printf("%s(%s)\n", name, traceArgs);
+    }
+
+    static MemorySegment findOrThrow(String symbol) {
+        return SYMBOL_LOOKUP.find(symbol)
+            .orElseThrow(() -> new UnsatisfiedLinkError("unresolved symbol: " + symbol));
+    }
+
+    static MemoryLayout[] inferVariadicLayouts(Object[] varargs) {
+        MemoryLayout[] result = new MemoryLayout[varargs.length];
+        for (int i = 0; i < varargs.length; i++) {
+            result[i] = variadicLayout(varargs[i].getClass());
+        }
+        return result;
+    }
+
+    static MethodHandle upcallHandle(Class<?> fi, String name, FunctionDescriptor fdesc) {
+        try {
+            return MethodHandles.lookup().findVirtual(fi, name, fdesc.toMethodType());
+        } catch (ReflectiveOperationException ex) {
+            throw new AssertionError(ex);
+        }
+    }
+
+    static MethodHandle downcallHandleVariadic(String name, FunctionDescriptor baseDesc, MemoryLayout[] variadicLayouts) {
+        FunctionDescriptor variadicDesc = baseDesc.appendArgumentLayouts(variadicLayouts);
+        Linker.Option fva = Linker.Option.firstVariadicArg(baseDesc.argumentLayouts().size());
+        return SYMBOL_LOOKUP.find(name)
+                .map(addr -> Linker.nativeLinker().downcallHandle(addr, variadicDesc, fva)
+                        .asSpreader(Object[].class, variadicLayouts.length))
+                .orElse(null);
+    }
+
+    // Internals only below this point
+
+    private static MemoryLayout variadicLayout(Class<?> c) {
+        // apply default argument promotions per C spec
+        // note that all primitives are boxed, since they are passed through an Object[]
+        if (c == Boolean.class || c == Byte.class || c == Character.class || c == Short.class || c == Integer.class) {
+            return JAVA_INT;
+        } else if (c == Long.class) {
+            return JAVA_LONG;
+        } else if (c == Float.class || c == Double.class) {
+            return JAVA_DOUBLE;
+        } else if (MemorySegment.class.isAssignableFrom(c)) {
+            return ADDRESS;
+        }
+        throw new IllegalArgumentException("Invalid type for ABI: " + c.getTypeName());
+    }
+    private static final int FALSE = (int)0L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define FALSE 0
      * }
      */
     public static int FALSE() {
-        return (int)0L;
+        return FALSE;
     }
+    private static final int TRUE = (int)1L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define TRUE 1
      * }
      */
     public static int TRUE() {
-        return (int)1L;
+        return TRUE;
     }
+    private static final int FILE_ATTRIBUTE_NORMAL = (int)128L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define FILE_ATTRIBUTE_NORMAL 128
      * }
      */
     public static int FILE_ATTRIBUTE_NORMAL() {
-        return (int)128L;
+        return FILE_ATTRIBUTE_NORMAL;
     }
+    private static final int OPEN_EXISTING = (int)3L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define OPEN_EXISTING 3
      * }
      */
     public static int OPEN_EXISTING() {
-        return (int)3L;
+        return OPEN_EXISTING;
     }
+    private static final int FILE_FLAG_OVERLAPPED = (int)1073741824L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define FILE_FLAG_OVERLAPPED 1073741824
      * }
      */
     public static int FILE_FLAG_OVERLAPPED() {
-        return (int)1073741824L;
+        return FILE_FLAG_OVERLAPPED;
     }
+    private static final int DTR_CONTROL_DISABLE = (int)0L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define DTR_CONTROL_DISABLE 0
      * }
      */
     public static int DTR_CONTROL_DISABLE() {
-        return (int)0L;
+        return DTR_CONTROL_DISABLE;
     }
+    private static final int RTS_CONTROL_DISABLE = (int)0L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define RTS_CONTROL_DISABLE 0
      * }
      */
     public static int RTS_CONTROL_DISABLE() {
-        return (int)0L;
+        return RTS_CONTROL_DISABLE;
     }
+    private static final int RTS_CONTROL_HANDSHAKE = (int)2L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define RTS_CONTROL_HANDSHAKE 2
      * }
      */
     public static int RTS_CONTROL_HANDSHAKE() {
-        return (int)2L;
+        return RTS_CONTROL_HANDSHAKE;
     }
+    private static final int FILE_TYPE_UNKNOWN = (int)0L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define FILE_TYPE_UNKNOWN 0
      * }
      */
     public static int FILE_TYPE_UNKNOWN() {
-        return (int)0L;
+        return FILE_TYPE_UNKNOWN;
     }
+    private static final int FILE_TYPE_CHAR = (int)2L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define FILE_TYPE_CHAR 2
      * }
      */
     public static int FILE_TYPE_CHAR() {
-        return (int)2L;
+        return FILE_TYPE_CHAR;
     }
+    private static final int NOPARITY = (int)0L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define NOPARITY 0
      * }
      */
     public static int NOPARITY() {
-        return (int)0L;
+        return NOPARITY;
     }
+    private static final int ONESTOPBIT = (int)0L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define ONESTOPBIT 0
      * }
      */
     public static int ONESTOPBIT() {
-        return (int)0L;
+        return ONESTOPBIT;
     }
+    private static final int TWOSTOPBITS = (int)2L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define TWOSTOPBITS 2
      * }
      */
     public static int TWOSTOPBITS() {
-        return (int)2L;
+        return TWOSTOPBITS;
     }
+    private static final int CE_RXOVER = (int)1L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define CE_RXOVER 1
      * }
      */
     public static int CE_RXOVER() {
-        return (int)1L;
+        return CE_RXOVER;
     }
+    private static final int CE_OVERRUN = (int)2L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define CE_OVERRUN 2
      * }
      */
     public static int CE_OVERRUN() {
-        return (int)2L;
+        return CE_OVERRUN;
     }
+    private static final int CE_RXPARITY = (int)4L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define CE_RXPARITY 4
      * }
      */
     public static int CE_RXPARITY() {
-        return (int)4L;
+        return CE_RXPARITY;
     }
+    private static final int CE_FRAME = (int)8L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define CE_FRAME 8
      * }
      */
     public static int CE_FRAME() {
-        return (int)8L;
+        return CE_FRAME;
     }
+    private static final int CE_BREAK = (int)16L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define CE_BREAK 16
      * }
      */
     public static int CE_BREAK() {
-        return (int)16L;
+        return CE_BREAK;
     }
+    private static final int EV_RXCHAR = (int)1L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define EV_RXCHAR 1
      * }
      */
     public static int EV_RXCHAR() {
-        return (int)1L;
+        return EV_RXCHAR;
     }
+    private static final int EV_RXFLAG = (int)2L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define EV_RXFLAG 2
      * }
      */
     public static int EV_RXFLAG() {
-        return (int)2L;
+        return EV_RXFLAG;
     }
+    private static final int EV_CTS = (int)8L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define EV_CTS 8
      * }
      */
     public static int EV_CTS() {
-        return (int)8L;
+        return EV_CTS;
     }
+    private static final int EV_DSR = (int)16L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define EV_DSR 16
      * }
      */
     public static int EV_DSR() {
-        return (int)16L;
+        return EV_DSR;
     }
+    private static final int EV_RLSD = (int)32L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define EV_RLSD 32
      * }
      */
     public static int EV_RLSD() {
-        return (int)32L;
+        return EV_RLSD;
     }
+    private static final int EV_BREAK = (int)64L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define EV_BREAK 64
      * }
      */
     public static int EV_BREAK() {
-        return (int)64L;
+        return EV_BREAK;
     }
+    private static final int EV_ERR = (int)128L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define EV_ERR 128
      * }
      */
     public static int EV_ERR() {
-        return (int)128L;
+        return EV_ERR;
     }
+    private static final int EV_RING = (int)256L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define EV_RING 256
      * }
      */
     public static int EV_RING() {
-        return (int)256L;
+        return EV_RING;
     }
+    private static final int SETDTR = (int)5L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define SETDTR 5
      * }
      */
     public static int SETDTR() {
-        return (int)5L;
+        return SETDTR;
     }
+    private static final int FORMAT_MESSAGE_IGNORE_INSERTS = (int)512L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define FORMAT_MESSAGE_IGNORE_INSERTS 512
      * }
      */
     public static int FORMAT_MESSAGE_IGNORE_INSERTS() {
-        return (int)512L;
+        return FORMAT_MESSAGE_IGNORE_INSERTS;
     }
+    private static final int FORMAT_MESSAGE_FROM_SYSTEM = (int)4096L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define FORMAT_MESSAGE_FROM_SYSTEM 4096
      * }
      */
     public static int FORMAT_MESSAGE_FROM_SYSTEM() {
-        return (int)4096L;
+        return FORMAT_MESSAGE_FROM_SYSTEM;
     }
+    private static final int FORMAT_MESSAGE_MAX_WIDTH_MASK = (int)255L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define FORMAT_MESSAGE_MAX_WIDTH_MASK 255
      * }
      */
     public static int FORMAT_MESSAGE_MAX_WIDTH_MASK() {
-        return (int)255L;
+        return FORMAT_MESSAGE_MAX_WIDTH_MASK;
     }
+
     public static MethodHandle CreateFileA$MH() {
-        return RuntimeHelper.requireNonNull(constants$1.const$4,"CreateFileA");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("CreateFileA"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * void* CreateFileA(char* lpFileName, unsigned long dwDesiredAccess, unsigned long dwShareMode, struct _SECURITY_ATTRIBUTES* lpSecurityAttributes, unsigned long dwCreationDisposition, unsigned long dwFlagsAndAttributes, void* hTemplateFile);
+     * {@snippet lang=c :
+     * HANDLE CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
      * }
      */
     public static MemorySegment CreateFileA(MemorySegment lpFileName, int dwDesiredAccess, int dwShareMode, MemorySegment lpSecurityAttributes, int dwCreationDisposition, int dwFlagsAndAttributes, MemorySegment hTemplateFile) {
         var mh$ = CreateFileA$MH();
         try {
-            return (java.lang.foreign.MemorySegment)mh$.invokeExact(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CreateFileA", lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+            }
+            return (MemorySegment) mh$.invokeExact(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle FlushFileBuffers$MH() {
-        return RuntimeHelper.requireNonNull(constants$1.const$6,"FlushFileBuffers");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("FlushFileBuffers"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int FlushFileBuffers(void* hFile);
+     * {@snippet lang=c :
+     * BOOL FlushFileBuffers(HANDLE hFile)
      * }
      */
     public static int FlushFileBuffers(MemorySegment hFile) {
         var mh$ = FlushFileBuffers$MH();
         try {
-            return (int)mh$.invokeExact(hFile);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("FlushFileBuffers", hFile);
+            }
+            return (int) mh$.invokeExact(hFile);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle GetFileType$MH() {
-        return RuntimeHelper.requireNonNull(constants$2.const$0,"GetFileType");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("GetFileType"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * unsigned long GetFileType(void* hFile);
+     * {@snippet lang=c :
+     * DWORD GetFileType(HANDLE hFile)
      * }
      */
     public static int GetFileType(MemorySegment hFile) {
         var mh$ = GetFileType$MH();
         try {
-            return (int)mh$.invokeExact(hFile);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("GetFileType", hFile);
+            }
+            return (int) mh$.invokeExact(hFile);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle ReadFile$MH() {
-        return RuntimeHelper.requireNonNull(constants$2.const$2,"ReadFile");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("ReadFile"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int ReadFile(void* hFile, void* lpBuffer, unsigned long nNumberOfBytesToRead, unsigned long* lpNumberOfBytesRead, struct _OVERLAPPED* lpOverlapped);
+     * {@snippet lang=c :
+     * BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
      * }
      */
     public static int ReadFile(MemorySegment hFile, MemorySegment lpBuffer, int nNumberOfBytesToRead, MemorySegment lpNumberOfBytesRead, MemorySegment lpOverlapped) {
         var mh$ = ReadFile$MH();
         try {
-            return (int)mh$.invokeExact(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("ReadFile", hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+            }
+            return (int) mh$.invokeExact(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle WriteFile$MH() {
-        return RuntimeHelper.requireNonNull(constants$2.const$3,"WriteFile");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("WriteFile"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int WriteFile(void* hFile, void* lpBuffer, unsigned long nNumberOfBytesToWrite, unsigned long* lpNumberOfBytesWritten, struct _OVERLAPPED* lpOverlapped);
+     * {@snippet lang=c :
+     * BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped)
      * }
      */
     public static int WriteFile(MemorySegment hFile, MemorySegment lpBuffer, int nNumberOfBytesToWrite, MemorySegment lpNumberOfBytesWritten, MemorySegment lpOverlapped) {
         var mh$ = WriteFile$MH();
         try {
-            return (int)mh$.invokeExact(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("WriteFile", hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
+            }
+            return (int) mh$.invokeExact(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle CloseHandle$MH() {
-        return RuntimeHelper.requireNonNull(constants$2.const$4,"CloseHandle");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("CloseHandle"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int CloseHandle(void* hObject);
+     * {@snippet lang=c :
+     * BOOL CloseHandle(HANDLE hObject)
      * }
      */
     public static int CloseHandle(MemorySegment hObject) {
         var mh$ = CloseHandle$MH();
         try {
-            return (int)mh$.invokeExact(hObject);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CloseHandle", hObject);
+            }
+            return (int) mh$.invokeExact(hObject);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle GetLastError$MH() {
-        return RuntimeHelper.requireNonNull(constants$2.const$6,"GetLastError");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG        );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("GetLastError"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * unsigned long GetLastError();
+     * {@snippet lang=c :
+     * DWORD GetLastError(void)
      * }
      */
     public static int GetLastError() {
         var mh$ = GetLastError$MH();
         try {
-            return (int)mh$.invokeExact();
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("GetLastError");
+            }
+            return (int) mh$.invokeExact();
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle GetOverlappedResult$MH() {
-        return RuntimeHelper.requireNonNull(constants$3.const$1,"GetOverlappedResult");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_INT
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("GetOverlappedResult"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int GetOverlappedResult(void* hFile, struct _OVERLAPPED* lpOverlapped, unsigned long* lpNumberOfBytesTransferred, int bWait);
+     * {@snippet lang=c :
+     * BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, BOOL bWait)
      * }
      */
     public static int GetOverlappedResult(MemorySegment hFile, MemorySegment lpOverlapped, MemorySegment lpNumberOfBytesTransferred, int bWait) {
         var mh$ = GetOverlappedResult$MH();
         try {
-            return (int)mh$.invokeExact(hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("GetOverlappedResult", hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
+            }
+            return (int) mh$.invokeExact(hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle WaitForSingleObject$MH() {
-        return RuntimeHelper.requireNonNull(constants$3.const$3,"WaitForSingleObject");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_LONG
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("WaitForSingleObject"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * unsigned long WaitForSingleObject(void* hHandle, unsigned long dwMilliseconds);
+     * {@snippet lang=c :
+     * DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
      * }
      */
     public static int WaitForSingleObject(MemorySegment hHandle, int dwMilliseconds) {
         var mh$ = WaitForSingleObject$MH();
         try {
-            return (int)mh$.invokeExact(hHandle, dwMilliseconds);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("WaitForSingleObject", hHandle, dwMilliseconds);
+            }
+            return (int) mh$.invokeExact(hHandle, dwMilliseconds);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle CreateEventA$MH() {
-        return RuntimeHelper.requireNonNull(constants$3.const$5,"CreateEventA");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_INT,
+                Windows.C_INT,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("CreateEventA"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * void* CreateEventA(struct _SECURITY_ATTRIBUTES* lpEventAttributes, int bManualReset, int bInitialState, char* lpName);
+     * {@snippet lang=c :
+     * HANDLE CreateEventA(LPSECURITY_ATTRIBUTES lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCSTR lpName)
      * }
      */
     public static MemorySegment CreateEventA(MemorySegment lpEventAttributes, int bManualReset, int bInitialState, MemorySegment lpName) {
         var mh$ = CreateEventA$MH();
         try {
-            return (java.lang.foreign.MemorySegment)mh$.invokeExact(lpEventAttributes, bManualReset, bInitialState, lpName);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CreateEventA", lpEventAttributes, bManualReset, bInitialState, lpName);
+            }
+            return (MemorySegment) mh$.invokeExact(lpEventAttributes, bManualReset, bInitialState, lpName);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle ClearCommError$MH() {
-        return RuntimeHelper.requireNonNull(constants$11.const$1,"ClearCommError");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("ClearCommError"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int ClearCommError(void* hFile, unsigned long* lpErrors, struct _COMSTAT* lpStat);
+     * {@snippet lang=c :
+     * BOOL ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpStat)
      * }
      */
     public static int ClearCommError(MemorySegment hFile, MemorySegment lpErrors, MemorySegment lpStat) {
         var mh$ = ClearCommError$MH();
         try {
-            return (int)mh$.invokeExact(hFile, lpErrors, lpStat);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("ClearCommError", hFile, lpErrors, lpStat);
+            }
+            return (int) mh$.invokeExact(hFile, lpErrors, lpStat);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle SetupComm$MH() {
-        return RuntimeHelper.requireNonNull(constants$11.const$3,"SetupComm");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_LONG
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("SetupComm"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int SetupComm(void* hFile, unsigned long dwInQueue, unsigned long dwOutQueue);
+     * {@snippet lang=c :
+     * BOOL SetupComm(HANDLE hFile, DWORD dwInQueue, DWORD dwOutQueue)
      * }
      */
     public static int SetupComm(MemorySegment hFile, int dwInQueue, int dwOutQueue) {
         var mh$ = SetupComm$MH();
         try {
-            return (int)mh$.invokeExact(hFile, dwInQueue, dwOutQueue);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("SetupComm", hFile, dwInQueue, dwOutQueue);
+            }
+            return (int) mh$.invokeExact(hFile, dwInQueue, dwOutQueue);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle EscapeCommFunction$MH() {
-        return RuntimeHelper.requireNonNull(constants$11.const$4,"EscapeCommFunction");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_LONG
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("EscapeCommFunction"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int EscapeCommFunction(void* hFile, unsigned long dwFunc);
+     * {@snippet lang=c :
+     * BOOL EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
      * }
      */
     public static int EscapeCommFunction(MemorySegment hFile, int dwFunc) {
         var mh$ = EscapeCommFunction$MH();
         try {
-            return (int)mh$.invokeExact(hFile, dwFunc);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("EscapeCommFunction", hFile, dwFunc);
+            }
+            return (int) mh$.invokeExact(hFile, dwFunc);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle GetCommMask$MH() {
-        return RuntimeHelper.requireNonNull(constants$11.const$6,"GetCommMask");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("GetCommMask"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int GetCommMask(void* hFile, unsigned long* lpEvtMask);
+     * {@snippet lang=c :
+     * BOOL GetCommMask(HANDLE hFile, LPDWORD lpEvtMask)
      * }
      */
     public static int GetCommMask(MemorySegment hFile, MemorySegment lpEvtMask) {
         var mh$ = GetCommMask$MH();
         try {
-            return (int)mh$.invokeExact(hFile, lpEvtMask);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("GetCommMask", hFile, lpEvtMask);
+            }
+            return (int) mh$.invokeExact(hFile, lpEvtMask);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle GetCommProperties$MH() {
-        return RuntimeHelper.requireNonNull(constants$12.const$0,"GetCommProperties");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("GetCommProperties"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int GetCommProperties(void* hFile, struct _COMMPROP* lpCommProp);
+     * {@snippet lang=c :
+     * BOOL GetCommProperties(HANDLE hFile, LPCOMMPROP lpCommProp)
      * }
      */
     public static int GetCommProperties(MemorySegment hFile, MemorySegment lpCommProp) {
         var mh$ = GetCommProperties$MH();
         try {
-            return (int)mh$.invokeExact(hFile, lpCommProp);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("GetCommProperties", hFile, lpCommProp);
+            }
+            return (int) mh$.invokeExact(hFile, lpCommProp);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle GetCommModemStatus$MH() {
-        return RuntimeHelper.requireNonNull(constants$12.const$1,"GetCommModemStatus");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("GetCommModemStatus"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int GetCommModemStatus(void* hFile, unsigned long* lpModemStat);
+     * {@snippet lang=c :
+     * BOOL GetCommModemStatus(HANDLE hFile, LPDWORD lpModemStat)
      * }
      */
     public static int GetCommModemStatus(MemorySegment hFile, MemorySegment lpModemStat) {
         var mh$ = GetCommModemStatus$MH();
         try {
-            return (int)mh$.invokeExact(hFile, lpModemStat);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("GetCommModemStatus", hFile, lpModemStat);
+            }
+            return (int) mh$.invokeExact(hFile, lpModemStat);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle GetCommState$MH() {
-        return RuntimeHelper.requireNonNull(constants$12.const$2,"GetCommState");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("GetCommState"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int GetCommState(void* hFile, struct _DCB* lpDCB);
+     * {@snippet lang=c :
+     * BOOL GetCommState(HANDLE hFile, LPDCB lpDCB)
      * }
      */
     public static int GetCommState(MemorySegment hFile, MemorySegment lpDCB) {
         var mh$ = GetCommState$MH();
         try {
-            return (int)mh$.invokeExact(hFile, lpDCB);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("GetCommState", hFile, lpDCB);
+            }
+            return (int) mh$.invokeExact(hFile, lpDCB);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle GetCommTimeouts$MH() {
-        return RuntimeHelper.requireNonNull(constants$12.const$3,"GetCommTimeouts");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("GetCommTimeouts"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int GetCommTimeouts(void* hFile, struct _COMMTIMEOUTS* lpCommTimeouts);
+     * {@snippet lang=c :
+     * BOOL GetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
      * }
      */
     public static int GetCommTimeouts(MemorySegment hFile, MemorySegment lpCommTimeouts) {
         var mh$ = GetCommTimeouts$MH();
         try {
-            return (int)mh$.invokeExact(hFile, lpCommTimeouts);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("GetCommTimeouts", hFile, lpCommTimeouts);
+            }
+            return (int) mh$.invokeExact(hFile, lpCommTimeouts);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle SetCommMask$MH() {
-        return RuntimeHelper.requireNonNull(constants$12.const$4,"SetCommMask");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_LONG
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("SetCommMask"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int SetCommMask(void* hFile, unsigned long dwEvtMask);
+     * {@snippet lang=c :
+     * BOOL SetCommMask(HANDLE hFile, DWORD dwEvtMask)
      * }
      */
     public static int SetCommMask(MemorySegment hFile, int dwEvtMask) {
         var mh$ = SetCommMask$MH();
         try {
-            return (int)mh$.invokeExact(hFile, dwEvtMask);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("SetCommMask", hFile, dwEvtMask);
+            }
+            return (int) mh$.invokeExact(hFile, dwEvtMask);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle SetCommState$MH() {
-        return RuntimeHelper.requireNonNull(constants$12.const$5,"SetCommState");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("SetCommState"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int SetCommState(void* hFile, struct _DCB* lpDCB);
+     * {@snippet lang=c :
+     * BOOL SetCommState(HANDLE hFile, LPDCB lpDCB)
      * }
      */
     public static int SetCommState(MemorySegment hFile, MemorySegment lpDCB) {
         var mh$ = SetCommState$MH();
         try {
-            return (int)mh$.invokeExact(hFile, lpDCB);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("SetCommState", hFile, lpDCB);
+            }
+            return (int) mh$.invokeExact(hFile, lpDCB);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle SetCommTimeouts$MH() {
-        return RuntimeHelper.requireNonNull(constants$13.const$0,"SetCommTimeouts");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("SetCommTimeouts"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int SetCommTimeouts(void* hFile, struct _COMMTIMEOUTS* lpCommTimeouts);
+     * {@snippet lang=c :
+     * BOOL SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
      * }
      */
     public static int SetCommTimeouts(MemorySegment hFile, MemorySegment lpCommTimeouts) {
         var mh$ = SetCommTimeouts$MH();
         try {
-            return (int)mh$.invokeExact(hFile, lpCommTimeouts);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("SetCommTimeouts", hFile, lpCommTimeouts);
+            }
+            return (int) mh$.invokeExact(hFile, lpCommTimeouts);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle WaitCommEvent$MH() {
-        return RuntimeHelper.requireNonNull(constants$13.const$1,"WaitCommEvent");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("WaitCommEvent"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * int WaitCommEvent(void* hFile, unsigned long* lpEvtMask, struct _OVERLAPPED* lpOverlapped);
+     * {@snippet lang=c :
+     * BOOL WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped)
      * }
      */
     public static int WaitCommEvent(MemorySegment hFile, MemorySegment lpEvtMask, MemorySegment lpOverlapped) {
         var mh$ = WaitCommEvent$MH();
         try {
-            return (int)mh$.invokeExact(hFile, lpEvtMask, lpOverlapped);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("WaitCommEvent", hFile, lpEvtMask, lpOverlapped);
+            }
+            return (int) mh$.invokeExact(hFile, lpEvtMask, lpOverlapped);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle FormatMessageA$MH() {
-        return RuntimeHelper.requireNonNull(constants$13.const$3,"FormatMessageA");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("FormatMessageA"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * unsigned long FormatMessageA(unsigned long dwFlags, void* lpSource, unsigned long dwMessageId, unsigned long dwLanguageId, char* lpBuffer, unsigned long nSize, char** Arguments);
+     * {@snippet lang=c :
+     * DWORD FormatMessageA(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPSTR lpBuffer, DWORD nSize, va_list *Arguments)
      * }
      */
     public static int FormatMessageA(int dwFlags, MemorySegment lpSource, int dwMessageId, int dwLanguageId, MemorySegment lpBuffer, int nSize, MemorySegment Arguments) {
         var mh$ = FormatMessageA$MH();
         try {
-            return (int)mh$.invokeExact(dwFlags, lpSource, dwMessageId, dwLanguageId, lpBuffer, nSize, Arguments);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("FormatMessageA", dwFlags, lpSource, dwMessageId, dwLanguageId, lpBuffer, nSize, Arguments);
+            }
+            return (int) mh$.invokeExact(dwFlags, lpSource, dwMessageId, dwLanguageId, lpBuffer, nSize, Arguments);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle RegCloseKey$MH() {
-        return RuntimeHelper.requireNonNull(constants$13.const$4,"RegCloseKey");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("RegCloseKey"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * long RegCloseKey(struct HKEY__* hKey);
+     * {@snippet lang=c :
+     * LSTATUS RegCloseKey(HKEY hKey)
      * }
      */
     public static int RegCloseKey(MemorySegment hKey) {
         var mh$ = RegCloseKey$MH();
         try {
-            return (int)mh$.invokeExact(hKey);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("RegCloseKey", hKey);
+            }
+            return (int) mh$.invokeExact(hKey);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle RegEnumValueA$MH() {
-        return RuntimeHelper.requireNonNull(constants$13.const$6,"RegEnumValueA");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("RegEnumValueA"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * long RegEnumValueA(struct HKEY__* hKey, unsigned long dwIndex, char* lpValueName, unsigned long* lpcchValueName, unsigned long* lpReserved, unsigned long* lpType, unsigned char* lpData, unsigned long* lpcbData);
+     * {@snippet lang=c :
+     * LSTATUS RegEnumValueA(HKEY hKey, DWORD dwIndex, LPSTR lpValueName, LPDWORD lpcchValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
      * }
      */
     public static int RegEnumValueA(MemorySegment hKey, int dwIndex, MemorySegment lpValueName, MemorySegment lpcchValueName, MemorySegment lpReserved, MemorySegment lpType, MemorySegment lpData, MemorySegment lpcbData) {
         var mh$ = RegEnumValueA$MH();
         try {
-            return (int)mh$.invokeExact(hKey, dwIndex, lpValueName, lpcchValueName, lpReserved, lpType, lpData, lpcbData);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("RegEnumValueA", hKey, dwIndex, lpValueName, lpcchValueName, lpReserved, lpType, lpData, lpcbData);
+            }
+            return (int) mh$.invokeExact(hKey, dwIndex, lpValueName, lpcchValueName, lpReserved, lpType, lpData, lpcbData);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+
     public static MethodHandle RegOpenKeyExA$MH() {
-        return RuntimeHelper.requireNonNull(constants$14.const$1,"RegOpenKeyExA");
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_POINTER
+            );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Windows.findOrThrow("RegOpenKeyExA"),
+                    DESC);
+        }
+        return Holder.MH;
     }
+
     /**
-     * {@snippet :
-     * long RegOpenKeyExA(struct HKEY__* hKey, char* lpSubKey, unsigned long ulOptions, unsigned long samDesired, struct HKEY__** phkResult);
+     * {@snippet lang=c :
+     * LSTATUS RegOpenKeyExA(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult)
      * }
      */
     public static int RegOpenKeyExA(MemorySegment hKey, MemorySegment lpSubKey, int ulOptions, int samDesired, MemorySegment phkResult) {
         var mh$ = RegOpenKeyExA$MH();
         try {
-            return (int)mh$.invokeExact(hKey, lpSubKey, ulOptions, samDesired, phkResult);
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("RegOpenKeyExA", hKey, lpSubKey, ulOptions, samDesired, phkResult);
+            }
+            return (int) mh$.invokeExact(hKey, lpSubKey, ulOptions, samDesired, phkResult);
         } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
+           throw new AssertionError("should not reach here", ex$);
         }
     }
+    private static final MemorySegment NULL = MemorySegment.ofAddress(0L);
+
     /**
-     * {@snippet :
-     * #define NULL 0
+     * {@snippet lang=c :
+     * #define NULL (void*) 0
      * }
      */
     public static MemorySegment NULL() {
-        return constants$14.const$2;
+        return NULL;
     }
+    private static final int GENERIC_READ = (int)2147483648L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define GENERIC_READ 2147483648
      * }
      */
     public static int GENERIC_READ() {
-        return (int)2147483648L;
+        return GENERIC_READ;
     }
+    private static final int GENERIC_WRITE = (int)1073741824L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define GENERIC_WRITE 1073741824
      * }
      */
     public static int GENERIC_WRITE() {
-        return (int)1073741824L;
+        return GENERIC_WRITE;
     }
+    private static final int KEY_READ = (int)131097L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define KEY_READ 131097
      * }
      */
     public static int KEY_READ() {
-        return (int)131097L;
+        return KEY_READ;
     }
+    private static final MemorySegment INVALID_HANDLE_VALUE = MemorySegment.ofAddress(-1L);
+
     /**
-     * {@snippet :
-     * #define INVALID_HANDLE_VALUE -1
+     * {@snippet lang=c :
+     * #define INVALID_HANDLE_VALUE (void*) -1
      * }
      */
     public static MemorySegment INVALID_HANDLE_VALUE() {
-        return constants$14.const$3;
+        return INVALID_HANDLE_VALUE;
     }
+    private static final int WAIT_OBJECT_0 = (int)0L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define WAIT_OBJECT_0 0
      * }
      */
     public static int WAIT_OBJECT_0() {
-        return (int)0L;
+        return WAIT_OBJECT_0;
     }
+    private static final int INFINITE = (int)4294967295L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define INFINITE 4294967295
      * }
      */
     public static int INFINITE() {
-        return (int)4294967295L;
+        return INFINITE;
     }
+    private static final int ERROR_SUCCESS = (int)0L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define ERROR_SUCCESS 0
      * }
      */
     public static int ERROR_SUCCESS() {
-        return (int)0L;
+        return ERROR_SUCCESS;
     }
+    private static final int NO_ERROR = (int)0L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define NO_ERROR 0
      * }
      */
     public static int NO_ERROR() {
-        return (int)0L;
+        return NO_ERROR;
     }
+    private static final int ERROR_FILE_NOT_FOUND = (int)2L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define ERROR_FILE_NOT_FOUND 2
      * }
      */
     public static int ERROR_FILE_NOT_FOUND() {
-        return (int)2L;
+        return ERROR_FILE_NOT_FOUND;
     }
+    private static final int ERROR_PATH_NOT_FOUND = (int)3L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define ERROR_PATH_NOT_FOUND 3
      * }
      */
     public static int ERROR_PATH_NOT_FOUND() {
-        return (int)3L;
+        return ERROR_PATH_NOT_FOUND;
     }
+    private static final int ERROR_NO_MORE_ITEMS = (int)259L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define ERROR_NO_MORE_ITEMS 259
      * }
      */
     public static int ERROR_NO_MORE_ITEMS() {
-        return (int)259L;
+        return ERROR_NO_MORE_ITEMS;
     }
+    private static final int ERROR_IO_PENDING = (int)997L;
+
     /**
-     * {@snippet :
+     * {@snippet lang=c :
      * #define ERROR_IO_PENDING 997
      * }
      */
     public static int ERROR_IO_PENDING() {
-        return (int)997L;
+        return ERROR_IO_PENDING;
     }
+    private static final MemorySegment HKEY_LOCAL_MACHINE = MemorySegment.ofAddress(-2147483646L);
+
     /**
-     * {@snippet :
-     * #define HKEY_LOCAL_MACHINE -2147483646
+     * {@snippet lang=c :
+     * #define HKEY_LOCAL_MACHINE (void*) -2147483646
      * }
      */
     public static MemorySegment HKEY_LOCAL_MACHINE() {
-        return constants$14.const$4;
+        return HKEY_LOCAL_MACHINE;
     }
 }
-
 

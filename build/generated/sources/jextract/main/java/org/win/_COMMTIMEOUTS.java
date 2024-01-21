@@ -2,163 +2,181 @@
 
 package org.win;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.VarHandle;
-import java.nio.ByteOrder;
+import java.lang.invoke.*;
 import java.lang.foreign.*;
+import java.nio.ByteOrder;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
 import static java.lang.foreign.ValueLayout.*;
+import static java.lang.foreign.MemoryLayout.PathElement.*;
+
 /**
- * {@snippet :
+ * {@snippet lang=c :
  * struct _COMMTIMEOUTS {
- *     unsigned long ReadIntervalTimeout;
- *     unsigned long ReadTotalTimeoutMultiplier;
- *     unsigned long ReadTotalTimeoutConstant;
- *     unsigned long WriteTotalTimeoutMultiplier;
- *     unsigned long WriteTotalTimeoutConstant;
- * };
+ *     DWORD ReadIntervalTimeout;
+ *     DWORD ReadTotalTimeoutMultiplier;
+ *     DWORD ReadTotalTimeoutConstant;
+ *     DWORD WriteTotalTimeoutMultiplier;
+ *     DWORD WriteTotalTimeoutConstant;
+ * }
  * }
  */
 public class _COMMTIMEOUTS {
 
-    public static MemoryLayout $LAYOUT() {
-        return constants$10.const$0;
+    _COMMTIMEOUTS() {
+        // Suppresses public default constructor, ensuring non-instantiability,
+        // but allows generated subclasses in same package.
     }
-    public static VarHandle ReadIntervalTimeout$VH() {
-        return constants$10.const$1;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned long ReadIntervalTimeout;
-     * }
-     */
-    public static int ReadIntervalTimeout$get(MemorySegment seg) {
-        return (int)constants$10.const$1.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned long ReadIntervalTimeout;
-     * }
-     */
-    public static void ReadIntervalTimeout$set(MemorySegment seg, int x) {
-        constants$10.const$1.set(seg, 0L, x);
-    }
-    public static int ReadIntervalTimeout$get(MemorySegment seg, long index) {
-        return (int)constants$10.const$1.get(seg, index * sizeof());    }
-    public static void ReadIntervalTimeout$set(MemorySegment seg, long index, int x) {
-        constants$10.const$1.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle ReadTotalTimeoutMultiplier$VH() {
-        return constants$10.const$2;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned long ReadTotalTimeoutMultiplier;
-     * }
-     */
-    public static int ReadTotalTimeoutMultiplier$get(MemorySegment seg) {
-        return (int)constants$10.const$2.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned long ReadTotalTimeoutMultiplier;
-     * }
-     */
-    public static void ReadTotalTimeoutMultiplier$set(MemorySegment seg, int x) {
-        constants$10.const$2.set(seg, 0L, x);
-    }
-    public static int ReadTotalTimeoutMultiplier$get(MemorySegment seg, long index) {
-        return (int)constants$10.const$2.get(seg, index * sizeof());    }
-    public static void ReadTotalTimeoutMultiplier$set(MemorySegment seg, long index, int x) {
-        constants$10.const$2.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle ReadTotalTimeoutConstant$VH() {
-        return constants$10.const$3;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned long ReadTotalTimeoutConstant;
-     * }
-     */
-    public static int ReadTotalTimeoutConstant$get(MemorySegment seg) {
-        return (int)constants$10.const$3.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned long ReadTotalTimeoutConstant;
-     * }
-     */
-    public static void ReadTotalTimeoutConstant$set(MemorySegment seg, int x) {
-        constants$10.const$3.set(seg, 0L, x);
-    }
-    public static int ReadTotalTimeoutConstant$get(MemorySegment seg, long index) {
-        return (int)constants$10.const$3.get(seg, index * sizeof());    }
-    public static void ReadTotalTimeoutConstant$set(MemorySegment seg, long index, int x) {
-        constants$10.const$3.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle WriteTotalTimeoutMultiplier$VH() {
-        return constants$10.const$4;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned long WriteTotalTimeoutMultiplier;
-     * }
-     */
-    public static int WriteTotalTimeoutMultiplier$get(MemorySegment seg) {
-        return (int)constants$10.const$4.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned long WriteTotalTimeoutMultiplier;
-     * }
-     */
-    public static void WriteTotalTimeoutMultiplier$set(MemorySegment seg, int x) {
-        constants$10.const$4.set(seg, 0L, x);
-    }
-    public static int WriteTotalTimeoutMultiplier$get(MemorySegment seg, long index) {
-        return (int)constants$10.const$4.get(seg, index * sizeof());    }
-    public static void WriteTotalTimeoutMultiplier$set(MemorySegment seg, long index, int x) {
-        constants$10.const$4.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle WriteTotalTimeoutConstant$VH() {
-        return constants$10.const$5;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned long WriteTotalTimeoutConstant;
-     * }
-     */
-    public static int WriteTotalTimeoutConstant$get(MemorySegment seg) {
-        return (int)constants$10.const$5.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned long WriteTotalTimeoutConstant;
-     * }
-     */
-    public static void WriteTotalTimeoutConstant$set(MemorySegment seg, int x) {
-        constants$10.const$5.set(seg, 0L, x);
-    }
-    public static int WriteTotalTimeoutConstant$get(MemorySegment seg, long index) {
-        return (int)constants$10.const$5.get(seg, index * sizeof());    }
-    public static void WriteTotalTimeoutConstant$set(MemorySegment seg, long index, int x) {
-        constants$10.const$5.set(seg, index * sizeof(), x);
-    }
-    public static long sizeof() { return $LAYOUT().byteSize(); }
-    public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }
-    public static MemorySegment allocateArray(long len, SegmentAllocator allocator) {
-        return allocator.allocate(MemoryLayout.sequenceLayout(len, $LAYOUT()));
-    }
-    public static MemorySegment ofAddress(MemorySegment addr, Arena scope) { return RuntimeHelper.asArray(addr, $LAYOUT(), 1, scope); }
-}
 
+    private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
+        Windows.C_LONG.withName("ReadIntervalTimeout"),
+        Windows.C_LONG.withName("ReadTotalTimeoutMultiplier"),
+        Windows.C_LONG.withName("ReadTotalTimeoutConstant"),
+        Windows.C_LONG.withName("WriteTotalTimeoutMultiplier"),
+        Windows.C_LONG.withName("WriteTotalTimeoutConstant")
+    ).withName("_COMMTIMEOUTS");
+
+    public static final GroupLayout layout() {
+        return $LAYOUT;
+    }
+
+    private static final long ReadIntervalTimeout$OFFSET = 0;
+    private static final OfInt ReadIntervalTimeout$LAYOUT = (OfInt)$LAYOUT.select(groupElement("ReadIntervalTimeout"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * DWORD ReadIntervalTimeout
+     * }
+     */
+    public static int ReadIntervalTimeout(MemorySegment struct) {
+        return struct.get(ReadIntervalTimeout$LAYOUT, ReadIntervalTimeout$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * DWORD ReadIntervalTimeout
+     * }
+     */
+    public static void ReadIntervalTimeout(MemorySegment struct, int fieldValue) {
+        struct.set(ReadIntervalTimeout$LAYOUT, ReadIntervalTimeout$OFFSET, fieldValue);
+    }
+
+    private static final long ReadTotalTimeoutMultiplier$OFFSET = 4;
+    private static final OfInt ReadTotalTimeoutMultiplier$LAYOUT = (OfInt)$LAYOUT.select(groupElement("ReadTotalTimeoutMultiplier"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * DWORD ReadTotalTimeoutMultiplier
+     * }
+     */
+    public static int ReadTotalTimeoutMultiplier(MemorySegment struct) {
+        return struct.get(ReadTotalTimeoutMultiplier$LAYOUT, ReadTotalTimeoutMultiplier$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * DWORD ReadTotalTimeoutMultiplier
+     * }
+     */
+    public static void ReadTotalTimeoutMultiplier(MemorySegment struct, int fieldValue) {
+        struct.set(ReadTotalTimeoutMultiplier$LAYOUT, ReadTotalTimeoutMultiplier$OFFSET, fieldValue);
+    }
+
+    private static final long ReadTotalTimeoutConstant$OFFSET = 8;
+    private static final OfInt ReadTotalTimeoutConstant$LAYOUT = (OfInt)$LAYOUT.select(groupElement("ReadTotalTimeoutConstant"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * DWORD ReadTotalTimeoutConstant
+     * }
+     */
+    public static int ReadTotalTimeoutConstant(MemorySegment struct) {
+        return struct.get(ReadTotalTimeoutConstant$LAYOUT, ReadTotalTimeoutConstant$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * DWORD ReadTotalTimeoutConstant
+     * }
+     */
+    public static void ReadTotalTimeoutConstant(MemorySegment struct, int fieldValue) {
+        struct.set(ReadTotalTimeoutConstant$LAYOUT, ReadTotalTimeoutConstant$OFFSET, fieldValue);
+    }
+
+    private static final long WriteTotalTimeoutMultiplier$OFFSET = 12;
+    private static final OfInt WriteTotalTimeoutMultiplier$LAYOUT = (OfInt)$LAYOUT.select(groupElement("WriteTotalTimeoutMultiplier"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * DWORD WriteTotalTimeoutMultiplier
+     * }
+     */
+    public static int WriteTotalTimeoutMultiplier(MemorySegment struct) {
+        return struct.get(WriteTotalTimeoutMultiplier$LAYOUT, WriteTotalTimeoutMultiplier$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * DWORD WriteTotalTimeoutMultiplier
+     * }
+     */
+    public static void WriteTotalTimeoutMultiplier(MemorySegment struct, int fieldValue) {
+        struct.set(WriteTotalTimeoutMultiplier$LAYOUT, WriteTotalTimeoutMultiplier$OFFSET, fieldValue);
+    }
+
+    private static final long WriteTotalTimeoutConstant$OFFSET = 16;
+    private static final OfInt WriteTotalTimeoutConstant$LAYOUT = (OfInt)$LAYOUT.select(groupElement("WriteTotalTimeoutConstant"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * DWORD WriteTotalTimeoutConstant
+     * }
+     */
+    public static int WriteTotalTimeoutConstant(MemorySegment struct) {
+        return struct.get(WriteTotalTimeoutConstant$LAYOUT, WriteTotalTimeoutConstant$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * DWORD WriteTotalTimeoutConstant
+     * }
+     */
+    public static void WriteTotalTimeoutConstant(MemorySegment struct, int fieldValue) {
+        struct.set(WriteTotalTimeoutConstant$LAYOUT, WriteTotalTimeoutConstant$OFFSET, fieldValue);
+    }
+
+    public static MemorySegment asSlice(MemorySegment array, long index) {
+        return array.asSlice(layout().byteSize() * index);
+    }
+
+    public static long sizeof() { return layout().byteSize(); }
+
+    public static MemorySegment allocate(SegmentAllocator allocator) {
+        return allocator.allocate(layout());
+    }
+
+    public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
+        return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
+        return reinterpret(addr, 1, arena, cleanup);
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
+        return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
+    }
+}
 
