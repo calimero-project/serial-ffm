@@ -2,82 +2,106 @@
 
 package org.unix;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.VarHandle;
-import java.nio.ByteOrder;
+import java.lang.invoke.*;
 import java.lang.foreign.*;
+import java.nio.ByteOrder;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
 import static java.lang.foreign.ValueLayout.*;
+import static java.lang.foreign.MemoryLayout.PathElement.*;
+
 /**
- * {@snippet :
+ * {@snippet lang=c :
  * struct timeval {
- *     long tv_sec;
- *     long tv_usec;
- * };
+ *     __time_t tv_sec;
+ *     __suseconds_t tv_usec;
+ * }
  * }
  */
 public class timeval {
 
-    public static MemoryLayout $LAYOUT() {
-        return constants$8.const$2;
+    timeval() {
+        // Suppresses public default constructor, ensuring non-instantiability,
+        // but allows generated subclasses in same package.
     }
-    public static VarHandle tv_sec$VH() {
-        return constants$8.const$3;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * long tv_sec;
-     * }
-     */
-    public static long tv_sec$get(MemorySegment seg) {
-        return (long)constants$8.const$3.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * long tv_sec;
-     * }
-     */
-    public static void tv_sec$set(MemorySegment seg, long x) {
-        constants$8.const$3.set(seg, 0L, x);
-    }
-    public static long tv_sec$get(MemorySegment seg, long index) {
-        return (long)constants$8.const$3.get(seg, index * sizeof());    }
-    public static void tv_sec$set(MemorySegment seg, long index, long x) {
-        constants$8.const$3.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle tv_usec$VH() {
-        return constants$8.const$4;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * long tv_usec;
-     * }
-     */
-    public static long tv_usec$get(MemorySegment seg) {
-        return (long)constants$8.const$4.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * long tv_usec;
-     * }
-     */
-    public static void tv_usec$set(MemorySegment seg, long x) {
-        constants$8.const$4.set(seg, 0L, x);
-    }
-    public static long tv_usec$get(MemorySegment seg, long index) {
-        return (long)constants$8.const$4.get(seg, index * sizeof());    }
-    public static void tv_usec$set(MemorySegment seg, long index, long x) {
-        constants$8.const$4.set(seg, index * sizeof(), x);
-    }
-    public static long sizeof() { return $LAYOUT().byteSize(); }
-    public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }
-    public static MemorySegment allocateArray(long len, SegmentAllocator allocator) {
-        return allocator.allocate(MemoryLayout.sequenceLayout(len, $LAYOUT()));
-    }
-    public static MemorySegment ofAddress(MemorySegment addr, Arena scope) { return RuntimeHelper.asArray(addr, $LAYOUT(), 1, scope); }
-}
 
+    private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
+        Linux.C_LONG.withName("tv_sec"),
+        Linux.C_LONG.withName("tv_usec")
+    ).withName("timeval");
+
+    public static final GroupLayout layout() {
+        return $LAYOUT;
+    }
+
+    private static final long tv_sec$OFFSET = 0;
+    private static final OfLong tv_sec$LAYOUT = (OfLong)$LAYOUT.select(groupElement("tv_sec"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * __time_t tv_sec
+     * }
+     */
+    public static long tv_sec(MemorySegment struct) {
+        return struct.get(tv_sec$LAYOUT, tv_sec$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * __time_t tv_sec
+     * }
+     */
+    public static void tv_sec(MemorySegment struct, long fieldValue) {
+        struct.set(tv_sec$LAYOUT, tv_sec$OFFSET, fieldValue);
+    }
+
+    private static final long tv_usec$OFFSET = 8;
+    private static final OfLong tv_usec$LAYOUT = (OfLong)$LAYOUT.select(groupElement("tv_usec"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * __suseconds_t tv_usec
+     * }
+     */
+    public static long tv_usec(MemorySegment struct) {
+        return struct.get(tv_usec$LAYOUT, tv_usec$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * __suseconds_t tv_usec
+     * }
+     */
+    public static void tv_usec(MemorySegment struct, long fieldValue) {
+        struct.set(tv_usec$LAYOUT, tv_usec$OFFSET, fieldValue);
+    }
+
+    public static MemorySegment asSlice(MemorySegment array, long index) {
+        return array.asSlice(layout().byteSize() * index);
+    }
+
+    public static long sizeof() { return layout().byteSize(); }
+
+    public static MemorySegment allocate(SegmentAllocator allocator) {
+        return allocator.allocate(layout());
+    }
+
+    public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
+        return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
+        return reinterpret(addr, 1, arena, cleanup);
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
+        return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
+    }
+}
 

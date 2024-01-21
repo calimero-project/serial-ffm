@@ -14,47 +14,72 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 
 /**
  * {@snippet lang=c :
- * struct {
- *     __fd_mask __fds_bits[16];
+ * struct timespec {
+ *     __time_t tv_sec;
+ *     __syscall_slong_t tv_nsec;
  * }
  * }
  */
-public class fd_set {
+public class timespec {
 
-    fd_set() {
+    timespec() {
         // Suppresses public default constructor, ensuring non-instantiability,
         // but allows generated subclasses in same package.
     }
 
     private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
-        MemoryLayout.sequenceLayout(16, Linux.C_LONG).withName("__fds_bits")
-    ).withName("fd_set");
+        Linux.C_LONG.withName("tv_sec"),
+        Linux.C_LONG.withName("tv_nsec")
+    ).withName("timespec");
 
     public static final GroupLayout layout() {
         return $LAYOUT;
     }
 
-    private static final long __fds_bits$OFFSET = 0;
-    private static final long __fds_bits$SIZE = 128;
+    private static final long tv_sec$OFFSET = 0;
+    private static final OfLong tv_sec$LAYOUT = (OfLong)$LAYOUT.select(groupElement("tv_sec"));
 
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * __fd_mask __fds_bits[16]
+     * __time_t tv_sec
      * }
      */
-    public static MemorySegment __fds_bits(MemorySegment struct) {
-        return struct.asSlice(__fds_bits$OFFSET, __fds_bits$SIZE);
+    public static long tv_sec(MemorySegment struct) {
+        return struct.get(tv_sec$LAYOUT, tv_sec$OFFSET);
     }
 
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * __fd_mask __fds_bits[16]
+     * __time_t tv_sec
      * }
      */
-    public static void __fds_bits(MemorySegment struct, MemorySegment fieldValue) {
-        MemorySegment.copy(fieldValue, 0L, struct, __fds_bits$OFFSET, __fds_bits$SIZE);
+    public static void tv_sec(MemorySegment struct, long fieldValue) {
+        struct.set(tv_sec$LAYOUT, tv_sec$OFFSET, fieldValue);
+    }
+
+    private static final long tv_nsec$OFFSET = 8;
+    private static final OfLong tv_nsec$LAYOUT = (OfLong)$LAYOUT.select(groupElement("tv_nsec"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * __syscall_slong_t tv_nsec
+     * }
+     */
+    public static long tv_nsec(MemorySegment struct) {
+        return struct.get(tv_nsec$LAYOUT, tv_nsec$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * __syscall_slong_t tv_nsec
+     * }
+     */
+    public static void tv_nsec(MemorySegment struct, long fieldValue) {
+        struct.set(tv_nsec$LAYOUT, tv_nsec$OFFSET, fieldValue);
     }
 
     public static MemorySegment asSlice(MemorySegment array, long index) {

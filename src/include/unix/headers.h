@@ -20,5 +20,5 @@
 
 // not available on macOS
 #ifdef __linux__
-//#include <linux/serial.h> // serial_icounter_struct
+#include <linux/serial.h> // serial_icounter_struct, serial_struct
 #endif

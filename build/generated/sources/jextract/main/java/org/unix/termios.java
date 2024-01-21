@@ -2,221 +2,257 @@
 
 package org.unix;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.VarHandle;
-import java.nio.ByteOrder;
+import java.lang.invoke.*;
 import java.lang.foreign.*;
+import java.nio.ByteOrder;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
 import static java.lang.foreign.ValueLayout.*;
+import static java.lang.foreign.MemoryLayout.PathElement.*;
+
 /**
- * {@snippet :
+ * {@snippet lang=c :
  * struct termios {
- *     unsigned int c_iflag;
- *     unsigned int c_oflag;
- *     unsigned int c_cflag;
- *     unsigned int c_lflag;
- *     unsigned char c_line;
- *     unsigned char c_cc[32];
- *     unsigned int c_ispeed;
- *     unsigned int c_ospeed;
- * };
+ *     tcflag_t c_iflag;
+ *     tcflag_t c_oflag;
+ *     tcflag_t c_cflag;
+ *     tcflag_t c_lflag;
+ *     cc_t c_line;
+ *     cc_t c_cc[32];
+ *     speed_t c_ispeed;
+ *     speed_t c_ospeed;
+ * }
  * }
  */
 public class termios {
 
-    public static MemoryLayout $LAYOUT() {
-        return constants$5.const$0;
+    termios() {
+        // Suppresses public default constructor, ensuring non-instantiability,
+        // but allows generated subclasses in same package.
     }
-    public static VarHandle c_iflag$VH() {
-        return constants$5.const$1;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned int c_iflag;
-     * }
-     */
-    public static int c_iflag$get(MemorySegment seg) {
-        return (int)constants$5.const$1.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned int c_iflag;
-     * }
-     */
-    public static void c_iflag$set(MemorySegment seg, int x) {
-        constants$5.const$1.set(seg, 0L, x);
-    }
-    public static int c_iflag$get(MemorySegment seg, long index) {
-        return (int)constants$5.const$1.get(seg, index * sizeof());    }
-    public static void c_iflag$set(MemorySegment seg, long index, int x) {
-        constants$5.const$1.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle c_oflag$VH() {
-        return constants$5.const$2;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned int c_oflag;
-     * }
-     */
-    public static int c_oflag$get(MemorySegment seg) {
-        return (int)constants$5.const$2.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned int c_oflag;
-     * }
-     */
-    public static void c_oflag$set(MemorySegment seg, int x) {
-        constants$5.const$2.set(seg, 0L, x);
-    }
-    public static int c_oflag$get(MemorySegment seg, long index) {
-        return (int)constants$5.const$2.get(seg, index * sizeof());    }
-    public static void c_oflag$set(MemorySegment seg, long index, int x) {
-        constants$5.const$2.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle c_cflag$VH() {
-        return constants$5.const$3;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned int c_cflag;
-     * }
-     */
-    public static int c_cflag$get(MemorySegment seg) {
-        return (int)constants$5.const$3.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned int c_cflag;
-     * }
-     */
-    public static void c_cflag$set(MemorySegment seg, int x) {
-        constants$5.const$3.set(seg, 0L, x);
-    }
-    public static int c_cflag$get(MemorySegment seg, long index) {
-        return (int)constants$5.const$3.get(seg, index * sizeof());    }
-    public static void c_cflag$set(MemorySegment seg, long index, int x) {
-        constants$5.const$3.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle c_lflag$VH() {
-        return constants$5.const$4;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned int c_lflag;
-     * }
-     */
-    public static int c_lflag$get(MemorySegment seg) {
-        return (int)constants$5.const$4.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned int c_lflag;
-     * }
-     */
-    public static void c_lflag$set(MemorySegment seg, int x) {
-        constants$5.const$4.set(seg, 0L, x);
-    }
-    public static int c_lflag$get(MemorySegment seg, long index) {
-        return (int)constants$5.const$4.get(seg, index * sizeof());    }
-    public static void c_lflag$set(MemorySegment seg, long index, int x) {
-        constants$5.const$4.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle c_line$VH() {
-        return constants$5.const$5;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned char c_line;
-     * }
-     */
-    public static byte c_line$get(MemorySegment seg) {
-        return (byte)constants$5.const$5.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned char c_line;
-     * }
-     */
-    public static void c_line$set(MemorySegment seg, byte x) {
-        constants$5.const$5.set(seg, 0L, x);
-    }
-    public static byte c_line$get(MemorySegment seg, long index) {
-        return (byte)constants$5.const$5.get(seg, index * sizeof());    }
-    public static void c_line$set(MemorySegment seg, long index, byte x) {
-        constants$5.const$5.set(seg, index * sizeof(), x);
-    }
-    public static MemorySegment c_cc$slice(MemorySegment seg) {
-        return seg.asSlice(17, 32);
-    }
-    public static VarHandle c_ispeed$VH() {
-        return constants$6.const$0;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned int c_ispeed;
-     * }
-     */
-    public static int c_ispeed$get(MemorySegment seg) {
-        return (int)constants$6.const$0.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned int c_ispeed;
-     * }
-     */
-    public static void c_ispeed$set(MemorySegment seg, int x) {
-        constants$6.const$0.set(seg, 0L, x);
-    }
-    public static int c_ispeed$get(MemorySegment seg, long index) {
-        return (int)constants$6.const$0.get(seg, index * sizeof());    }
-    public static void c_ispeed$set(MemorySegment seg, long index, int x) {
-        constants$6.const$0.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle c_ospeed$VH() {
-        return constants$6.const$1;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned int c_ospeed;
-     * }
-     */
-    public static int c_ospeed$get(MemorySegment seg) {
-        return (int)constants$6.const$1.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned int c_ospeed;
-     * }
-     */
-    public static void c_ospeed$set(MemorySegment seg, int x) {
-        constants$6.const$1.set(seg, 0L, x);
-    }
-    public static int c_ospeed$get(MemorySegment seg, long index) {
-        return (int)constants$6.const$1.get(seg, index * sizeof());    }
-    public static void c_ospeed$set(MemorySegment seg, long index, int x) {
-        constants$6.const$1.set(seg, index * sizeof(), x);
-    }
-    public static long sizeof() { return $LAYOUT().byteSize(); }
-    public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }
-    public static MemorySegment allocateArray(long len, SegmentAllocator allocator) {
-        return allocator.allocate(MemoryLayout.sequenceLayout(len, $LAYOUT()));
-    }
-    public static MemorySegment ofAddress(MemorySegment addr, Arena scope) { return RuntimeHelper.asArray(addr, $LAYOUT(), 1, scope); }
-}
 
+    private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
+        Linux.C_INT.withName("c_iflag"),
+        Linux.C_INT.withName("c_oflag"),
+        Linux.C_INT.withName("c_cflag"),
+        Linux.C_INT.withName("c_lflag"),
+        Linux.C_CHAR.withName("c_line"),
+        MemoryLayout.sequenceLayout(32, Linux.C_CHAR).withName("c_cc"),
+        MemoryLayout.paddingLayout(3),
+        Linux.C_INT.withName("c_ispeed"),
+        Linux.C_INT.withName("c_ospeed")
+    ).withName("termios");
+
+    public static final GroupLayout layout() {
+        return $LAYOUT;
+    }
+
+    private static final long c_iflag$OFFSET = 0;
+    private static final OfInt c_iflag$LAYOUT = (OfInt)$LAYOUT.select(groupElement("c_iflag"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * tcflag_t c_iflag
+     * }
+     */
+    public static int c_iflag(MemorySegment struct) {
+        return struct.get(c_iflag$LAYOUT, c_iflag$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * tcflag_t c_iflag
+     * }
+     */
+    public static void c_iflag(MemorySegment struct, int fieldValue) {
+        struct.set(c_iflag$LAYOUT, c_iflag$OFFSET, fieldValue);
+    }
+
+    private static final long c_oflag$OFFSET = 4;
+    private static final OfInt c_oflag$LAYOUT = (OfInt)$LAYOUT.select(groupElement("c_oflag"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * tcflag_t c_oflag
+     * }
+     */
+    public static int c_oflag(MemorySegment struct) {
+        return struct.get(c_oflag$LAYOUT, c_oflag$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * tcflag_t c_oflag
+     * }
+     */
+    public static void c_oflag(MemorySegment struct, int fieldValue) {
+        struct.set(c_oflag$LAYOUT, c_oflag$OFFSET, fieldValue);
+    }
+
+    private static final long c_cflag$OFFSET = 8;
+    private static final OfInt c_cflag$LAYOUT = (OfInt)$LAYOUT.select(groupElement("c_cflag"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * tcflag_t c_cflag
+     * }
+     */
+    public static int c_cflag(MemorySegment struct) {
+        return struct.get(c_cflag$LAYOUT, c_cflag$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * tcflag_t c_cflag
+     * }
+     */
+    public static void c_cflag(MemorySegment struct, int fieldValue) {
+        struct.set(c_cflag$LAYOUT, c_cflag$OFFSET, fieldValue);
+    }
+
+    private static final long c_lflag$OFFSET = 12;
+    private static final OfInt c_lflag$LAYOUT = (OfInt)$LAYOUT.select(groupElement("c_lflag"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * tcflag_t c_lflag
+     * }
+     */
+    public static int c_lflag(MemorySegment struct) {
+        return struct.get(c_lflag$LAYOUT, c_lflag$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * tcflag_t c_lflag
+     * }
+     */
+    public static void c_lflag(MemorySegment struct, int fieldValue) {
+        struct.set(c_lflag$LAYOUT, c_lflag$OFFSET, fieldValue);
+    }
+
+    private static final long c_line$OFFSET = 16;
+    private static final OfByte c_line$LAYOUT = (OfByte)$LAYOUT.select(groupElement("c_line"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * cc_t c_line
+     * }
+     */
+    public static byte c_line(MemorySegment struct) {
+        return struct.get(c_line$LAYOUT, c_line$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * cc_t c_line
+     * }
+     */
+    public static void c_line(MemorySegment struct, byte fieldValue) {
+        struct.set(c_line$LAYOUT, c_line$OFFSET, fieldValue);
+    }
+
+    private static final long c_cc$OFFSET = 17;
+    private static final long c_cc$SIZE = 32;
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * cc_t c_cc[32]
+     * }
+     */
+    public static MemorySegment c_cc(MemorySegment struct) {
+        return struct.asSlice(c_cc$OFFSET, c_cc$SIZE);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * cc_t c_cc[32]
+     * }
+     */
+    public static void c_cc(MemorySegment struct, MemorySegment fieldValue) {
+        MemorySegment.copy(fieldValue, 0L, struct, c_cc$OFFSET, c_cc$SIZE);
+    }
+
+    private static final long c_ispeed$OFFSET = 52;
+    private static final OfInt c_ispeed$LAYOUT = (OfInt)$LAYOUT.select(groupElement("c_ispeed"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * speed_t c_ispeed
+     * }
+     */
+    public static int c_ispeed(MemorySegment struct) {
+        return struct.get(c_ispeed$LAYOUT, c_ispeed$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * speed_t c_ispeed
+     * }
+     */
+    public static void c_ispeed(MemorySegment struct, int fieldValue) {
+        struct.set(c_ispeed$LAYOUT, c_ispeed$OFFSET, fieldValue);
+    }
+
+    private static final long c_ospeed$OFFSET = 56;
+    private static final OfInt c_ospeed$LAYOUT = (OfInt)$LAYOUT.select(groupElement("c_ospeed"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * speed_t c_ospeed
+     * }
+     */
+    public static int c_ospeed(MemorySegment struct) {
+        return struct.get(c_ospeed$LAYOUT, c_ospeed$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * speed_t c_ospeed
+     * }
+     */
+    public static void c_ospeed(MemorySegment struct, int fieldValue) {
+        struct.set(c_ospeed$LAYOUT, c_ospeed$OFFSET, fieldValue);
+    }
+
+    public static MemorySegment asSlice(MemorySegment array, long index) {
+        return array.asSlice(layout().byteSize() * index);
+    }
+
+    public static long sizeof() { return layout().byteSize(); }
+
+    public static MemorySegment allocate(SegmentAllocator allocator) {
+        return allocator.allocate(layout());
+    }
+
+    public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
+        return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
+        return reinterpret(addr, 1, arena, cleanup);
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
+        return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
+    }
+}
 

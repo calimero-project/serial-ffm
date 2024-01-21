@@ -2,7 +2,7 @@
 **/build/*
 
 # include jextract generated headers
-#!build/generated
+!build/generated
 !build/generated/sources
 !build/generated/sources/jextract
 

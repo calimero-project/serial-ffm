@@ -2,140 +2,182 @@
 
 package org.unix;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.VarHandle;
-import java.nio.ByteOrder;
+import java.lang.invoke.*;
 import java.lang.foreign.*;
+import java.nio.ByteOrder;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
 import static java.lang.foreign.ValueLayout.*;
+import static java.lang.foreign.MemoryLayout.PathElement.*;
+
 /**
- * {@snippet :
+ * {@snippet lang=c :
  * struct dirent {
- *     unsigned long d_ino;
- *     long d_off;
+ *     __ino_t d_ino;
+ *     __off_t d_off;
  *     unsigned short d_reclen;
  *     unsigned char d_type;
  *     char d_name[256];
- * };
+ * }
  * }
  */
 public class dirent {
 
-    public static MemoryLayout $LAYOUT() {
-        return constants$9.const$3;
+    dirent() {
+        // Suppresses public default constructor, ensuring non-instantiability,
+        // but allows generated subclasses in same package.
     }
-    public static VarHandle d_ino$VH() {
-        return constants$9.const$4;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned long d_ino;
-     * }
-     */
-    public static long d_ino$get(MemorySegment seg) {
-        return (long)constants$9.const$4.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned long d_ino;
-     * }
-     */
-    public static void d_ino$set(MemorySegment seg, long x) {
-        constants$9.const$4.set(seg, 0L, x);
-    }
-    public static long d_ino$get(MemorySegment seg, long index) {
-        return (long)constants$9.const$4.get(seg, index * sizeof());    }
-    public static void d_ino$set(MemorySegment seg, long index, long x) {
-        constants$9.const$4.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle d_off$VH() {
-        return constants$9.const$5;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * long d_off;
-     * }
-     */
-    public static long d_off$get(MemorySegment seg) {
-        return (long)constants$9.const$5.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * long d_off;
-     * }
-     */
-    public static void d_off$set(MemorySegment seg, long x) {
-        constants$9.const$5.set(seg, 0L, x);
-    }
-    public static long d_off$get(MemorySegment seg, long index) {
-        return (long)constants$9.const$5.get(seg, index * sizeof());    }
-    public static void d_off$set(MemorySegment seg, long index, long x) {
-        constants$9.const$5.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle d_reclen$VH() {
-        return constants$10.const$0;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned short d_reclen;
-     * }
-     */
-    public static short d_reclen$get(MemorySegment seg) {
-        return (short)constants$10.const$0.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned short d_reclen;
-     * }
-     */
-    public static void d_reclen$set(MemorySegment seg, short x) {
-        constants$10.const$0.set(seg, 0L, x);
-    }
-    public static short d_reclen$get(MemorySegment seg, long index) {
-        return (short)constants$10.const$0.get(seg, index * sizeof());    }
-    public static void d_reclen$set(MemorySegment seg, long index, short x) {
-        constants$10.const$0.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle d_type$VH() {
-        return constants$10.const$1;
-    }
-    /**
-     * Getter for field:
-     * {@snippet :
-     * unsigned char d_type;
-     * }
-     */
-    public static byte d_type$get(MemorySegment seg) {
-        return (byte)constants$10.const$1.get(seg, 0L);
-    }
-    /**
-     * Setter for field:
-     * {@snippet :
-     * unsigned char d_type;
-     * }
-     */
-    public static void d_type$set(MemorySegment seg, byte x) {
-        constants$10.const$1.set(seg, 0L, x);
-    }
-    public static byte d_type$get(MemorySegment seg, long index) {
-        return (byte)constants$10.const$1.get(seg, index * sizeof());    }
-    public static void d_type$set(MemorySegment seg, long index, byte x) {
-        constants$10.const$1.set(seg, index * sizeof(), x);
-    }
-    public static MemorySegment d_name$slice(MemorySegment seg) {
-        return seg.asSlice(19, 256);
-    }
-    public static long sizeof() { return $LAYOUT().byteSize(); }
-    public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }
-    public static MemorySegment allocateArray(long len, SegmentAllocator allocator) {
-        return allocator.allocate(MemoryLayout.sequenceLayout(len, $LAYOUT()));
-    }
-    public static MemorySegment ofAddress(MemorySegment addr, Arena scope) { return RuntimeHelper.asArray(addr, $LAYOUT(), 1, scope); }
-}
 
+    private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
+        Linux.C_LONG.withName("d_ino"),
+        Linux.C_LONG.withName("d_off"),
+        Linux.C_SHORT.withName("d_reclen"),
+        Linux.C_CHAR.withName("d_type"),
+        MemoryLayout.sequenceLayout(256, Linux.C_CHAR).withName("d_name"),
+        MemoryLayout.paddingLayout(5)
+    ).withName("dirent");
+
+    public static final GroupLayout layout() {
+        return $LAYOUT;
+    }
+
+    private static final long d_ino$OFFSET = 0;
+    private static final OfLong d_ino$LAYOUT = (OfLong)$LAYOUT.select(groupElement("d_ino"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * __ino_t d_ino
+     * }
+     */
+    public static long d_ino(MemorySegment struct) {
+        return struct.get(d_ino$LAYOUT, d_ino$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * __ino_t d_ino
+     * }
+     */
+    public static void d_ino(MemorySegment struct, long fieldValue) {
+        struct.set(d_ino$LAYOUT, d_ino$OFFSET, fieldValue);
+    }
+
+    private static final long d_off$OFFSET = 8;
+    private static final OfLong d_off$LAYOUT = (OfLong)$LAYOUT.select(groupElement("d_off"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * __off_t d_off
+     * }
+     */
+    public static long d_off(MemorySegment struct) {
+        return struct.get(d_off$LAYOUT, d_off$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * __off_t d_off
+     * }
+     */
+    public static void d_off(MemorySegment struct, long fieldValue) {
+        struct.set(d_off$LAYOUT, d_off$OFFSET, fieldValue);
+    }
+
+    private static final long d_reclen$OFFSET = 16;
+    private static final OfShort d_reclen$LAYOUT = (OfShort)$LAYOUT.select(groupElement("d_reclen"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * unsigned short d_reclen
+     * }
+     */
+    public static short d_reclen(MemorySegment struct) {
+        return struct.get(d_reclen$LAYOUT, d_reclen$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * unsigned short d_reclen
+     * }
+     */
+    public static void d_reclen(MemorySegment struct, short fieldValue) {
+        struct.set(d_reclen$LAYOUT, d_reclen$OFFSET, fieldValue);
+    }
+
+    private static final long d_type$OFFSET = 18;
+    private static final OfByte d_type$LAYOUT = (OfByte)$LAYOUT.select(groupElement("d_type"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * unsigned char d_type
+     * }
+     */
+    public static byte d_type(MemorySegment struct) {
+        return struct.get(d_type$LAYOUT, d_type$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * unsigned char d_type
+     * }
+     */
+    public static void d_type(MemorySegment struct, byte fieldValue) {
+        struct.set(d_type$LAYOUT, d_type$OFFSET, fieldValue);
+    }
+
+    private static final long d_name$OFFSET = 19;
+    private static final long d_name$SIZE = 256;
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * char d_name[256]
+     * }
+     */
+    public static MemorySegment d_name(MemorySegment struct) {
+        return struct.asSlice(d_name$OFFSET, d_name$SIZE);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * char d_name[256]
+     * }
+     */
+    public static void d_name(MemorySegment struct, MemorySegment fieldValue) {
+        MemorySegment.copy(fieldValue, 0L, struct, d_name$OFFSET, d_name$SIZE);
+    }
+
+    public static MemorySegment asSlice(MemorySegment array, long index) {
+        return array.asSlice(layout().byteSize() * index);
+    }
+
+    public static long sizeof() { return layout().byteSize(); }
+
+    public static MemorySegment allocate(SegmentAllocator allocator) {
+        return allocator.allocate(layout());
+    }
+
+    public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
+        return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
+        return reinterpret(addr, 1, arena, cleanup);
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
+        return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
+    }
+}
 

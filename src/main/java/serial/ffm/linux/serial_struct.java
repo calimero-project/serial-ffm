@@ -2,11 +2,24 @@
 
 package serial.ffm.linux;
 
-import java.lang.invoke.VarHandle;
-import java.lang.foreign.*;
+import java.lang.foreign.AddressLayout;
+import java.lang.foreign.Arena;
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
+import java.util.function.Consumer;
+
+import org.unix.Linux;
+
+import static java.lang.foreign.MemoryLayout.PathElement.groupElement;
+import static java.lang.foreign.ValueLayout.OfByte;
+import static java.lang.foreign.ValueLayout.OfInt;
+import static java.lang.foreign.ValueLayout.OfLong;
+import static java.lang.foreign.ValueLayout.OfShort;
 
 /**
- * {@snippet :
+ * {@snippet lang=c :
  * struct serial_struct {
  *     int type;
  *     int line;
@@ -22,467 +35,480 @@ import java.lang.foreign.*;
  *     int hub6;
  *     unsigned short closing_wait;
  *     unsigned short closing_wait2;
- *     unsigned char* iomem_base;
+ *     unsigned char *iomem_base;
  *     unsigned short iomem_reg_shift;
  *     unsigned int port_high;
  *     unsigned long iomap_base;
- * };
+ * }
  * }
  */
 public class serial_struct {
 
-    public static MemoryLayout $LAYOUT() {
-        return constants$11.const$2;
+    serial_struct() {
+        // Suppresses public default constructor, ensuring non-instantiability,
+        // but allows generated subclasses in same package.
     }
-    public static VarHandle type$VH() {
-        return constants$11.const$3;
+
+    private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
+        Linux.C_INT.withName("type"),
+        Linux.C_INT.withName("line"),
+        Linux.C_INT.withName("port"),
+        Linux.C_INT.withName("irq"),
+        Linux.C_INT.withName("flags"),
+        Linux.C_INT.withName("xmit_fifo_size"),
+        Linux.C_INT.withName("custom_divisor"),
+        Linux.C_INT.withName("baud_base"),
+        Linux.C_SHORT.withName("close_delay"),
+        Linux.C_CHAR.withName("io_type"),
+        MemoryLayout.sequenceLayout(1, Linux.C_CHAR).withName("reserved_char"),
+        Linux.C_INT.withName("hub6"),
+        Linux.C_SHORT.withName("closing_wait"),
+        Linux.C_SHORT.withName("closing_wait2"),
+        MemoryLayout.paddingLayout(4),
+        Linux.C_POINTER.withName("iomem_base"),
+        Linux.C_SHORT.withName("iomem_reg_shift"),
+        MemoryLayout.paddingLayout(2),
+        Linux.C_INT.withName("port_high"),
+        Linux.C_LONG.withName("iomap_base")
+    ).withName("serial_struct");
+
+    public static final GroupLayout layout() {
+        return $LAYOUT;
     }
+
+    private static final long type$OFFSET = 0;
+    private static final OfInt type$LAYOUT = (OfInt)$LAYOUT.select(groupElement("type"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * int type;
+     * {@snippet lang=c :
+     * int type
      * }
      */
-    public static int type$get(MemorySegment seg) {
-        return (int)constants$11.const$3.get(seg, 0L);
+    public static int type(MemorySegment struct) {
+        return struct.get(type$LAYOUT, type$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * int type;
+     * {@snippet lang=c :
+     * int type
      * }
      */
-    public static void type$set(MemorySegment seg, int x) {
-        constants$11.const$3.set(seg, 0L, x);
+    public static void type(MemorySegment struct, int fieldValue) {
+        struct.set(type$LAYOUT, type$OFFSET, fieldValue);
     }
-    public static int type$get(MemorySegment seg, long index) {
-        return (int)constants$11.const$3.get(seg, index * sizeof());    }
-    public static void type$set(MemorySegment seg, long index, int x) {
-        constants$11.const$3.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle line$VH() {
-        return constants$11.const$4;
-    }
+
+    private static final long line$OFFSET = 4;
+    private static final OfInt line$LAYOUT = (OfInt)$LAYOUT.select(groupElement("line"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * int line;
+     * {@snippet lang=c :
+     * int line
      * }
      */
-    public static int line$get(MemorySegment seg) {
-        return (int)constants$11.const$4.get(seg, 0L);
+    public static int line(MemorySegment struct) {
+        return struct.get(line$LAYOUT, line$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * int line;
+     * {@snippet lang=c :
+     * int line
      * }
      */
-    public static void line$set(MemorySegment seg, int x) {
-        constants$11.const$4.set(seg, 0L, x);
+    public static void line(MemorySegment struct, int fieldValue) {
+        struct.set(line$LAYOUT, line$OFFSET, fieldValue);
     }
-    public static int line$get(MemorySegment seg, long index) {
-        return (int)constants$11.const$4.get(seg, index * sizeof());    }
-    public static void line$set(MemorySegment seg, long index, int x) {
-        constants$11.const$4.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle port$VH() {
-        return constants$11.const$5;
-    }
+
+    private static final long port$OFFSET = 8;
+    private static final OfInt port$LAYOUT = (OfInt)$LAYOUT.select(groupElement("port"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * unsigned int port;
+     * {@snippet lang=c :
+     * unsigned int port
      * }
      */
-    public static int port$get(MemorySegment seg) {
-        return (int)constants$11.const$5.get(seg, 0L);
+    public static int port(MemorySegment struct) {
+        return struct.get(port$LAYOUT, port$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * unsigned int port;
+     * {@snippet lang=c :
+     * unsigned int port
      * }
      */
-    public static void port$set(MemorySegment seg, int x) {
-        constants$11.const$5.set(seg, 0L, x);
+    public static void port(MemorySegment struct, int fieldValue) {
+        struct.set(port$LAYOUT, port$OFFSET, fieldValue);
     }
-    public static int port$get(MemorySegment seg, long index) {
-        return (int)constants$11.const$5.get(seg, index * sizeof());    }
-    public static void port$set(MemorySegment seg, long index, int x) {
-        constants$11.const$5.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle irq$VH() {
-        return constants$12.const$0;
-    }
+
+    private static final long irq$OFFSET = 12;
+    private static final OfInt irq$LAYOUT = (OfInt)$LAYOUT.select(groupElement("irq"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * int irq;
+     * {@snippet lang=c :
+     * int irq
      * }
      */
-    public static int irq$get(MemorySegment seg) {
-        return (int)constants$12.const$0.get(seg, 0L);
+    public static int irq(MemorySegment struct) {
+        return struct.get(irq$LAYOUT, irq$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * int irq;
+     * {@snippet lang=c :
+     * int irq
      * }
      */
-    public static void irq$set(MemorySegment seg, int x) {
-        constants$12.const$0.set(seg, 0L, x);
+    public static void irq(MemorySegment struct, int fieldValue) {
+        struct.set(irq$LAYOUT, irq$OFFSET, fieldValue);
     }
-    public static int irq$get(MemorySegment seg, long index) {
-        return (int)constants$12.const$0.get(seg, index * sizeof());    }
-    public static void irq$set(MemorySegment seg, long index, int x) {
-        constants$12.const$0.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle flags$VH() {
-        return constants$12.const$1;
-    }
+
+    private static final long flags$OFFSET = 16;
+    private static final OfInt flags$LAYOUT = (OfInt)$LAYOUT.select(groupElement("flags"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * int flags;
+     * {@snippet lang=c :
+     * int flags
      * }
      */
-    public static int flags$get(MemorySegment seg) {
-        return (int)constants$12.const$1.get(seg, 0L);
+    public static int flags(MemorySegment struct) {
+        return struct.get(flags$LAYOUT, flags$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * int flags;
+     * {@snippet lang=c :
+     * int flags
      * }
      */
-    public static void flags$set(MemorySegment seg, int x) {
-        constants$12.const$1.set(seg, 0L, x);
+    public static void flags(MemorySegment struct, int fieldValue) {
+        struct.set(flags$LAYOUT, flags$OFFSET, fieldValue);
     }
-    public static int flags$get(MemorySegment seg, long index) {
-        return (int)constants$12.const$1.get(seg, index * sizeof());    }
-    public static void flags$set(MemorySegment seg, long index, int x) {
-        constants$12.const$1.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle xmit_fifo_size$VH() {
-        return constants$12.const$2;
-    }
+
+    private static final long xmit_fifo_size$OFFSET = 20;
+    private static final OfInt xmit_fifo_size$LAYOUT = (OfInt)$LAYOUT.select(groupElement("xmit_fifo_size"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * int xmit_fifo_size;
+     * {@snippet lang=c :
+     * int xmit_fifo_size
      * }
      */
-    public static int xmit_fifo_size$get(MemorySegment seg) {
-        return (int)constants$12.const$2.get(seg, 0L);
+    public static int xmit_fifo_size(MemorySegment struct) {
+        return struct.get(xmit_fifo_size$LAYOUT, xmit_fifo_size$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * int xmit_fifo_size;
+     * {@snippet lang=c :
+     * int xmit_fifo_size
      * }
      */
-    public static void xmit_fifo_size$set(MemorySegment seg, int x) {
-        constants$12.const$2.set(seg, 0L, x);
+    public static void xmit_fifo_size(MemorySegment struct, int fieldValue) {
+        struct.set(xmit_fifo_size$LAYOUT, xmit_fifo_size$OFFSET, fieldValue);
     }
-    public static int xmit_fifo_size$get(MemorySegment seg, long index) {
-        return (int)constants$12.const$2.get(seg, index * sizeof());    }
-    public static void xmit_fifo_size$set(MemorySegment seg, long index, int x) {
-        constants$12.const$2.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle custom_divisor$VH() {
-        return constants$12.const$3;
-    }
+
+    private static final long custom_divisor$OFFSET = 24;
+    private static final OfInt custom_divisor$LAYOUT = (OfInt)$LAYOUT.select(groupElement("custom_divisor"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * int custom_divisor;
+     * {@snippet lang=c :
+     * int custom_divisor
      * }
      */
-    public static int custom_divisor$get(MemorySegment seg) {
-        return (int)constants$12.const$3.get(seg, 0L);
+    public static int custom_divisor(MemorySegment struct) {
+        return struct.get(custom_divisor$LAYOUT, custom_divisor$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * int custom_divisor;
+     * {@snippet lang=c :
+     * int custom_divisor
      * }
      */
-    public static void custom_divisor$set(MemorySegment seg, int x) {
-        constants$12.const$3.set(seg, 0L, x);
+    public static void custom_divisor(MemorySegment struct, int fieldValue) {
+        struct.set(custom_divisor$LAYOUT, custom_divisor$OFFSET, fieldValue);
     }
-    public static int custom_divisor$get(MemorySegment seg, long index) {
-        return (int)constants$12.const$3.get(seg, index * sizeof());    }
-    public static void custom_divisor$set(MemorySegment seg, long index, int x) {
-        constants$12.const$3.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle baud_base$VH() {
-        return constants$12.const$4;
-    }
+
+    private static final long baud_base$OFFSET = 28;
+    private static final OfInt baud_base$LAYOUT = (OfInt)$LAYOUT.select(groupElement("baud_base"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * int baud_base;
+     * {@snippet lang=c :
+     * int baud_base
      * }
      */
-    public static int baud_base$get(MemorySegment seg) {
-        return (int)constants$12.const$4.get(seg, 0L);
+    public static int baud_base(MemorySegment struct) {
+        return struct.get(baud_base$LAYOUT, baud_base$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * int baud_base;
+     * {@snippet lang=c :
+     * int baud_base
      * }
      */
-    public static void baud_base$set(MemorySegment seg, int x) {
-        constants$12.const$4.set(seg, 0L, x);
+    public static void baud_base(MemorySegment struct, int fieldValue) {
+        struct.set(baud_base$LAYOUT, baud_base$OFFSET, fieldValue);
     }
-    public static int baud_base$get(MemorySegment seg, long index) {
-        return (int)constants$12.const$4.get(seg, index * sizeof());    }
-    public static void baud_base$set(MemorySegment seg, long index, int x) {
-        constants$12.const$4.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle close_delay$VH() {
-        return constants$12.const$5;
-    }
+
+    private static final long close_delay$OFFSET = 32;
+    private static final OfShort close_delay$LAYOUT = (OfShort)$LAYOUT.select(groupElement("close_delay"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * unsigned short close_delay;
+     * {@snippet lang=c :
+     * unsigned short close_delay
      * }
      */
-    public static short close_delay$get(MemorySegment seg) {
-        return (short)constants$12.const$5.get(seg, 0L);
+    public static short close_delay(MemorySegment struct) {
+        return struct.get(close_delay$LAYOUT, close_delay$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * unsigned short close_delay;
+     * {@snippet lang=c :
+     * unsigned short close_delay
      * }
      */
-    public static void close_delay$set(MemorySegment seg, short x) {
-        constants$12.const$5.set(seg, 0L, x);
+    public static void close_delay(MemorySegment struct, short fieldValue) {
+        struct.set(close_delay$LAYOUT, close_delay$OFFSET, fieldValue);
     }
-    public static short close_delay$get(MemorySegment seg, long index) {
-        return (short)constants$12.const$5.get(seg, index * sizeof());    }
-    public static void close_delay$set(MemorySegment seg, long index, short x) {
-        constants$12.const$5.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle io_type$VH() {
-        return constants$13.const$0;
-    }
+
+    private static final long io_type$OFFSET = 34;
+    private static final OfByte io_type$LAYOUT = (OfByte)$LAYOUT.select(groupElement("io_type"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * char io_type;
+     * {@snippet lang=c :
+     * char io_type
      * }
      */
-    public static byte io_type$get(MemorySegment seg) {
-        return (byte)constants$13.const$0.get(seg, 0L);
+    public static byte io_type(MemorySegment struct) {
+        return struct.get(io_type$LAYOUT, io_type$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * char io_type;
+     * {@snippet lang=c :
+     * char io_type
      * }
      */
-    public static void io_type$set(MemorySegment seg, byte x) {
-        constants$13.const$0.set(seg, 0L, x);
+    public static void io_type(MemorySegment struct, byte fieldValue) {
+        struct.set(io_type$LAYOUT, io_type$OFFSET, fieldValue);
     }
-    public static byte io_type$get(MemorySegment seg, long index) {
-        return (byte)constants$13.const$0.get(seg, index * sizeof());    }
-    public static void io_type$set(MemorySegment seg, long index, byte x) {
-        constants$13.const$0.set(seg, index * sizeof(), x);
-    }
-    public static MemorySegment reserved_char$slice(MemorySegment seg) {
-        return seg.asSlice(35, 1);
-    }
-    public static VarHandle hub6$VH() {
-        return constants$13.const$1;
-    }
+
+    private static final long reserved_char$OFFSET = 35;
+    private static final long reserved_char$SIZE = 1;
+
     /**
      * Getter for field:
-     * {@snippet :
-     * int hub6;
+     * {@snippet lang=c :
+     * char reserved_char[1]
      * }
      */
-    public static int hub6$get(MemorySegment seg) {
-        return (int)constants$13.const$1.get(seg, 0L);
+    public static MemorySegment reserved_char(MemorySegment struct) {
+        return struct.asSlice(reserved_char$OFFSET, reserved_char$SIZE);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * int hub6;
+     * {@snippet lang=c :
+     * char reserved_char[1]
      * }
      */
-    public static void hub6$set(MemorySegment seg, int x) {
-        constants$13.const$1.set(seg, 0L, x);
+    public static void reserved_char(MemorySegment struct, MemorySegment fieldValue) {
+        MemorySegment.copy(fieldValue, 0L, struct, reserved_char$OFFSET, reserved_char$SIZE);
     }
-    public static int hub6$get(MemorySegment seg, long index) {
-        return (int)constants$13.const$1.get(seg, index * sizeof());    }
-    public static void hub6$set(MemorySegment seg, long index, int x) {
-        constants$13.const$1.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle closing_wait$VH() {
-        return constants$13.const$2;
-    }
+
+    private static final long hub6$OFFSET = 36;
+    private static final OfInt hub6$LAYOUT = (OfInt)$LAYOUT.select(groupElement("hub6"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * unsigned short closing_wait;
+     * {@snippet lang=c :
+     * int hub6
      * }
      */
-    public static short closing_wait$get(MemorySegment seg) {
-        return (short)constants$13.const$2.get(seg, 0L);
+    public static int hub6(MemorySegment struct) {
+        return struct.get(hub6$LAYOUT, hub6$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * unsigned short closing_wait;
+     * {@snippet lang=c :
+     * int hub6
      * }
      */
-    public static void closing_wait$set(MemorySegment seg, short x) {
-        constants$13.const$2.set(seg, 0L, x);
+    public static void hub6(MemorySegment struct, int fieldValue) {
+        struct.set(hub6$LAYOUT, hub6$OFFSET, fieldValue);
     }
-    public static short closing_wait$get(MemorySegment seg, long index) {
-        return (short)constants$13.const$2.get(seg, index * sizeof());    }
-    public static void closing_wait$set(MemorySegment seg, long index, short x) {
-        constants$13.const$2.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle closing_wait2$VH() {
-        return constants$13.const$3;
-    }
+
+    private static final long closing_wait$OFFSET = 40;
+    private static final OfShort closing_wait$LAYOUT = (OfShort)$LAYOUT.select(groupElement("closing_wait"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * unsigned short closing_wait2;
+     * {@snippet lang=c :
+     * unsigned short closing_wait
      * }
      */
-    public static short closing_wait2$get(MemorySegment seg) {
-        return (short)constants$13.const$3.get(seg, 0L);
+    public static short closing_wait(MemorySegment struct) {
+        return struct.get(closing_wait$LAYOUT, closing_wait$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * unsigned short closing_wait2;
+     * {@snippet lang=c :
+     * unsigned short closing_wait
      * }
      */
-    public static void closing_wait2$set(MemorySegment seg, short x) {
-        constants$13.const$3.set(seg, 0L, x);
+    public static void closing_wait(MemorySegment struct, short fieldValue) {
+        struct.set(closing_wait$LAYOUT, closing_wait$OFFSET, fieldValue);
     }
-    public static short closing_wait2$get(MemorySegment seg, long index) {
-        return (short)constants$13.const$3.get(seg, index * sizeof());    }
-    public static void closing_wait2$set(MemorySegment seg, long index, short x) {
-        constants$13.const$3.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle iomem_base$VH() {
-        return constants$13.const$4;
-    }
+
+    private static final long closing_wait2$OFFSET = 42;
+    private static final OfShort closing_wait2$LAYOUT = (OfShort)$LAYOUT.select(groupElement("closing_wait2"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * unsigned char* iomem_base;
+     * {@snippet lang=c :
+     * unsigned short closing_wait2
      * }
      */
-    public static MemorySegment iomem_base$get(MemorySegment seg) {
-        return (MemorySegment)constants$13.const$4.get(seg, 0L);
+    public static short closing_wait2(MemorySegment struct) {
+        return struct.get(closing_wait2$LAYOUT, closing_wait2$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * unsigned char* iomem_base;
+     * {@snippet lang=c :
+     * unsigned short closing_wait2
      * }
      */
-    public static void iomem_base$set(MemorySegment seg, MemorySegment x) {
-        constants$13.const$4.set(seg, 0L, x);
+    public static void closing_wait2(MemorySegment struct, short fieldValue) {
+        struct.set(closing_wait2$LAYOUT, closing_wait2$OFFSET, fieldValue);
     }
-    public static MemorySegment iomem_base$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$13.const$4.get(seg, index * sizeof());    }
-    public static void iomem_base$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$13.const$4.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle iomem_reg_shift$VH() {
-        return constants$13.const$5;
-    }
+
+    private static final long iomem_base$OFFSET = 48;
+    private static final AddressLayout iomem_base$LAYOUT = (AddressLayout)$LAYOUT.select(groupElement("iomem_base"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * unsigned short iomem_reg_shift;
+     * {@snippet lang=c :
+     * unsigned char *iomem_base
      * }
      */
-    public static short iomem_reg_shift$get(MemorySegment seg) {
-        return (short)constants$13.const$5.get(seg, 0L);
+    public static MemorySegment iomem_base(MemorySegment struct) {
+        return struct.get(iomem_base$LAYOUT, iomem_base$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * unsigned short iomem_reg_shift;
+     * {@snippet lang=c :
+     * unsigned char *iomem_base
      * }
      */
-    public static void iomem_reg_shift$set(MemorySegment seg, short x) {
-        constants$13.const$5.set(seg, 0L, x);
+    public static void iomem_base(MemorySegment struct, MemorySegment fieldValue) {
+        struct.set(iomem_base$LAYOUT, iomem_base$OFFSET, fieldValue);
     }
-    public static short iomem_reg_shift$get(MemorySegment seg, long index) {
-        return (short)constants$13.const$5.get(seg, index * sizeof());    }
-    public static void iomem_reg_shift$set(MemorySegment seg, long index, short x) {
-        constants$13.const$5.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle port_high$VH() {
-        return constants$14.const$0;
-    }
+
+    private static final long iomem_reg_shift$OFFSET = 56;
+    private static final OfShort iomem_reg_shift$LAYOUT = (OfShort)$LAYOUT.select(groupElement("iomem_reg_shift"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * unsigned int port_high;
+     * {@snippet lang=c :
+     * unsigned short iomem_reg_shift
      * }
      */
-    public static int port_high$get(MemorySegment seg) {
-        return (int)constants$14.const$0.get(seg, 0L);
+    public static short iomem_reg_shift(MemorySegment struct) {
+        return struct.get(iomem_reg_shift$LAYOUT, iomem_reg_shift$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * unsigned int port_high;
+     * {@snippet lang=c :
+     * unsigned short iomem_reg_shift
      * }
      */
-    public static void port_high$set(MemorySegment seg, int x) {
-        constants$14.const$0.set(seg, 0L, x);
+    public static void iomem_reg_shift(MemorySegment struct, short fieldValue) {
+        struct.set(iomem_reg_shift$LAYOUT, iomem_reg_shift$OFFSET, fieldValue);
     }
-    public static int port_high$get(MemorySegment seg, long index) {
-        return (int)constants$14.const$0.get(seg, index * sizeof());    }
-    public static void port_high$set(MemorySegment seg, long index, int x) {
-        constants$14.const$0.set(seg, index * sizeof(), x);
-    }
-    public static VarHandle iomap_base$VH() {
-        return constants$14.const$1;
-    }
+
+    private static final long port_high$OFFSET = 60;
+    private static final OfInt port_high$LAYOUT = (OfInt)$LAYOUT.select(groupElement("port_high"));
+
     /**
      * Getter for field:
-     * {@snippet :
-     * unsigned long iomap_base;
+     * {@snippet lang=c :
+     * unsigned int port_high
      * }
      */
-    public static long iomap_base$get(MemorySegment seg) {
-        return (long)constants$14.const$1.get(seg, 0L);
+    public static int port_high(MemorySegment struct) {
+        return struct.get(port_high$LAYOUT, port_high$OFFSET);
     }
+
     /**
      * Setter for field:
-     * {@snippet :
-     * unsigned long iomap_base;
+     * {@snippet lang=c :
+     * unsigned int port_high
      * }
      */
-    public static void iomap_base$set(MemorySegment seg, long x) {
-        constants$14.const$1.set(seg, 0L, x);
+    public static void port_high(MemorySegment struct, int fieldValue) {
+        struct.set(port_high$LAYOUT, port_high$OFFSET, fieldValue);
     }
-    public static long iomap_base$get(MemorySegment seg, long index) {
-        return (long)constants$14.const$1.get(seg, index * sizeof());    }
-    public static void iomap_base$set(MemorySegment seg, long index, long x) {
-        constants$14.const$1.set(seg, index * sizeof(), x);
+
+    private static final long iomap_base$OFFSET = 64;
+    private static final OfLong iomap_base$LAYOUT = (OfLong)$LAYOUT.select(groupElement("iomap_base"));
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * unsigned long iomap_base
+     * }
+     */
+    public static long iomap_base(MemorySegment struct) {
+        return struct.get(iomap_base$LAYOUT, iomap_base$OFFSET);
     }
-    public static long sizeof() { return $LAYOUT().byteSize(); }
-    public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }
-    public static MemorySegment allocateArray(long len, SegmentAllocator allocator) {
-        return allocator.allocate(MemoryLayout.sequenceLayout(len, $LAYOUT()));
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * unsigned long iomap_base
+     * }
+     */
+    public static void iomap_base(MemorySegment struct, long fieldValue) {
+        struct.set(iomap_base$LAYOUT, iomap_base$OFFSET, fieldValue);
     }
-//    public static MemorySegment ofAddress(MemorySegment addr, Arena scope) { return RuntimeHelper.asArray(addr, $LAYOUT(), 1, scope); }
+
+    public static MemorySegment asSlice(MemorySegment array, long index) {
+        return array.asSlice(layout().byteSize() * index);
+    }
+
+    public static long sizeof() { return layout().byteSize(); }
+
+    public static MemorySegment allocate(SegmentAllocator allocator) {
+        return allocator.allocate(layout());
+    }
+
+    public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
+        return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
+        return reinterpret(addr, 1, arena, cleanup);
+    }
+
+    public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
+        return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
+    }
 }
