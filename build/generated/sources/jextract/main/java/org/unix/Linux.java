@@ -1270,6 +1270,35 @@ public class Linux {
         }
     }
 
+    public static MethodHandle __errno_location$MH() {
+        class Holder {
+            static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Linux.C_POINTER        );
+
+            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
+                    Linux.findOrThrow("__errno_location"),
+                    DESC);
+        }
+        return Holder.MH;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern int *__errno_location(void)
+     * }
+     */
+    public static MemorySegment __errno_location() {
+        var mh$ = __errno_location$MH();
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("__errno_location");
+            }
+            return (MemorySegment) mh$.invokeExact();
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     public static MethodHandle select$MH() {
         class Holder {
             static final FunctionDescriptor DESC = FunctionDescriptor.of(

@@ -143,10 +143,13 @@ tasks.jextract {
         }
         os.contains("linux") -> {
             paths = listOf("/usr/include")
+            funcFilter = funcFilter + listOf("__errno_location")
             structFilter = structFilter + listOf("serial_icounter_struct", "serial_struct")
         }
-        os.contains("mac") ->
+        os.contains("mac") -> {
             paths = listOf("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include")
+            funcFilter = funcFilter + listOf("__error")
+        }
         else -> throw RuntimeException("Unsupported platform \"$os\"")
     }
 
