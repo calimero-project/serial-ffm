@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2023 B. Malinowsky
+// Copyright (c) 2022, 2024 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -136,14 +136,14 @@ final class UnixSerialPort extends ReadWritePort {
 
 			final var dirp = addr;
 			while (!(addr = Linux.readdir(dirp)).equals(Linux.NULL())) {
-				final var entry = dirent.ofAddress(addr, arena);
-				final String name = dirent.d_name$slice(entry).getString(0);
+				final MemorySegment entry = dirent.reinterpret(addr, arena, null);
+				final String name = dirent.d_name(entry).getString(0);
 				// ignore entries '.' and '..'
 				if (name.charAt(0) == '.' && name.length() <= 2)
 					continue;
 
 				if (debug())
-					logger.log(TRACE, LayoutFormatter.format(entry, dirent.$LAYOUT()));
+					logger.log(TRACE, LayoutFormatter.format(entry, dirent.layout()));
 
 				final String filename = dir + "/" + name;
 				logger.log(TRACE, "test {0}", filename);
@@ -206,7 +206,7 @@ final class UnixSerialPort extends ReadWritePort {
 	@Override
 	Parity parity(final Arena arena) throws IOException {
 		final var options = tcgetattr(arena);
-		final long cflag = termios.c_cflag$get(options);
+		final long cflag = termios.c_cflag(options);
 		return genericParity(cflag);
 	}
 
@@ -220,7 +220,7 @@ final class UnixSerialPort extends ReadWritePort {
 	@Override
 	int dataBits(final Arena arena) throws IOException {
 		final var options = tcgetattr(arena);
-		final long cflag = termios.c_cflag$get(options);
+		final long cflag = termios.c_cflag(options);
 		return genericDataBits(cflag);
 	}
 
@@ -240,23 +240,23 @@ final class UnixSerialPort extends ReadWritePort {
 	@Override
 	void flowControl(final Arena arena, final FlowControl flowControl) throws IOException {
 		final var options = tcgetattr(arena);
-		long iflag = termios.c_iflag$get(options);
+		long iflag = termios.c_iflag(options);
 		// disable SW flow ctrl
 		iflag &= ~(Linux.IXON() | Linux.IXOFF() | Linux.IXANY());
-		termios.c_iflag$set(options, (int) iflag);
-		long cflag = termios.c_cflag$get(options);
+		termios.c_iflag(options, (int) iflag);
+		long cflag = termios.c_cflag(options);
 		cflag = switch (flowControl) {
 			case CtsRts -> cflag | HW_FLOWCTL;
 			case None -> cflag & ~HW_FLOWCTL;
 		};
-		termios.c_cflag$set(options, (int) cflag);
+		termios.c_cflag(options, (int) cflag);
 		tcsetattr(options);
 	}
 
 	@Override
 	FlowControl flowControl(final Arena arena) throws IOException {
 		final var options = tcgetattr(arena);
-		final long cflag = termios.c_cflag$get(options);
+		final long cflag = termios.c_cflag(options);
 		return genericFlowControl(cflag);
 	}
 
@@ -333,7 +333,7 @@ final class UnixSerialPort extends ReadWritePort {
 			if (definedTIOCGSERIAL()) {
 				final var info = serial_struct.allocate(arena);
 				if (Linux.ioctl(fd.value(), TIOCGSERIAL, info.address()) == 0) {
-					if (serial_struct.type$get(info) != PORT_UNKNOWN)
+					if (serial_struct.type(info) != PORT_UNKNOWN)
 						valid = true;
 					else if (hasDevSerialLink(arena, portId))
 						valid = true;
@@ -375,8 +375,8 @@ final class UnixSerialPort extends ReadWritePort {
 					return false;
 				}
 				if (debug())
-					logger.log(TRACE, LayoutFormatter.format(seg, stat.$LAYOUT()));
-				if (stat.st_nlink$get(seg) != 2)
+					logger.log(TRACE, LayoutFormatter.format(seg, stat.layout()));
+				if (stat.st_nlink(seg) != 2)
 					return false;
 			}
 		}
@@ -472,16 +472,16 @@ final class UnixSerialPort extends ReadWritePort {
 			}
 			Linux.cfsetispeed(options, Linux.B9600());
 			Linux.cfsetospeed(options, Linux.B9600());
-			long cflag = termios.c_cflag$get(options);
+			long cflag = termios.c_cflag(options);
 			cflag |= Linux.CREAD() | Linux.CLOCAL();
 			cflag &= ~Linux.CSIZE();
 			cflag |= Linux.CS8();
-			termios.c_cflag$set(options, (int) cflag);
-			termios.c_iflag$set(options, Linux.INPCK());
-			termios.c_lflag$set(options, 0);
-			termios.c_oflag$set(options, 0);
-			termios.c_cc$slice(options).set(Linux.C_CHAR, Linux.VMIN(), (byte) 0);
-			termios.c_cc$slice(options).set(Linux.C_CHAR, Linux.VTIME(), (byte) 0);
+			termios.c_cflag(options, (int) cflag);
+			termios.c_iflag(options, Linux.INPCK());
+			termios.c_lflag(options, 0);
+			termios.c_oflag(options, 0);
+			termios.c_cc(options).set(Linux.C_CHAR, Linux.VMIN(), (byte) 0);
+			termios.c_cc(options).set(Linux.C_CHAR, Linux.VTIME(), (byte) 0);
 			if (Linux.tcsetattr(fd, Linux.TCSANOW(), options) == -1) {
 				logger.log(WARNING, "setting port defaults, tcsetattr: {0}", errnoMsg());
 				return false;
@@ -555,8 +555,8 @@ final class UnixSerialPort extends ReadWritePort {
 
 		final var dirp = addr;
 		while (!(addr = Linux.readdir(dirp)).equals(Linux.NULL())) {
-			final var entry = dirent.ofAddress(addr, arena);
-			final String name = dirent.d_name$slice(entry).getString(0);
+			final var entry = dirent.reinterpret(addr, arena, null);
+			final String name = dirent.d_name(entry).getString(0);
 			// ignore entries '.' and '..'
 			if (name.charAt(0) == '.' && name.length() <= 2)
 				continue;
@@ -629,7 +629,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 	// CSTOPB set corresponds to 2 stop bits, default is 1 stop bit
 	private static void setTermiosStopBits(final MemorySegment cflags, /*uint8_t*/ final StopBits stopbits) {
-		long flags = termios.c_cflag$get(cflags);
+		long flags = termios.c_cflag(cflags);
 
 		flags &= ~Linux.CSTOPB();
 		switch (stopbits) {
@@ -643,11 +643,11 @@ final class UnixSerialPort extends ReadWritePort {
 			default:
 				break;
 		}
-		termios.c_cflag$set(cflags, (int) flags);
+		termios.c_cflag(cflags, (int) flags);
 	}
 
 	private static StopBits genericStopBits(final MemorySegment cflags) {
-		final long flags = termios.c_cflag$get(cflags);
+		final long flags = termios.c_cflag(cflags);
 		final int stopbits = (int) (flags & Linux.CSTOPB());
 		if (stopbits == Linux.CSTOPB())
 			return StopBits.Two;
@@ -662,7 +662,7 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private void setTermiosParity(final MemorySegment flags, final Parity parity) {
-		long cflags = termios.c_cflag$get(flags);
+		long cflags = termios.c_cflag(flags);
 		cflags &= ~(Linux.PARENB() | Linux.PARODD() | CMSPAR);
 
 		switch (parity) {
@@ -702,7 +702,7 @@ final class UnixSerialPort extends ReadWritePort {
 					}
 				}
 		}
-		termios.c_cflag$set(flags, (int) cflags);
+		termios.c_cflag(flags, (int) cflags);
 	}
 
 	private static Parity genericParity(final long cflags) {
@@ -912,7 +912,7 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private static void setTermiosDataBits(final MemorySegment flags, /*uint8_t*/ final int databits) {
-		long cflags = termios.c_cflag$get(flags);
+		long cflags = termios.c_cflag(flags);
 		cflags &= ~Linux.CSIZE();
 		cflags |= switch (databits) {
 			case 5 -> Linux.CS5();
@@ -920,7 +920,7 @@ final class UnixSerialPort extends ReadWritePort {
 			case 7 -> Linux.CS7();
 			default -> Linux.CS8();
 		};
-		termios.c_cflag$set(flags, (int) cflags);
+		termios.c_cflag(flags, (int) cflags);
 	}
 
 	private static /*uint8_t*/ int genericDataBits(final long cflags) {
@@ -995,8 +995,8 @@ final class UnixSerialPort extends ReadWritePort {
 			FD_SET(fd, input);
 
 			final var timeout = timeval.allocate(arena);
-			timeval.tv_sec$set(timeout, 0);
-			timeval.tv_usec$set(timeout, receiveTimeout * 1000);
+			timeval.tv_sec(timeout, 0);
+			timeval.tv_usec(timeout, receiveTimeout * 1000);
 			final int n = Linux.select(maxFd, input, MemorySegment.NULL, MemorySegment.NULL, timeout);
 			if (n == -1) {
 				perror("select failed");
@@ -1138,37 +1138,37 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private /*uint*/ long genericLineEvents(final MemorySegment icount) {
 		/*uint*/ long events = 0;
-		if (serial_icounter_struct.rx$get(icount) != rx) {
-			rx = serial_icounter_struct.rx$get(icount);
+		if (serial_icounter_struct.rx(icount) != rx) {
+			rx = serial_icounter_struct.rx(icount);
 			events |= EVENT_RXCHAR;
 			events |= EVENT_RXFLAG;
 		}
-		if (serial_icounter_struct.cts$get(icount) != cts) {
-			cts = serial_icounter_struct.cts$get(icount);
+		if (serial_icounter_struct.cts(icount) != cts) {
+			cts = serial_icounter_struct.cts(icount);
 			events |= EVENT_CTS;
 		}
-		if (serial_icounter_struct.dsr$get(icount) != dsr) {
-			dsr = serial_icounter_struct.dsr$get(icount);
+		if (serial_icounter_struct.dsr(icount) != dsr) {
+			dsr = serial_icounter_struct.dsr(icount);
 			events |= EVENT_DSR;
 		}
-		if (serial_icounter_struct.dcd$get(icount) != dcd) {
-			dcd = serial_icounter_struct.dcd$get(icount);
+		if (serial_icounter_struct.dcd(icount) != dcd) {
+			dcd = serial_icounter_struct.dcd(icount);
 			events |= EVENT_RLSD;
 		}
-		if (serial_icounter_struct.brk$get(icount) != brk) {
-			brk = serial_icounter_struct.brk$get(icount);
+		if (serial_icounter_struct.brk(icount) != brk) {
+			brk = serial_icounter_struct.brk(icount);
 			events |= EVENT_BREAK;
 		}
-		if (serial_icounter_struct.frame$get(icount) != frame
-				|| serial_icounter_struct.buf_overrun$get(icount) != buf_overrun
-				|| serial_icounter_struct.parity$get(icount) != parity) {
-			frame = serial_icounter_struct.frame$get(icount);
-			buf_overrun = serial_icounter_struct.buf_overrun$get(icount);
-			parity = serial_icounter_struct.parity$get(icount);
+		if (serial_icounter_struct.frame(icount) != frame
+				|| serial_icounter_struct.buf_overrun(icount) != buf_overrun
+				|| serial_icounter_struct.parity(icount) != parity) {
+			frame = serial_icounter_struct.frame(icount);
+			buf_overrun = serial_icounter_struct.buf_overrun(icount);
+			parity = serial_icounter_struct.parity(icount);
 			events |= EVENT_ERR;
 		}
-		if (serial_icounter_struct.rng$get(icount) != rng) {
-			rng = serial_icounter_struct.rng$get(icount);
+		if (serial_icounter_struct.rng(icount) != rng) {
+			rng = serial_icounter_struct.rng(icount);
 			events |= EVENT_RING;
 		}
 		return events;
@@ -1243,8 +1243,8 @@ final class UnixSerialPort extends ReadWritePort {
 
 			while (true) {
 				fdset.fill((byte) 0);
-				timeval.tv_sec$set(timeout, (int) (eventPollInterval.toSeconds()));
-				timeval.tv_usec$set(timeout, eventPollInterval.toNanosPart() / 1000);
+				timeval.tv_sec(timeout, (int) (eventPollInterval.toSeconds()));
+				timeval.tv_usec(timeout, eventPollInterval.toNanosPart() / 1000);
 				int ret;
 				do {
 					ret = Linux.select(maxFd, fdset, Linux.NULL(), Linux.NULL(), timeout);
@@ -1396,8 +1396,8 @@ final class UnixSerialPort extends ReadWritePort {
 			// if we're here we have: multiplier > 0 or totalConstant > 0 or interval = 0
 		}
 
-		termios.c_cc$slice(options).set(ValueLayout.JAVA_BYTE, Linux.VMIN(), (byte) vmin);
-		termios.c_cc$slice(options).set(ValueLayout.JAVA_BYTE, Linux.VTIME(), (byte) vtime);
+		termios.c_cc(options).set(ValueLayout.JAVA_BYTE, Linux.VMIN(), (byte) vmin);
+		termios.c_cc(options).set(ValueLayout.JAVA_BYTE, Linux.VTIME(), (byte) vtime);
 
 		if (Linux.tcsetattr(fd.value(), Linux.TCSANOW(), options) == -1) {
 			logger.log(WARNING, "set timeouts, tcsetattr: {0}", errnoMsg());
@@ -1413,8 +1413,8 @@ final class UnixSerialPort extends ReadWritePort {
 			throw newException(errno());
 		}
 
-		final byte vmin = termios.c_cc$slice(options).get(ValueLayout.JAVA_BYTE, Linux.VMIN());
-		final byte vtime = termios.c_cc$slice(options).get(ValueLayout.JAVA_BYTE, Linux.VTIME());
+		final byte vmin = termios.c_cc(options).get(ValueLayout.JAVA_BYTE, Linux.VMIN());
+		final byte vtime = termios.c_cc(options).get(ValueLayout.JAVA_BYTE, Linux.VTIME());
 
 		/*uint*/ int readIntervalTimeout = 0;
 		/*uint*/ int readTotalTimeoutMultiplier = 0;
@@ -1474,7 +1474,7 @@ final class UnixSerialPort extends ReadWritePort {
 	private static final VarHandle fds_bits;
 	static {
 		final String name = OS.current() == OS.Mac ? "fds_bits" : "__fds_bits";
-		final var valueLayout = (ValueLayout) fd_set.$LAYOUT()
+		final var valueLayout = (ValueLayout) fd_set.layout()
 				.select(PathElement.groupElement(name)).select(PathElement.sequenceElement());
 		fds_bits = valueLayout.arrayElementVarHandle();
 	}

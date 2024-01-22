@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2023 B. Malinowsky
+// Copyright (c) 2022, 2024 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -106,7 +106,7 @@ final class WinSerialPort extends ReadWritePort {
 					// reinit chars with size on every iteration
 					deviceNameLength.set(ValueLayout.JAVA_INT, 0, size);
 					portNameLength.set(ValueLayout.JAVA_INT, 0, size);
-					ret = Windows.RegEnumValueA(MemorySegment.ofAddress(HKEY__.unused$get(serialCommKey)), i, deviceName,
+					ret = Windows.RegEnumValueA(MemorySegment.ofAddress(HKEY__.unused(serialCommKey)), i, deviceName,
 							deviceNameLength, Windows.NULL(), Windows.NULL(), portName, portNameLength);
 
 					if (ret == Windows.ERROR_NO_MORE_ITEMS())
@@ -170,14 +170,14 @@ final class WinSerialPort extends ReadWritePort {
 				Windows.SetupComm(h.handle(), 200, 200);
 				if (Windows.GetCommProperties(h.handle(), cp) == 0)
 					throw newIoException(name);
-				final int tx = _COMMPROP.dwCurrentTxQueue$get(cp);
-				final int rx = _COMMPROP.dwCurrentRxQueue$get(cp);
+				final int tx = _COMMPROP.dwCurrentTxQueue(cp);
+				final int rx = _COMMPROP.dwCurrentRxQueue(cp);
 				logger.log(TRACE, "set queue tx {0} rx {1}", tx, rx);
 			}
 			if (Windows.EscapeCommFunction(h.handle(), Windows.SETDTR()) == 0)
 				throw newIoException();
 
-			maxBaudRate = _COMMPROP.dwMaxBaud$get(cp);
+			maxBaudRate = _COMMPROP.dwMaxBaud(cp);
 			System.out.println("max baud rate = " + maxBaudRate);
 		} catch (final IOException e) {
 			close();
@@ -191,7 +191,7 @@ final class WinSerialPort extends ReadWritePort {
 			throw new IOException("baud rate %d > max. allowed baud rate %d".formatted(baudrate, maxBaudRate));
 
 		final var dcb = commState(arena);
-		_DCB.BaudRate$set(dcb, baudrate);
+		_DCB.BaudRate(dcb, baudrate);
 		setDcbBits(dcb, "fAbortOnError", Windows.FALSE());
 		if (Windows.SetCommState(h.handle(), dcb) == 0)
 			throw newIoException();
@@ -200,24 +200,24 @@ final class WinSerialPort extends ReadWritePort {
 	@Override
 	int baudRate(final Arena arena) throws IOException {
 		final var dcb = commState(arena);
-		return _DCB.BaudRate$get(dcb);
+		return _DCB.BaudRate(dcb);
 	}
 
 	@Override
 	void parity(final Arena arena, final Parity parity) throws IOException {
 		final var dcb = commState(arena);
-		_DCB.Parity$set(dcb, (byte) parity.value());
+		_DCB.Parity(dcb, (byte) parity.value());
 		setDcbBits(dcb, "fParity", parity.value() != Windows.NOPARITY() ? 1 : 0);
 		setDcbBits(dcb, "fAbortOnError", Windows.FALSE());
 
 		final char parityReplace = '\0';
 		if (parity == Parity.None) {
 			setDcbBits(dcb, "fErrorChar", 0);
-			_DCB.ErrorChar$set(dcb, (byte) parityReplace);
+			_DCB.ErrorChar(dcb, (byte) parityReplace);
 		}
 		else {
 			setDcbBits(dcb, "fErrorChar", parityReplace != '\0' ? 1 : 0);
-			_DCB.ErrorChar$set(dcb, (byte) parityReplace);
+			_DCB.ErrorChar(dcb, (byte) parityReplace);
 		}
 
 		if (Windows.SetCommState(h.handle(), dcb) == 0)
@@ -227,13 +227,13 @@ final class WinSerialPort extends ReadWritePort {
 	@Override
 	Parity parity(final Arena arena) throws IOException {
 		final var dcb = commState(arena);
-		return Parity.values()[_DCB.Parity$get(dcb)];
+		return Parity.values()[_DCB.Parity(dcb)];
 	}
 
 	@Override
 	void dataBits(final Arena arena, final int databits) throws IOException {
 		final var dcb = commState(arena);
-		_DCB.ByteSize$set(dcb, (byte) databits);
+		_DCB.ByteSize(dcb, (byte) databits);
 		setDcbBits(dcb, "fAbortOnError", Windows.FALSE());
 		if (Windows.SetCommState(h.handle(), dcb) == 0)
 			throw newIoException();
@@ -242,13 +242,13 @@ final class WinSerialPort extends ReadWritePort {
 	@Override
 	int dataBits(final Arena arena) throws IOException {
 		final var dcb = commState(arena);
-		return _DCB.ByteSize$get(dcb);
+		return _DCB.ByteSize(dcb);
 	}
 
 	@Override
 	void stopBits(final Arena arena, final StopBits stopbits) throws IOException {
 		final var dcb = commState(arena);
-		_DCB.StopBits$set(dcb, (byte) platformStopBits(stopbits));
+		_DCB.StopBits(dcb, (byte) platformStopBits(stopbits));
 		setDcbBits(dcb, "fAbortOnError", Windows.FALSE());
 		if (Windows.SetCommState(h.handle(), dcb) == 0)
 			throw newIoException();
@@ -257,7 +257,7 @@ final class WinSerialPort extends ReadWritePort {
 	@Override
 	StopBits stopBits(final Arena arena) throws IOException {
 		final var dcb = commState(arena);
-		return genericStopBits(_DCB.StopBits$get(dcb));
+		return genericStopBits(_DCB.StopBits(dcb));
 	}
 
 	@Override
@@ -269,8 +269,8 @@ final class WinSerialPort extends ReadWritePort {
 		setDcbBits(dcb, "fTXContinueOnXoff", Windows.FALSE());
 		setDcbBits(dcb, "fOutX", Windows.FALSE());
 		setDcbBits(dcb, "fInX", Windows.FALSE());
-		_DCB.XonChar$set(dcb, (byte) 0);
-		_DCB.XoffChar$set(dcb, (byte) 0);
+		_DCB.XonChar(dcb, (byte) 0);
+		_DCB.XoffChar(dcb, (byte) 0);
 		switch (flowControl) {
 			case CtsRts -> {
 				setDcbBits(dcb, "fOutxCtsFlow", Windows.TRUE());
@@ -296,7 +296,7 @@ final class WinSerialPort extends ReadWritePort {
 
 	private MemorySegment commState(final Arena arena) throws IOException {
 		final var dcb = _DCB.allocate(arena);
-		_DCB.DCBlength$set(dcb, (int) _DCB.sizeof());
+		_DCB.DCBlength(dcb, (int) _DCB.sizeof());
 		if (Windows.GetCommState(h.handle(), dcb) == 0)
 			throw newIoException();
 		return dcb;
@@ -441,7 +441,7 @@ final class WinSerialPort extends ReadWritePort {
 			throw newIoException();
 
 		// wait for operation completion, and check result
-		/*DWORD*/ final int res = Windows.WaitForSingleObject(_OVERLAPPED.hEvent$get(overlapped), Windows.INFINITE());
+		/*DWORD*/ final int res = Windows.WaitForSingleObject(_OVERLAPPED.hEvent(overlapped), Windows.INFINITE());
 		if (res == Windows.WAIT_OBJECT_0()
 				&& Windows.GetOverlappedResult(h.handle(), overlapped, transferred, Windows.FALSE()) != 0) {
 			// completed successfully
@@ -459,7 +459,7 @@ final class WinSerialPort extends ReadWritePort {
 		final var written = arena.allocate(ValueLayout.JAVA_INT, 0);
 		try {
 			final var o = _OVERLAPPED.allocate(arena);
-			_OVERLAPPED.hEvent$set(o, event);
+			_OVERLAPPED.hEvent(o, event);
 
 			if (Windows.WriteFile(h.handle(), bytes, (int) bytes.byteSize(), written, o) == 0)
 				waitPendingIO(h, o, written);
@@ -484,7 +484,7 @@ final class WinSerialPort extends ReadWritePort {
 			throw newIoException();
 
 		final var o = _OVERLAPPED.allocate(arena);
-		_OVERLAPPED.hEvent$set(o, event);
+		_OVERLAPPED.hEvent(o, event);
 
 		final /*DWORD*/ var read = arena.allocate(ValueLayout.JAVA_INT, 0);
 		try {
@@ -528,12 +528,12 @@ final class WinSerialPort extends ReadWritePort {
 				throw newIoException();
 
 			final var o = _OVERLAPPED.allocate(arena);
-			_OVERLAPPED.hEvent$set(o, event);
+			_OVERLAPPED.hEvent(o, event);
 			final /*DWORD*/ var eventMask = arena.allocate(ValueLayout.JAVA_INT, 0);
 			final /*DWORD*/ var undefined = arena.allocate(ValueLayout.JAVA_INT, 0);
 			if (Windows.WaitCommEvent(h.handle(), eventMask, o) == 0)
 				waitPendingIO(h, o, undefined);
-			Windows.CloseHandle(_OVERLAPPED.hEvent$get(o));
+			Windows.CloseHandle(_OVERLAPPED.hEvent(o));
 			// note if event mask was changed while waiting for event we return 0
 			return eventMask.get(ValueLayout.JAVA_INT, 0);
 		}
@@ -556,7 +556,7 @@ final class WinSerialPort extends ReadWritePort {
 			case AvailableInput -> {
 				final var stat = _COMSTAT.allocate(arena);
 				ret = Windows.ClearCommError(h.handle(), value, stat);
-				yield _COMSTAT.cbInQue$get(stat);
+				yield _COMSTAT.cbInQue(stat);
 			}
 			case Error -> {
 				ret = Windows.ClearCommError(h.handle(), value, Windows.NULL());
@@ -573,11 +573,11 @@ final class WinSerialPort extends ReadWritePort {
 	@Override
 	void timeouts(final Arena arena, final Timeouts timeouts) throws IOException {
 		final var to = _COMMTIMEOUTS.allocate(arena);
-		_COMMTIMEOUTS.ReadIntervalTimeout$set(to, timeouts.readInterval());
-		_COMMTIMEOUTS.ReadTotalTimeoutMultiplier$set(to, timeouts.readTotalMultiplier());
-		_COMMTIMEOUTS.ReadTotalTimeoutConstant$set(to, timeouts.readTotalConstant());
-		_COMMTIMEOUTS.WriteTotalTimeoutMultiplier$set(to, timeouts.writeTotalMultiplier());
-		_COMMTIMEOUTS.WriteTotalTimeoutConstant$set(to, timeouts.writeTotalConstant());
+		_COMMTIMEOUTS.ReadIntervalTimeout(to, timeouts.readInterval());
+		_COMMTIMEOUTS.ReadTotalTimeoutMultiplier(to, timeouts.readTotalMultiplier());
+		_COMMTIMEOUTS.ReadTotalTimeoutConstant(to, timeouts.readTotalConstant());
+		_COMMTIMEOUTS.WriteTotalTimeoutMultiplier(to, timeouts.writeTotalMultiplier());
+		_COMMTIMEOUTS.WriteTotalTimeoutConstant(to, timeouts.writeTotalConstant());
 		if (Windows.SetCommTimeouts(h.handle(), to) == 0)
 			throw newIoException();
 	}
@@ -587,9 +587,9 @@ final class WinSerialPort extends ReadWritePort {
 		final var to = _COMMTIMEOUTS.allocate(arena);
 		if (Windows.GetCommTimeouts(h.handle(), to) == 0)
 			throw newIoException();
-		return new Timeouts(_COMMTIMEOUTS.ReadIntervalTimeout$get(to),
-				_COMMTIMEOUTS.ReadTotalTimeoutMultiplier$get(to), _COMMTIMEOUTS.ReadTotalTimeoutConstant$get(to),
-				_COMMTIMEOUTS.WriteTotalTimeoutMultiplier$get(to), _COMMTIMEOUTS.WriteTotalTimeoutConstant$get(to));
+		return new Timeouts(_COMMTIMEOUTS.ReadIntervalTimeout(to),
+				_COMMTIMEOUTS.ReadTotalTimeoutMultiplier(to), _COMMTIMEOUTS.ReadTotalTimeoutConstant(to),
+				_COMMTIMEOUTS.WriteTotalTimeoutMultiplier(to), _COMMTIMEOUTS.WriteTotalTimeoutConstant(to));
 	}
 
 	@Override
