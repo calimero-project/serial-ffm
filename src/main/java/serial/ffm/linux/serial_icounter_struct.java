@@ -7,11 +7,14 @@ import java.lang.foreign.GroupLayout;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
+import java.lang.foreign.SequenceLayout;
+import java.lang.invoke.VarHandle;
 import java.util.function.Consumer;
 
 import org.unix.Linux;
 
 import static java.lang.foreign.MemoryLayout.PathElement.groupElement;
+import static java.lang.foreign.MemoryLayout.PathElement.sequenceElement;
 import static java.lang.foreign.ValueLayout.OfInt;
 
 /**
@@ -35,8 +38,7 @@ import static java.lang.foreign.ValueLayout.OfInt;
 public class serial_icounter_struct {
 
     serial_icounter_struct() {
-        // Suppresses public default constructor, ensuring non-instantiability,
-        // but allows generated subclasses in same package.
+        // Should not be called directly
     }
 
     private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
@@ -54,12 +56,36 @@ public class serial_icounter_struct {
         MemoryLayout.sequenceLayout(9, Linux.C_INT).withName("reserved")
     ).withName("serial_icounter_struct");
 
+    /**
+     * The layout of this struct
+     */
     public static final GroupLayout layout() {
         return $LAYOUT;
     }
 
-    private static final long cts$OFFSET = 0;
     private static final OfInt cts$LAYOUT = (OfInt)$LAYOUT.select(groupElement("cts"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int cts
+     * }
+     */
+    public static final OfInt cts$layout() {
+        return cts$LAYOUT;
+    }
+
+    private static final long cts$OFFSET = 0;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int cts
+     * }
+     */
+    public static final long cts$offset() {
+        return cts$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -81,8 +107,29 @@ public class serial_icounter_struct {
         struct.set(cts$LAYOUT, cts$OFFSET, fieldValue);
     }
 
-    private static final long dsr$OFFSET = 4;
     private static final OfInt dsr$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dsr"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int dsr
+     * }
+     */
+    public static final OfInt dsr$layout() {
+        return dsr$LAYOUT;
+    }
+
+    private static final long dsr$OFFSET = 4;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int dsr
+     * }
+     */
+    public static final long dsr$offset() {
+        return dsr$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -104,8 +151,29 @@ public class serial_icounter_struct {
         struct.set(dsr$LAYOUT, dsr$OFFSET, fieldValue);
     }
 
-    private static final long rng$OFFSET = 8;
     private static final OfInt rng$LAYOUT = (OfInt)$LAYOUT.select(groupElement("rng"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int rng
+     * }
+     */
+    public static final OfInt rng$layout() {
+        return rng$LAYOUT;
+    }
+
+    private static final long rng$OFFSET = 8;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int rng
+     * }
+     */
+    public static final long rng$offset() {
+        return rng$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -127,8 +195,29 @@ public class serial_icounter_struct {
         struct.set(rng$LAYOUT, rng$OFFSET, fieldValue);
     }
 
-    private static final long dcd$OFFSET = 12;
     private static final OfInt dcd$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dcd"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int dcd
+     * }
+     */
+    public static final OfInt dcd$layout() {
+        return dcd$LAYOUT;
+    }
+
+    private static final long dcd$OFFSET = 12;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int dcd
+     * }
+     */
+    public static final long dcd$offset() {
+        return dcd$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -150,8 +239,29 @@ public class serial_icounter_struct {
         struct.set(dcd$LAYOUT, dcd$OFFSET, fieldValue);
     }
 
-    private static final long rx$OFFSET = 16;
     private static final OfInt rx$LAYOUT = (OfInt)$LAYOUT.select(groupElement("rx"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int rx
+     * }
+     */
+    public static final OfInt rx$layout() {
+        return rx$LAYOUT;
+    }
+
+    private static final long rx$OFFSET = 16;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int rx
+     * }
+     */
+    public static final long rx$offset() {
+        return rx$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -173,8 +283,29 @@ public class serial_icounter_struct {
         struct.set(rx$LAYOUT, rx$OFFSET, fieldValue);
     }
 
-    private static final long tx$OFFSET = 20;
     private static final OfInt tx$LAYOUT = (OfInt)$LAYOUT.select(groupElement("tx"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int tx
+     * }
+     */
+    public static final OfInt tx$layout() {
+        return tx$LAYOUT;
+    }
+
+    private static final long tx$OFFSET = 20;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int tx
+     * }
+     */
+    public static final long tx$offset() {
+        return tx$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -196,8 +327,29 @@ public class serial_icounter_struct {
         struct.set(tx$LAYOUT, tx$OFFSET, fieldValue);
     }
 
-    private static final long frame$OFFSET = 24;
     private static final OfInt frame$LAYOUT = (OfInt)$LAYOUT.select(groupElement("frame"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int frame
+     * }
+     */
+    public static final OfInt frame$layout() {
+        return frame$LAYOUT;
+    }
+
+    private static final long frame$OFFSET = 24;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int frame
+     * }
+     */
+    public static final long frame$offset() {
+        return frame$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -219,8 +371,29 @@ public class serial_icounter_struct {
         struct.set(frame$LAYOUT, frame$OFFSET, fieldValue);
     }
 
-    private static final long overrun$OFFSET = 28;
     private static final OfInt overrun$LAYOUT = (OfInt)$LAYOUT.select(groupElement("overrun"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int overrun
+     * }
+     */
+    public static final OfInt overrun$layout() {
+        return overrun$LAYOUT;
+    }
+
+    private static final long overrun$OFFSET = 28;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int overrun
+     * }
+     */
+    public static final long overrun$offset() {
+        return overrun$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -242,8 +415,29 @@ public class serial_icounter_struct {
         struct.set(overrun$LAYOUT, overrun$OFFSET, fieldValue);
     }
 
-    private static final long parity$OFFSET = 32;
     private static final OfInt parity$LAYOUT = (OfInt)$LAYOUT.select(groupElement("parity"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int parity
+     * }
+     */
+    public static final OfInt parity$layout() {
+        return parity$LAYOUT;
+    }
+
+    private static final long parity$OFFSET = 32;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int parity
+     * }
+     */
+    public static final long parity$offset() {
+        return parity$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -265,8 +459,29 @@ public class serial_icounter_struct {
         struct.set(parity$LAYOUT, parity$OFFSET, fieldValue);
     }
 
-    private static final long brk$OFFSET = 36;
     private static final OfInt brk$LAYOUT = (OfInt)$LAYOUT.select(groupElement("brk"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int brk
+     * }
+     */
+    public static final OfInt brk$layout() {
+        return brk$LAYOUT;
+    }
+
+    private static final long brk$OFFSET = 36;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int brk
+     * }
+     */
+    public static final long brk$offset() {
+        return brk$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -288,8 +503,29 @@ public class serial_icounter_struct {
         struct.set(brk$LAYOUT, brk$OFFSET, fieldValue);
     }
 
-    private static final long buf_overrun$OFFSET = 40;
     private static final OfInt buf_overrun$LAYOUT = (OfInt)$LAYOUT.select(groupElement("buf_overrun"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int buf_overrun
+     * }
+     */
+    public static final OfInt buf_overrun$layout() {
+        return buf_overrun$LAYOUT;
+    }
+
+    private static final long buf_overrun$OFFSET = 40;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int buf_overrun
+     * }
+     */
+    public static final long buf_overrun$offset() {
+        return buf_overrun$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -311,8 +547,29 @@ public class serial_icounter_struct {
         struct.set(buf_overrun$LAYOUT, buf_overrun$OFFSET, fieldValue);
     }
 
+    private static final SequenceLayout reserved$LAYOUT = (SequenceLayout)$LAYOUT.select(groupElement("reserved"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int reserved[9]
+     * }
+     */
+    public static final SequenceLayout reserved$layout() {
+        return reserved$LAYOUT;
+    }
+
     private static final long reserved$OFFSET = 44;
-    private static final long reserved$SIZE = 36;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int reserved[9]
+     * }
+     */
+    public static final long reserved$offset() {
+        return reserved$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -321,7 +578,7 @@ public class serial_icounter_struct {
      * }
      */
     public static MemorySegment reserved(MemorySegment struct) {
-        return struct.asSlice(reserved$OFFSET, reserved$SIZE);
+        return struct.asSlice(reserved$OFFSET, reserved$LAYOUT.byteSize());
     }
 
     /**
@@ -331,27 +588,82 @@ public class serial_icounter_struct {
      * }
      */
     public static void reserved(MemorySegment struct, MemorySegment fieldValue) {
-        MemorySegment.copy(fieldValue, 0L, struct, reserved$OFFSET, reserved$SIZE);
+        MemorySegment.copy(fieldValue, 0L, struct, reserved$OFFSET, reserved$LAYOUT.byteSize());
     }
 
+    private static long[] reserved$DIMS = { 9 };
+
+    /**
+     * Dimensions for array field:
+     * {@snippet lang=c :
+     * int reserved[9]
+     * }
+     */
+    public static long[] reserved$dimensions() {
+        return reserved$DIMS;
+    }
+    private static final VarHandle reserved$ELEM_HANDLE = reserved$LAYOUT.varHandle(sequenceElement());
+
+    /**
+     * Indexed getter for field:
+     * {@snippet lang=c :
+     * int reserved[9]
+     * }
+     */
+    public static int reserved(MemorySegment struct, long index0) {
+        return (int)reserved$ELEM_HANDLE.get(struct, 0L, index0);
+    }
+
+    /**
+     * Indexed setter for field:
+     * {@snippet lang=c :
+     * int reserved[9]
+     * }
+     */
+    public static void reserved(MemorySegment struct, long index0, int fieldValue) {
+        reserved$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+    }
+
+    /**
+     * Obtains a slice of {@code arrayParam} which selects the array element at {@code index}.
+     * The returned segment has address {@code arrayParam.address() + index * layout().byteSize()}
+     */
     public static MemorySegment asSlice(MemorySegment array, long index) {
         return array.asSlice(layout().byteSize() * index);
     }
 
+    /**
+     * The size (in bytes) of this struct
+     */
     public static long sizeof() { return layout().byteSize(); }
 
+    /**
+     * Allocate a segment of size {@code layout().byteSize()} using {@code allocator}
+     */
     public static MemorySegment allocate(SegmentAllocator allocator) {
         return allocator.allocate(layout());
     }
 
+    /**
+     * Allocate an array of size {@code elementCount} using {@code allocator}.
+     * The returned segment has size {@code elementCount * layout().byteSize()}.
+     */
     public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
         return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
     }
 
+    /**
+     * Reinterprets {@code addr} using target {@code arena} and {@code cleanupAction) (if any).
+     * The returned segment has size {@code layout().byteSize()}
+     */
     public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
         return reinterpret(addr, 1, arena, cleanup);
     }
 
+    /**
+     * Reinterprets {@code addr} using target {@code arena} and {@code cleanupAction) (if any).
+     * The returned segment has size {@code elementCount * layout().byteSize()}
+     */
     public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
         return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
     }

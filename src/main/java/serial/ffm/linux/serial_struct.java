@@ -8,11 +8,14 @@ import java.lang.foreign.GroupLayout;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
+import java.lang.foreign.SequenceLayout;
+import java.lang.invoke.VarHandle;
 import java.util.function.Consumer;
 
 import org.unix.Linux;
 
 import static java.lang.foreign.MemoryLayout.PathElement.groupElement;
+import static java.lang.foreign.MemoryLayout.PathElement.sequenceElement;
 import static java.lang.foreign.ValueLayout.OfByte;
 import static java.lang.foreign.ValueLayout.OfInt;
 import static java.lang.foreign.ValueLayout.OfLong;
@@ -45,8 +48,7 @@ import static java.lang.foreign.ValueLayout.OfShort;
 public class serial_struct {
 
     serial_struct() {
-        // Suppresses public default constructor, ensuring non-instantiability,
-        // but allows generated subclasses in same package.
+        // Should not be called directly
     }
 
     private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
@@ -72,12 +74,36 @@ public class serial_struct {
         Linux.C_LONG.withName("iomap_base")
     ).withName("serial_struct");
 
+    /**
+     * The layout of this struct
+     */
     public static final GroupLayout layout() {
         return $LAYOUT;
     }
 
-    private static final long type$OFFSET = 0;
     private static final OfInt type$LAYOUT = (OfInt)$LAYOUT.select(groupElement("type"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int type
+     * }
+     */
+    public static final OfInt type$layout() {
+        return type$LAYOUT;
+    }
+
+    private static final long type$OFFSET = 0;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int type
+     * }
+     */
+    public static final long type$offset() {
+        return type$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -99,8 +125,29 @@ public class serial_struct {
         struct.set(type$LAYOUT, type$OFFSET, fieldValue);
     }
 
-    private static final long line$OFFSET = 4;
     private static final OfInt line$LAYOUT = (OfInt)$LAYOUT.select(groupElement("line"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int line
+     * }
+     */
+    public static final OfInt line$layout() {
+        return line$LAYOUT;
+    }
+
+    private static final long line$OFFSET = 4;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int line
+     * }
+     */
+    public static final long line$offset() {
+        return line$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -122,8 +169,29 @@ public class serial_struct {
         struct.set(line$LAYOUT, line$OFFSET, fieldValue);
     }
 
-    private static final long port$OFFSET = 8;
     private static final OfInt port$LAYOUT = (OfInt)$LAYOUT.select(groupElement("port"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * unsigned int port
+     * }
+     */
+    public static final OfInt port$layout() {
+        return port$LAYOUT;
+    }
+
+    private static final long port$OFFSET = 8;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * unsigned int port
+     * }
+     */
+    public static final long port$offset() {
+        return port$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -145,8 +213,29 @@ public class serial_struct {
         struct.set(port$LAYOUT, port$OFFSET, fieldValue);
     }
 
-    private static final long irq$OFFSET = 12;
     private static final OfInt irq$LAYOUT = (OfInt)$LAYOUT.select(groupElement("irq"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int irq
+     * }
+     */
+    public static final OfInt irq$layout() {
+        return irq$LAYOUT;
+    }
+
+    private static final long irq$OFFSET = 12;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int irq
+     * }
+     */
+    public static final long irq$offset() {
+        return irq$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -168,8 +257,29 @@ public class serial_struct {
         struct.set(irq$LAYOUT, irq$OFFSET, fieldValue);
     }
 
-    private static final long flags$OFFSET = 16;
     private static final OfInt flags$LAYOUT = (OfInt)$LAYOUT.select(groupElement("flags"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int flags
+     * }
+     */
+    public static final OfInt flags$layout() {
+        return flags$LAYOUT;
+    }
+
+    private static final long flags$OFFSET = 16;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int flags
+     * }
+     */
+    public static final long flags$offset() {
+        return flags$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -191,8 +301,29 @@ public class serial_struct {
         struct.set(flags$LAYOUT, flags$OFFSET, fieldValue);
     }
 
-    private static final long xmit_fifo_size$OFFSET = 20;
     private static final OfInt xmit_fifo_size$LAYOUT = (OfInt)$LAYOUT.select(groupElement("xmit_fifo_size"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int xmit_fifo_size
+     * }
+     */
+    public static final OfInt xmit_fifo_size$layout() {
+        return xmit_fifo_size$LAYOUT;
+    }
+
+    private static final long xmit_fifo_size$OFFSET = 20;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int xmit_fifo_size
+     * }
+     */
+    public static final long xmit_fifo_size$offset() {
+        return xmit_fifo_size$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -214,8 +345,29 @@ public class serial_struct {
         struct.set(xmit_fifo_size$LAYOUT, xmit_fifo_size$OFFSET, fieldValue);
     }
 
-    private static final long custom_divisor$OFFSET = 24;
     private static final OfInt custom_divisor$LAYOUT = (OfInt)$LAYOUT.select(groupElement("custom_divisor"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int custom_divisor
+     * }
+     */
+    public static final OfInt custom_divisor$layout() {
+        return custom_divisor$LAYOUT;
+    }
+
+    private static final long custom_divisor$OFFSET = 24;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int custom_divisor
+     * }
+     */
+    public static final long custom_divisor$offset() {
+        return custom_divisor$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -237,8 +389,29 @@ public class serial_struct {
         struct.set(custom_divisor$LAYOUT, custom_divisor$OFFSET, fieldValue);
     }
 
-    private static final long baud_base$OFFSET = 28;
     private static final OfInt baud_base$LAYOUT = (OfInt)$LAYOUT.select(groupElement("baud_base"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int baud_base
+     * }
+     */
+    public static final OfInt baud_base$layout() {
+        return baud_base$LAYOUT;
+    }
+
+    private static final long baud_base$OFFSET = 28;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int baud_base
+     * }
+     */
+    public static final long baud_base$offset() {
+        return baud_base$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -260,8 +433,29 @@ public class serial_struct {
         struct.set(baud_base$LAYOUT, baud_base$OFFSET, fieldValue);
     }
 
-    private static final long close_delay$OFFSET = 32;
     private static final OfShort close_delay$LAYOUT = (OfShort)$LAYOUT.select(groupElement("close_delay"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * unsigned short close_delay
+     * }
+     */
+    public static final OfShort close_delay$layout() {
+        return close_delay$LAYOUT;
+    }
+
+    private static final long close_delay$OFFSET = 32;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * unsigned short close_delay
+     * }
+     */
+    public static final long close_delay$offset() {
+        return close_delay$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -283,8 +477,29 @@ public class serial_struct {
         struct.set(close_delay$LAYOUT, close_delay$OFFSET, fieldValue);
     }
 
-    private static final long io_type$OFFSET = 34;
     private static final OfByte io_type$LAYOUT = (OfByte)$LAYOUT.select(groupElement("io_type"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * char io_type
+     * }
+     */
+    public static final OfByte io_type$layout() {
+        return io_type$LAYOUT;
+    }
+
+    private static final long io_type$OFFSET = 34;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * char io_type
+     * }
+     */
+    public static final long io_type$offset() {
+        return io_type$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -306,8 +521,29 @@ public class serial_struct {
         struct.set(io_type$LAYOUT, io_type$OFFSET, fieldValue);
     }
 
+    private static final SequenceLayout reserved_char$LAYOUT = (SequenceLayout)$LAYOUT.select(groupElement("reserved_char"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * char reserved_char[1]
+     * }
+     */
+    public static final SequenceLayout reserved_char$layout() {
+        return reserved_char$LAYOUT;
+    }
+
     private static final long reserved_char$OFFSET = 35;
-    private static final long reserved_char$SIZE = 1;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * char reserved_char[1]
+     * }
+     */
+    public static final long reserved_char$offset() {
+        return reserved_char$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -316,7 +552,7 @@ public class serial_struct {
      * }
      */
     public static MemorySegment reserved_char(MemorySegment struct) {
-        return struct.asSlice(reserved_char$OFFSET, reserved_char$SIZE);
+        return struct.asSlice(reserved_char$OFFSET, reserved_char$LAYOUT.byteSize());
     }
 
     /**
@@ -326,11 +562,65 @@ public class serial_struct {
      * }
      */
     public static void reserved_char(MemorySegment struct, MemorySegment fieldValue) {
-        MemorySegment.copy(fieldValue, 0L, struct, reserved_char$OFFSET, reserved_char$SIZE);
+        MemorySegment.copy(fieldValue, 0L, struct, reserved_char$OFFSET, reserved_char$LAYOUT.byteSize());
+    }
+
+    private static long[] reserved_char$DIMS = { 1 };
+
+    /**
+     * Dimensions for array field:
+     * {@snippet lang=c :
+     * char reserved_char[1]
+     * }
+     */
+    public static long[] reserved_char$dimensions() {
+        return reserved_char$DIMS;
+    }
+    private static final VarHandle reserved_char$ELEM_HANDLE = reserved_char$LAYOUT.varHandle(sequenceElement());
+
+    /**
+     * Indexed getter for field:
+     * {@snippet lang=c :
+     * char reserved_char[1]
+     * }
+     */
+    public static byte reserved_char(MemorySegment struct, long index0) {
+        return (byte)reserved_char$ELEM_HANDLE.get(struct, 0L, index0);
+    }
+
+    /**
+     * Indexed setter for field:
+     * {@snippet lang=c :
+     * char reserved_char[1]
+     * }
+     */
+    public static void reserved_char(MemorySegment struct, long index0, byte fieldValue) {
+        reserved_char$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+    }
+
+    private static final OfInt hub6$LAYOUT = (OfInt)$LAYOUT.select(groupElement("hub6"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * int hub6
+     * }
+     */
+    public static final OfInt hub6$layout() {
+        return hub6$LAYOUT;
     }
 
     private static final long hub6$OFFSET = 36;
-    private static final OfInt hub6$LAYOUT = (OfInt)$LAYOUT.select(groupElement("hub6"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * int hub6
+     * }
+     */
+    public static final long hub6$offset() {
+        return hub6$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -352,8 +642,29 @@ public class serial_struct {
         struct.set(hub6$LAYOUT, hub6$OFFSET, fieldValue);
     }
 
-    private static final long closing_wait$OFFSET = 40;
     private static final OfShort closing_wait$LAYOUT = (OfShort)$LAYOUT.select(groupElement("closing_wait"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * unsigned short closing_wait
+     * }
+     */
+    public static final OfShort closing_wait$layout() {
+        return closing_wait$LAYOUT;
+    }
+
+    private static final long closing_wait$OFFSET = 40;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * unsigned short closing_wait
+     * }
+     */
+    public static final long closing_wait$offset() {
+        return closing_wait$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -375,8 +686,29 @@ public class serial_struct {
         struct.set(closing_wait$LAYOUT, closing_wait$OFFSET, fieldValue);
     }
 
-    private static final long closing_wait2$OFFSET = 42;
     private static final OfShort closing_wait2$LAYOUT = (OfShort)$LAYOUT.select(groupElement("closing_wait2"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * unsigned short closing_wait2
+     * }
+     */
+    public static final OfShort closing_wait2$layout() {
+        return closing_wait2$LAYOUT;
+    }
+
+    private static final long closing_wait2$OFFSET = 42;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * unsigned short closing_wait2
+     * }
+     */
+    public static final long closing_wait2$offset() {
+        return closing_wait2$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -398,8 +730,29 @@ public class serial_struct {
         struct.set(closing_wait2$LAYOUT, closing_wait2$OFFSET, fieldValue);
     }
 
-    private static final long iomem_base$OFFSET = 48;
     private static final AddressLayout iomem_base$LAYOUT = (AddressLayout)$LAYOUT.select(groupElement("iomem_base"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * unsigned char *iomem_base
+     * }
+     */
+    public static final AddressLayout iomem_base$layout() {
+        return iomem_base$LAYOUT;
+    }
+
+    private static final long iomem_base$OFFSET = 48;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * unsigned char *iomem_base
+     * }
+     */
+    public static final long iomem_base$offset() {
+        return iomem_base$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -421,8 +774,29 @@ public class serial_struct {
         struct.set(iomem_base$LAYOUT, iomem_base$OFFSET, fieldValue);
     }
 
-    private static final long iomem_reg_shift$OFFSET = 56;
     private static final OfShort iomem_reg_shift$LAYOUT = (OfShort)$LAYOUT.select(groupElement("iomem_reg_shift"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * unsigned short iomem_reg_shift
+     * }
+     */
+    public static final OfShort iomem_reg_shift$layout() {
+        return iomem_reg_shift$LAYOUT;
+    }
+
+    private static final long iomem_reg_shift$OFFSET = 56;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * unsigned short iomem_reg_shift
+     * }
+     */
+    public static final long iomem_reg_shift$offset() {
+        return iomem_reg_shift$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -444,8 +818,29 @@ public class serial_struct {
         struct.set(iomem_reg_shift$LAYOUT, iomem_reg_shift$OFFSET, fieldValue);
     }
 
-    private static final long port_high$OFFSET = 60;
     private static final OfInt port_high$LAYOUT = (OfInt)$LAYOUT.select(groupElement("port_high"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * unsigned int port_high
+     * }
+     */
+    public static final OfInt port_high$layout() {
+        return port_high$LAYOUT;
+    }
+
+    private static final long port_high$OFFSET = 60;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * unsigned int port_high
+     * }
+     */
+    public static final long port_high$offset() {
+        return port_high$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -467,8 +862,29 @@ public class serial_struct {
         struct.set(port_high$LAYOUT, port_high$OFFSET, fieldValue);
     }
 
-    private static final long iomap_base$OFFSET = 64;
     private static final OfLong iomap_base$LAYOUT = (OfLong)$LAYOUT.select(groupElement("iomap_base"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * unsigned long iomap_base
+     * }
+     */
+    public static final OfLong iomap_base$layout() {
+        return iomap_base$LAYOUT;
+    }
+
+    private static final long iomap_base$OFFSET = 64;
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * unsigned long iomap_base
+     * }
+     */
+    public static final long iomap_base$offset() {
+        return iomap_base$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -490,24 +906,46 @@ public class serial_struct {
         struct.set(iomap_base$LAYOUT, iomap_base$OFFSET, fieldValue);
     }
 
+    /**
+     * Obtains a slice of {@code arrayParam} which selects the array element at {@code index}.
+     * The returned segment has address {@code arrayParam.address() + index * layout().byteSize()}
+     */
     public static MemorySegment asSlice(MemorySegment array, long index) {
         return array.asSlice(layout().byteSize() * index);
     }
 
+    /**
+     * The size (in bytes) of this struct
+     */
     public static long sizeof() { return layout().byteSize(); }
 
+    /**
+     * Allocate a segment of size {@code layout().byteSize()} using {@code allocator}
+     */
     public static MemorySegment allocate(SegmentAllocator allocator) {
         return allocator.allocate(layout());
     }
 
+    /**
+     * Allocate an array of size {@code elementCount} using {@code allocator}.
+     * The returned segment has size {@code elementCount * layout().byteSize()}.
+     */
     public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
         return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
     }
 
+    /**
+     * Reinterprets {@code addr} using target {@code arena} and {@code cleanupAction) (if any).
+     * The returned segment has size {@code layout().byteSize()}
+     */
     public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
         return reinterpret(addr, 1, arena, cleanup);
     }
 
+    /**
+     * Reinterprets {@code addr} using target {@code arena} and {@code cleanupAction) (if any).
+     * The returned segment has size {@code elementCount * layout().byteSize()}
+     */
     public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
         return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
     }
