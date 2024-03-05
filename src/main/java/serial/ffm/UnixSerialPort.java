@@ -571,7 +571,8 @@ final class UnixSerialPort extends ReadWritePort {
 			}
 
 			final var cresolved = arena.allocate(Linux.PATH_MAX());
-			Linux.realpath(cfilename, cresolved);
+			if (Linux.realpath(cfilename, cresolved) == Linux.NULL())
+				logger.log(WARNING, "realpath failed for {0}: {1}", filename, errnoMsg());
 			final String resolved = cresolved.getString(0);
 
 			if (portId.equals(resolved)) {
