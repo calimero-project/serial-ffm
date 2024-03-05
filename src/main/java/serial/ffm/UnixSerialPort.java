@@ -354,7 +354,8 @@ final class UnixSerialPort extends ReadWritePort {
 		catch (final IOException e) {
 			if (error.get() == Linux.ENOENT())
 				return false;
-
+			if (error.get() == Linux.EBUSY() || error.get() == Linux.EPERM() || error.get() == Linux.EACCES())
+				return true;
 			logger.log(TRACE, "{0}", e.getMessage());
 			return false;
 		}
