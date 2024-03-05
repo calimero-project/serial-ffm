@@ -33,9 +33,9 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.win.HKEY__;
@@ -85,10 +85,10 @@ final class WinSerialPort extends ReadWritePort {
 
 
 	// port names currently listed in registry
-	static List<String> portNames() {
+	static Set<String> portNames() {
 		final var logger = System.getLogger("serial.ffm");
 		logger.log(TRACE, "query serial port names from registry");
-		final var portNames = new ArrayList<String>();
+		final var portNames = new TreeSet<String>();
 
 		try (var arena = Arena.ofConfined()) {
 			final var subKey = arena.allocateFrom("HARDWARE\\DEVICEMAP\\SERIALCOMM");

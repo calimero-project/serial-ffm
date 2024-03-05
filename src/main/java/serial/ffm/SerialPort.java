@@ -25,6 +25,7 @@ package serial.ffm;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Set;
 
 public interface SerialPort extends AutoCloseable {
 	enum StopBits {
@@ -52,6 +53,13 @@ public interface SerialPort extends AutoCloseable {
 	record Timeouts(int readInterval, int readTotalMultiplier, int readTotalConstant, int writeTotalMultiplier,
 			int writeTotalConstant) {}
 
+	static Set<String> portIdentifiers() {
+		return switch (OS.current()) {
+			case Windows    -> WinSerialPort.portNames();
+			case Linux, Mac -> UnixSerialPort.portIdentifiers();
+			case Other      -> throw new RuntimeException("unsupported platform '" + OS.osName() + "'");
+		};
+	}
 
 	static boolean portExists(final String portId) {
 		return switch (OS.current()) {

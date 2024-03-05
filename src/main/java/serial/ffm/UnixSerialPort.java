@@ -39,9 +39,9 @@ import java.lang.invoke.VarHandle;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.unix.Linux;
@@ -126,7 +126,7 @@ final class UnixSerialPort extends ReadWritePort {
 	private static Set<String> checkPortsDir(final String dir) {
 		try (var arena = Arena.ofConfined()) {
 			final var logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
-			final var ports = new HashSet<String>();
+			final var ports = new TreeSet<String>();
 
 			var /*DIR*/ addr = Linux.opendir(arena.allocateFrom(dir));
 			if (addr.equals(Linux.NULL())) {
