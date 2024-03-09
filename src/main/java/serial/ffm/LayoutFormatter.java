@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2023 B. Malinowsky
+// Copyright (c) 2022, 2024 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -61,7 +61,7 @@ final class LayoutFormatter {
 		else if (layout instanceof final ValueLayout vl) {
 			final var name = vl.name().get();
 			final VarHandle varHandle = vl.varHandle();
-			final Object o = varHandle.get(seg);
+			final Object o = varHandle.get(seg, 0);
 			writer.write(indent + name + "\t= " + o + "\n");
 		}
 	}

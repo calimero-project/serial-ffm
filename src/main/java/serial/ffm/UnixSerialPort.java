@@ -275,9 +275,9 @@ final class UnixSerialPort extends ReadWritePort {
 			// set rx and tx queues
 			final var size = arena.allocate(Linux.C_INT, 200);
 			// ??? how to set buffers
-			if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TXSETIHOG, size.address()) == -1)
+			if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TXSETIHOG, size) == -1)
 				perror("TXSETIHOG");
-			if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TXSETOHOG, size.address()) == -1)
+			if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TXSETOHOG, size) == -1)
 				perror("TXSETOHOG");
 
 			final String out = "set queue tx %d rx %d".formatted(0, 0);
@@ -285,10 +285,10 @@ final class UnixSerialPort extends ReadWritePort {
 		}
 
 		final var status = arena.allocate(Linux.C_INT);
-		int ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCMGET(), status.address());
+		int ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCMGET(), status);
 		if (ret != -1) {
 			status.set(Linux.C_INT, 0, status.get(Linux.C_INT, 0) | Linux.TIOCM_DTR());
-			ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCMSET(), status.address());
+			ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCMSET(), status);
 		}
 		if (ret == -1) {
 			final int err = errno();
@@ -332,7 +332,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 			if (definedTIOCGSERIAL()) {
 				final var info = serial_struct.allocate(arena);
-				if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TIOCGSERIAL, info.address()) == 0) {
+				if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TIOCGSERIAL, info) == 0) {
 					if (serial_struct.type(info) != PORT_UNKNOWN)
 						valid = true;
 					else if (hasDevSerialLink(arena, portId))
@@ -343,7 +343,7 @@ final class UnixSerialPort extends ReadWritePort {
 			}
 			else {
 				final var status = arena.allocate(Linux.C_INT);
-				final int ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCMGET(), status.address());
+				final int ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCMGET(), status);
 				valid = ret == 0;
 				logger.log(TRACE, "check port type: {0}", errnoMsg());
 			}
@@ -1020,8 +1020,8 @@ final class UnixSerialPort extends ReadWritePort {
 
 					// get number of bytes that are immediately available for reading:
 					// if 0, this indicates other errors, e.g., disconnected usb adapter
-					final /*size_t*/ var nread = arena.allocate(ValueLayout.JAVA_LONG, 0);
-					Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.FIONREAD(), nread.address());
+					final /*size_t*/ var nread = arena.allocateFrom(ValueLayout.JAVA_LONG, 0);
+					Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.FIONREAD(), nread);
 					if (nread.get(ValueLayout.JAVA_LONG, 0) == 0)
 						return -1;
 
@@ -1076,7 +1076,7 @@ final class UnixSerialPort extends ReadWritePort {
 	private static /*uint*/ long isInputWaiting(final Arena arena, final fd_t fd) throws IOException {
 		Linux.fcntl.makeInvoker(Linux.C_INT).apply(fd.value(), Linux.F_SETFL(), Linux.O_NONBLOCK());
 		/*uint*/ final var bytes = arena.allocate(ValueLayout.JAVA_INT);
-		if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.FIONREAD(), bytes.address()) == -1) {
+		if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.FIONREAD(), bytes) == -1) {
 
 			//#if defined FIORDCHK
 			if (definedFIORDCHK()) {
@@ -1186,7 +1186,7 @@ final class UnixSerialPort extends ReadWritePort {
 			final var icount = serial_icounter_struct.allocate(arena);
 			int ret;
 			do {
-				ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TIOCGICOUNT, icount.address());
+				ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TIOCGICOUNT, icount);
 			}
 			while (ret == -1 && errno() == Linux.EINTR());
 			if (ret == -1)
@@ -1310,7 +1310,7 @@ final class UnixSerialPort extends ReadWritePort {
 		return (int) /*uint*/ switch (type) {
 			case Line -> {
 				/*uint*/ final var mstatus = arena.allocate(ValueLayout.JAVA_INT);
-				final int ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCMGET(), mstatus.address());
+				final int ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCMGET(), mstatus);
 				if (ret == -1)
 					throw newException(errno());
 
@@ -1491,7 +1491,7 @@ final class UnixSerialPort extends ReadWritePort {
 //		}
 
 		final long rawfd = fd.value & 0xffff_ffffL;
-		final long element = (long) fds_bits.get(fdset, rawfd / __DARWIN_NFDBITS);
+		final long element = (long) fds_bits.get(fdset, 0, rawfd / __DARWIN_NFDBITS);
 		final long bit = element & (1 << (rawfd % __DARWIN_NFDBITS));
 		return bit != 0;
 	}
@@ -1506,7 +1506,7 @@ final class UnixSerialPort extends ReadWritePort {
 //		}
 
 		final long rawfd = fd.value & 0xffff_ffffL;
-		fds_bits.getAndBitwiseOr(fdset, rawfd / __DARWIN_NFDBITS, 1 << (rawfd % __DARWIN_NFDBITS));
+		fds_bits.getAndBitwiseOr(fdset, 0, rawfd / __DARWIN_NFDBITS, 1 << (rawfd % __DARWIN_NFDBITS));
 	}
 
 	private void perror(final String msg) {

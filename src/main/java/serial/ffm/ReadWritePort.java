@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2023 B. Malinowsky
+// Copyright (c) 2022, 2024 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -302,7 +302,7 @@ abstract class ReadWritePort implements SerialPort {
 
 	final void write(final int bite) throws IOException {
 		try (var arena = Arena.ofConfined()) {
-			final var out = arena.allocate(ValueLayout.JAVA_BYTE, (byte) bite);
+			final var out = arena.allocateFrom(ValueLayout.JAVA_BYTE, (byte) bite);
 			final int written = writeBytes(arena, out);
 			if (written != 1)
 				throw new IOException("write failed");

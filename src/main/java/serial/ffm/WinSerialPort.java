@@ -456,7 +456,7 @@ final class WinSerialPort extends ReadWritePort {
 		if (event.equals(Windows.NULL()))
 			throw newIoException();
 
-		final var written = arena.allocate(ValueLayout.JAVA_INT, 0);
+		final var written = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
 		try {
 			final var o = _OVERLAPPED.allocate(arena);
 			_OVERLAPPED.hEvent(o, event);
@@ -486,7 +486,7 @@ final class WinSerialPort extends ReadWritePort {
 		final var o = _OVERLAPPED.allocate(arena);
 		_OVERLAPPED.hEvent(o, event);
 
-		final /*DWORD*/ var read = arena.allocate(ValueLayout.JAVA_INT, 0);
+		final /*DWORD*/ var read = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
 		try {
 			if (Windows.ReadFile(h.handle(), bytes, (int) bytes.byteSize(), read, o) == 0)
 				waitPendingIO(h, o, read);
@@ -508,7 +508,7 @@ final class WinSerialPort extends ReadWritePort {
 	public void setEvents(final int eventMask, final boolean enable) throws IOException {
 		logger.log(TRACE, "set event: mask 0x{0}, enable={1}",  Integer.toUnsignedString(eventMask, 16), enable);
 		try (var arena = Arena.ofConfined()) {
-			/*DWORD*/ final var mask = arena.allocate(ValueLayout.JAVA_INT, 1);
+			/*DWORD*/ final var mask = arena.allocate(ValueLayout.JAVA_INT);
 			if (Windows.GetCommMask(h.handle(), mask) == 0)
 				throw newIoException();
 
@@ -529,8 +529,8 @@ final class WinSerialPort extends ReadWritePort {
 
 			final var o = _OVERLAPPED.allocate(arena);
 			_OVERLAPPED.hEvent(o, event);
-			final /*DWORD*/ var eventMask = arena.allocate(ValueLayout.JAVA_INT, 0);
-			final /*DWORD*/ var undefined = arena.allocate(ValueLayout.JAVA_INT, 0);
+			final /*DWORD*/ var eventMask = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
+			final /*DWORD*/ var undefined = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
 			if (Windows.WaitCommEvent(h.handle(), eventMask, o) == 0)
 				waitPendingIO(h, o, undefined);
 			Windows.CloseHandle(_OVERLAPPED.hEvent(o));
@@ -541,7 +541,7 @@ final class WinSerialPort extends ReadWritePort {
 
 	@Override
 	int status(final Arena arena, final Status type) throws IOException {
-		/*DWORD*/ final var value = arena.allocate(ValueLayout.JAVA_INT, 1);
+		/*DWORD*/ final var value = arena.allocate(ValueLayout.JAVA_INT);
 		int ret;
 		final int status = switch (type) {
 			case Line -> {
