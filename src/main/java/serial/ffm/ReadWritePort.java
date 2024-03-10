@@ -301,6 +301,8 @@ abstract class ReadWritePort implements SerialPort {
 	abstract int readBytes(Arena arena, MemorySegment bytes) throws IOException;
 
 	final void write(final int bite) throws IOException {
+		var hex = bite < 16 ? "0" + Integer.toHexString(bite) : Integer.toHexString(bite);
+		logger.log(TRACE, "start write (length 1): {0}", hex);
 		try (var arena = Arena.ofConfined()) {
 			final var out = arena.allocateFrom(ValueLayout.JAVA_BYTE, (byte) bite);
 			final int written = writeBytes(arena, out);
