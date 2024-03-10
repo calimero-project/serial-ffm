@@ -971,10 +971,16 @@ final class UnixSerialPort extends ReadWritePort {
 
 	@Override
 	int readBytes(final Arena arena, final MemorySegment bytes) throws IOException {
-		final long r = read(arena, fd(), bytes);
-		if (r == -1)
-			throw newException(errno());
-		return (int) r;
+		lock.lock();
+		try {
+			final long r = read(arena, fd(), bytes);
+			if (r == -1)
+				throw newException(errno());
+			return (int) r;
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 
 	private fd_t fd() throws IOException {
@@ -999,7 +1005,14 @@ final class UnixSerialPort extends ReadWritePort {
 			final var timeout = timeval.allocate(arena);
 			timeval.tv_sec(timeout, 0);
 			timeval.tv_usec(timeout, receiveTimeout * 1000);
-			final int n = Linux.select(maxFd, input, MemorySegment.NULL, MemorySegment.NULL, timeout);
+			lock.unlock();
+			final int n;
+			try {
+				n = Linux.select(maxFd, input, MemorySegment.NULL, MemorySegment.NULL, timeout);
+			}
+			finally {
+				lock.lock();
+			}
 			if (n == -1) {
 				perror("select failed");
 				// EINTR: simply continue with the byte counting loop, since we have to calculate
@@ -1060,7 +1073,13 @@ final class UnixSerialPort extends ReadWritePort {
 
 	@Override
 	int writeBytes(final Arena arena, final MemorySegment bytes) throws IOException {
-		return (int) write(fd, bytes);
+		lock.lock();
+		try {
+			return (int) write(fd, bytes);
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 
 	private long write(final fd_t fd, /*uint8_t*/ final MemorySegment buf) throws IOException {
