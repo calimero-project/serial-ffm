@@ -990,6 +990,8 @@ final class UnixSerialPort extends ReadWritePort {
 		return lfd;
 	}
 
+	private long timeouts;
+
 	private long read(final Arena arena, final fd_t fd, final MemorySegment buffer) {
 		final long start = System.nanoTime();
 
@@ -1024,7 +1026,16 @@ final class UnixSerialPort extends ReadWritePort {
 					break;
 			}
 			else if (n == 0) { // read timeout
-//					trace("read timeout");
+				// don't flood the log, so trace only every second if rcv timeout is quite short
+				++timeouts;
+				if (receiveTimeout >= 200) {
+					logger.log(TRACE, "read timeout ({0} ms)", receiveTimeout);
+					timeouts = 0;
+				}
+				else if (timeouts * receiveTimeout >= 1000) {
+					logger.log(TRACE, "read timeout ({0}/s)", timeouts);
+					timeouts = 0;
+				}
 				break;
 			}
 			else {
