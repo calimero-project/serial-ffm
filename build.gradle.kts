@@ -4,7 +4,7 @@ import java.util.Locale
 plugins {
     id("java-library")
 	id("com.github.ben-manes.versions") version "0.50.0"
-    id("io.github.krakowski.jextract") version "0.4.1"
+    id("io.github.krakowski.jextract") version "0.5.0"
     id("maven-publish")
     signing
 }
@@ -90,8 +90,6 @@ tasks.test {
 //project.gradle.startParameter.excludedTaskNames.add("jextract")
 
 tasks.jextract {
-    sourceMode = false // option --source does not exist any longer, source mode is always default
-
     val os = System.getProperty("os.name").lowercase(Locale.ENGLISH)
 
 	var headersDir = "unix"
