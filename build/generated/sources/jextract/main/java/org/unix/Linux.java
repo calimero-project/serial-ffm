@@ -615,9 +615,9 @@ public class Linux {
             Linux.C_INT
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("close"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("close");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -639,6 +639,17 @@ public class Linux {
     public static MethodHandle close$handle() {
         return close.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int close(int __fd)
+     * }
+     */
+    public static MemorySegment close$address() {
+        return close.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern int close(int __fd)
@@ -664,9 +675,9 @@ public class Linux {
             Linux.C_LONG
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("read"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("read");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -688,6 +699,17 @@ public class Linux {
     public static MethodHandle read$handle() {
         return read.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern ssize_t read(int __fd, void *__buf, size_t __nbytes)
+     * }
+     */
+    public static MemorySegment read$address() {
+        return read.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern ssize_t read(int __fd, void *__buf, size_t __nbytes)
@@ -713,9 +735,9 @@ public class Linux {
             Linux.C_LONG
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("write"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("write");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -737,6 +759,17 @@ public class Linux {
     public static MethodHandle write$handle() {
         return write.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern ssize_t write(int __fd, const void *__buf, size_t __n)
+     * }
+     */
+    public static MemorySegment write$address() {
+        return write.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern ssize_t write(int __fd, const void *__buf, size_t __n)
@@ -758,9 +791,9 @@ public class Linux {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             Linux.C_INT    );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("getpid"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("getpid");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -782,6 +815,17 @@ public class Linux {
     public static MethodHandle getpid$handle() {
         return getpid.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern __pid_t getpid(void)
+     * }
+     */
+    public static MemorySegment getpid$address() {
+        return getpid.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern __pid_t getpid(void)
@@ -806,9 +850,9 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("link"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("link");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -830,6 +874,17 @@ public class Linux {
     public static MethodHandle link$handle() {
         return link.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int link(const char *__from, const char *__to)
+     * }
+     */
+    public static MemorySegment link$address() {
+        return link.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern int link(const char *__from, const char *__to)
@@ -853,9 +908,9 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("unlink"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("unlink");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -877,6 +932,17 @@ public class Linux {
     public static MethodHandle unlink$handle() {
         return unlink.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int unlink(const char *__name)
+     * }
+     */
+    public static MemorySegment unlink$address() {
+        return unlink.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern int unlink(const char *__name)
@@ -901,9 +967,9 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("stat"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("stat");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -925,6 +991,17 @@ public class Linux {
     public static MethodHandle stat$handle() {
         return stat.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int stat(const char *restrict __file, struct stat *restrict __buf)
+     * }
+     */
+    public static MemorySegment stat$address() {
+        return stat.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern int stat(const char *restrict __file, struct stat *restrict __buf)
@@ -981,6 +1058,13 @@ public class Linux {
         }
 
         /**
+         * {@return the address}
+         */
+        public static MemorySegment address() {
+            return ADDR;
+        }
+
+        /**
          * {@return the specialized method handle}
          */
         public MethodHandle handle() {
@@ -999,7 +1083,7 @@ public class Linux {
                 if (TRACE_DOWNCALLS) {
                     traceDowncall("fcntl", __fd, __cmd, x2);
                 }
-                return (int)spreader.invokeExact(__fd, __cmd, x2);
+                return (int) spreader.invokeExact(__fd, __cmd, x2);
             } catch(IllegalArgumentException | ClassCastException ex$)  {
                 throw ex$; // rethrow IAE from passing wrong number/type of args
             } catch (Throwable ex$) {
@@ -1047,6 +1131,13 @@ public class Linux {
         }
 
         /**
+         * {@return the address}
+         */
+        public static MemorySegment address() {
+            return ADDR;
+        }
+
+        /**
          * {@return the specialized method handle}
          */
         public MethodHandle handle() {
@@ -1065,7 +1156,7 @@ public class Linux {
                 if (TRACE_DOWNCALLS) {
                     traceDowncall("open", __file, __oflag, x2);
                 }
-                return (int)spreader.invokeExact(__file, __oflag, x2);
+                return (int) spreader.invokeExact(__file, __oflag, x2);
             } catch(IllegalArgumentException | ClassCastException ex$)  {
                 throw ex$; // rethrow IAE from passing wrong number/type of args
             } catch (Throwable ex$) {
@@ -1080,9 +1171,9 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("cfgetispeed"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("cfgetispeed");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1104,6 +1195,17 @@ public class Linux {
     public static MethodHandle cfgetispeed$handle() {
         return cfgetispeed.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern speed_t cfgetispeed(const struct termios *__termios_p)
+     * }
+     */
+    public static MemorySegment cfgetispeed$address() {
+        return cfgetispeed.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern speed_t cfgetispeed(const struct termios *__termios_p)
@@ -1128,9 +1230,9 @@ public class Linux {
             Linux.C_INT
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("cfsetospeed"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("cfsetospeed");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1152,6 +1254,17 @@ public class Linux {
     public static MethodHandle cfsetospeed$handle() {
         return cfsetospeed.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int cfsetospeed(struct termios *__termios_p, speed_t __speed)
+     * }
+     */
+    public static MemorySegment cfsetospeed$address() {
+        return cfsetospeed.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern int cfsetospeed(struct termios *__termios_p, speed_t __speed)
@@ -1176,9 +1289,9 @@ public class Linux {
             Linux.C_INT
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("cfsetispeed"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("cfsetispeed");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1200,6 +1313,17 @@ public class Linux {
     public static MethodHandle cfsetispeed$handle() {
         return cfsetispeed.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int cfsetispeed(struct termios *__termios_p, speed_t __speed)
+     * }
+     */
+    public static MemorySegment cfsetispeed$address() {
+        return cfsetispeed.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern int cfsetispeed(struct termios *__termios_p, speed_t __speed)
@@ -1224,9 +1348,9 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("tcgetattr"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("tcgetattr");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1248,6 +1372,17 @@ public class Linux {
     public static MethodHandle tcgetattr$handle() {
         return tcgetattr.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int tcgetattr(int __fd, struct termios *__termios_p)
+     * }
+     */
+    public static MemorySegment tcgetattr$address() {
+        return tcgetattr.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern int tcgetattr(int __fd, struct termios *__termios_p)
@@ -1273,9 +1408,9 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("tcsetattr"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("tcsetattr");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1297,6 +1432,17 @@ public class Linux {
     public static MethodHandle tcsetattr$handle() {
         return tcsetattr.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int tcsetattr(int __fd, int __optional_actions, const struct termios *__termios_p)
+     * }
+     */
+    public static MemorySegment tcsetattr$address() {
+        return tcsetattr.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern int tcsetattr(int __fd, int __optional_actions, const struct termios *__termios_p)
@@ -1320,9 +1466,9 @@ public class Linux {
             Linux.C_INT
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("tcdrain"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("tcdrain");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1344,6 +1490,17 @@ public class Linux {
     public static MethodHandle tcdrain$handle() {
         return tcdrain.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int tcdrain(int __fd)
+     * }
+     */
+    public static MemorySegment tcdrain$address() {
+        return tcdrain.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern int tcdrain(int __fd)
@@ -1400,6 +1557,13 @@ public class Linux {
         }
 
         /**
+         * {@return the address}
+         */
+        public static MemorySegment address() {
+            return ADDR;
+        }
+
+        /**
          * {@return the specialized method handle}
          */
         public MethodHandle handle() {
@@ -1418,7 +1582,7 @@ public class Linux {
                 if (TRACE_DOWNCALLS) {
                     traceDowncall("ioctl", __fd, __request, x2);
                 }
-                return (int)spreader.invokeExact(__fd, __request, x2);
+                return (int) spreader.invokeExact(__fd, __request, x2);
             } catch(IllegalArgumentException | ClassCastException ex$)  {
                 throw ex$; // rethrow IAE from passing wrong number/type of args
             } catch (Throwable ex$) {
@@ -1433,9 +1597,9 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("strlen"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("strlen");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1457,6 +1621,17 @@ public class Linux {
     public static MethodHandle strlen$handle() {
         return strlen.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern unsigned long strlen(const char *__s)
+     * }
+     */
+    public static MemorySegment strlen$address() {
+        return strlen.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern unsigned long strlen(const char *__s)
@@ -1480,9 +1655,9 @@ public class Linux {
             Linux.C_INT
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("strerror"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("strerror");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1504,6 +1679,17 @@ public class Linux {
     public static MethodHandle strerror$handle() {
         return strerror.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern char *strerror(int __errnum)
+     * }
+     */
+    public static MemorySegment strerror$address() {
+        return strerror.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern char *strerror(int __errnum)
@@ -1525,9 +1711,9 @@ public class Linux {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             Linux.C_POINTER    );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("__errno_location"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("__errno_location");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1549,6 +1735,17 @@ public class Linux {
     public static MethodHandle __errno_location$handle() {
         return __errno_location.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int *__errno_location(void)
+     * }
+     */
+    public static MemorySegment __errno_location$address() {
+        return __errno_location.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern int *__errno_location(void)
@@ -1576,9 +1773,9 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("select"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("select");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1600,6 +1797,17 @@ public class Linux {
     public static MethodHandle select$handle() {
         return select.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int select(int __nfds, fd_set *restrict __readfds, fd_set *restrict __writefds, fd_set *restrict __exceptfds, struct timeval *restrict __timeout)
+     * }
+     */
+    public static MemorySegment select$address() {
+        return select.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern int select(int __nfds, fd_set *restrict __readfds, fd_set *restrict __writefds, fd_set *restrict __exceptfds, struct timeval *restrict __timeout)
@@ -1624,9 +1832,9 @@ public class Linux {
             Linux.C_INT
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("kill"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("kill");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1648,6 +1856,17 @@ public class Linux {
     public static MethodHandle kill$handle() {
         return kill.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int kill(__pid_t __pid, int __sig)
+     * }
+     */
+    public static MemorySegment kill$address() {
+        return kill.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern int kill(__pid_t __pid, int __sig)
@@ -1671,9 +1890,9 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("closedir"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("closedir");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1695,6 +1914,17 @@ public class Linux {
     public static MethodHandle closedir$handle() {
         return closedir.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int closedir(DIR *__dirp)
+     * }
+     */
+    public static MemorySegment closedir$address() {
+        return closedir.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern int closedir(DIR *__dirp)
@@ -1718,9 +1948,9 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("opendir"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("opendir");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1742,6 +1972,17 @@ public class Linux {
     public static MethodHandle opendir$handle() {
         return opendir.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern DIR *opendir(const char *__name)
+     * }
+     */
+    public static MemorySegment opendir$address() {
+        return opendir.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern DIR *opendir(const char *__name)
@@ -1765,9 +2006,9 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("readdir"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("readdir");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1789,6 +2030,17 @@ public class Linux {
     public static MethodHandle readdir$handle() {
         return readdir.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern struct dirent *readdir(DIR *__dirp)
+     * }
+     */
+    public static MemorySegment readdir$address() {
+        return readdir.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern struct dirent *readdir(DIR *__dirp)
@@ -1813,9 +2065,9 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(
-                    Linux.findOrThrow("realpath"),
-                    DESC);
+        public static final MemorySegment ADDR = Linux.findOrThrow("realpath");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
 
     /**
@@ -1837,6 +2089,17 @@ public class Linux {
     public static MethodHandle realpath$handle() {
         return realpath.HANDLE;
     }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern char *realpath(const char *restrict __name, char *restrict __resolved)
+     * }
+     */
+    public static MemorySegment realpath$address() {
+        return realpath.ADDR;
+    }
+
     /**
      * {@snippet lang=c :
      * extern char *realpath(const char *restrict __name, char *restrict __resolved)
