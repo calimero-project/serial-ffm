@@ -57,7 +57,7 @@ public class dirent {
         return d_ino$LAYOUT;
     }
 
-    private static final long d_ino$OFFSET = 0;
+    private static final long d_ino$OFFSET = $LAYOUT.byteOffset(groupElement("d_ino"));
 
     /**
      * Offset for field:
@@ -101,7 +101,7 @@ public class dirent {
         return d_off$LAYOUT;
     }
 
-    private static final long d_off$OFFSET = 8;
+    private static final long d_off$OFFSET = $LAYOUT.byteOffset(groupElement("d_off"));
 
     /**
      * Offset for field:
@@ -145,7 +145,7 @@ public class dirent {
         return d_reclen$LAYOUT;
     }
 
-    private static final long d_reclen$OFFSET = 16;
+    private static final long d_reclen$OFFSET = $LAYOUT.byteOffset(groupElement("d_reclen"));
 
     /**
      * Offset for field:
@@ -189,7 +189,7 @@ public class dirent {
         return d_type$LAYOUT;
     }
 
-    private static final long d_type$OFFSET = 18;
+    private static final long d_type$OFFSET = $LAYOUT.byteOffset(groupElement("d_type"));
 
     /**
      * Offset for field:
@@ -233,7 +233,7 @@ public class dirent {
         return d_name$LAYOUT;
     }
 
-    private static final long d_name$OFFSET = 19;
+    private static final long d_name$OFFSET = $LAYOUT.byteOffset(groupElement("d_name"));
 
     /**
      * Offset for field:

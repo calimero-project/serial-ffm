@@ -48,7 +48,7 @@ public class fd_set {
         return __fds_bits$LAYOUT;
     }
 
-    private static final long __fds_bits$OFFSET = 0;
+    private static final long __fds_bits$OFFSET = $LAYOUT.byteOffset(groupElement("__fds_bits"));
 
     /**
      * Offset for field:

@@ -49,8 +49,7 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 public class _DCB {
 
     _DCB() {
-        // Suppresses public default constructor, ensuring non-instantiability,
-        // but allows generated subclasses in same package.
+        // Should not be called directly
     }
 
     private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
@@ -71,12 +70,36 @@ public class _DCB {
         Windows.C_SHORT.withName("wReserved1")
     ).withName("_DCB");
 
+    /**
+     * The layout of this struct
+     */
     public static final GroupLayout layout() {
         return $LAYOUT;
     }
 
-    private static final long DCBlength$OFFSET = 0;
     private static final OfInt DCBlength$LAYOUT = (OfInt)$LAYOUT.select(groupElement("DCBlength"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD DCBlength
+     * }
+     */
+    public static final OfInt DCBlength$layout() {
+        return DCBlength$LAYOUT;
+    }
+
+    private static final long DCBlength$OFFSET = $LAYOUT.byteOffset(groupElement("DCBlength"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD DCBlength
+     * }
+     */
+    public static final long DCBlength$offset() {
+        return DCBlength$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -98,8 +121,29 @@ public class _DCB {
         struct.set(DCBlength$LAYOUT, DCBlength$OFFSET, fieldValue);
     }
 
-    private static final long BaudRate$OFFSET = 4;
     private static final OfInt BaudRate$LAYOUT = (OfInt)$LAYOUT.select(groupElement("BaudRate"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD BaudRate
+     * }
+     */
+    public static final OfInt BaudRate$layout() {
+        return BaudRate$LAYOUT;
+    }
+
+    private static final long BaudRate$OFFSET = $LAYOUT.byteOffset(groupElement("BaudRate"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD BaudRate
+     * }
+     */
+    public static final long BaudRate$offset() {
+        return BaudRate$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -121,8 +165,29 @@ public class _DCB {
         struct.set(BaudRate$LAYOUT, BaudRate$OFFSET, fieldValue);
     }
 
-    private static final long wReserved$OFFSET = 12;
     private static final OfShort wReserved$LAYOUT = (OfShort)$LAYOUT.select(groupElement("wReserved"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * WORD wReserved
+     * }
+     */
+    public static final OfShort wReserved$layout() {
+        return wReserved$LAYOUT;
+    }
+
+    private static final long wReserved$OFFSET = $LAYOUT.byteOffset(groupElement("wReserved"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * WORD wReserved
+     * }
+     */
+    public static final long wReserved$offset() {
+        return wReserved$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -144,8 +209,29 @@ public class _DCB {
         struct.set(wReserved$LAYOUT, wReserved$OFFSET, fieldValue);
     }
 
-    private static final long XonLim$OFFSET = 14;
     private static final OfShort XonLim$LAYOUT = (OfShort)$LAYOUT.select(groupElement("XonLim"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * WORD XonLim
+     * }
+     */
+    public static final OfShort XonLim$layout() {
+        return XonLim$LAYOUT;
+    }
+
+    private static final long XonLim$OFFSET = $LAYOUT.byteOffset(groupElement("XonLim"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * WORD XonLim
+     * }
+     */
+    public static final long XonLim$offset() {
+        return XonLim$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -167,8 +253,29 @@ public class _DCB {
         struct.set(XonLim$LAYOUT, XonLim$OFFSET, fieldValue);
     }
 
-    private static final long XoffLim$OFFSET = 16;
     private static final OfShort XoffLim$LAYOUT = (OfShort)$LAYOUT.select(groupElement("XoffLim"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * WORD XoffLim
+     * }
+     */
+    public static final OfShort XoffLim$layout() {
+        return XoffLim$LAYOUT;
+    }
+
+    private static final long XoffLim$OFFSET = $LAYOUT.byteOffset(groupElement("XoffLim"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * WORD XoffLim
+     * }
+     */
+    public static final long XoffLim$offset() {
+        return XoffLim$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -190,8 +297,29 @@ public class _DCB {
         struct.set(XoffLim$LAYOUT, XoffLim$OFFSET, fieldValue);
     }
 
-    private static final long ByteSize$OFFSET = 18;
     private static final OfByte ByteSize$LAYOUT = (OfByte)$LAYOUT.select(groupElement("ByteSize"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * BYTE ByteSize
+     * }
+     */
+    public static final OfByte ByteSize$layout() {
+        return ByteSize$LAYOUT;
+    }
+
+    private static final long ByteSize$OFFSET = $LAYOUT.byteOffset(groupElement("ByteSize"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * BYTE ByteSize
+     * }
+     */
+    public static final long ByteSize$offset() {
+        return ByteSize$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -213,8 +341,29 @@ public class _DCB {
         struct.set(ByteSize$LAYOUT, ByteSize$OFFSET, fieldValue);
     }
 
-    private static final long Parity$OFFSET = 19;
     private static final OfByte Parity$LAYOUT = (OfByte)$LAYOUT.select(groupElement("Parity"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * BYTE Parity
+     * }
+     */
+    public static final OfByte Parity$layout() {
+        return Parity$LAYOUT;
+    }
+
+    private static final long Parity$OFFSET = $LAYOUT.byteOffset(groupElement("Parity"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * BYTE Parity
+     * }
+     */
+    public static final long Parity$offset() {
+        return Parity$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -236,8 +385,29 @@ public class _DCB {
         struct.set(Parity$LAYOUT, Parity$OFFSET, fieldValue);
     }
 
-    private static final long StopBits$OFFSET = 20;
     private static final OfByte StopBits$LAYOUT = (OfByte)$LAYOUT.select(groupElement("StopBits"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * BYTE StopBits
+     * }
+     */
+    public static final OfByte StopBits$layout() {
+        return StopBits$LAYOUT;
+    }
+
+    private static final long StopBits$OFFSET = $LAYOUT.byteOffset(groupElement("StopBits"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * BYTE StopBits
+     * }
+     */
+    public static final long StopBits$offset() {
+        return StopBits$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -259,8 +429,29 @@ public class _DCB {
         struct.set(StopBits$LAYOUT, StopBits$OFFSET, fieldValue);
     }
 
-    private static final long XonChar$OFFSET = 21;
     private static final OfByte XonChar$LAYOUT = (OfByte)$LAYOUT.select(groupElement("XonChar"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * char XonChar
+     * }
+     */
+    public static final OfByte XonChar$layout() {
+        return XonChar$LAYOUT;
+    }
+
+    private static final long XonChar$OFFSET = $LAYOUT.byteOffset(groupElement("XonChar"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * char XonChar
+     * }
+     */
+    public static final long XonChar$offset() {
+        return XonChar$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -282,8 +473,29 @@ public class _DCB {
         struct.set(XonChar$LAYOUT, XonChar$OFFSET, fieldValue);
     }
 
-    private static final long XoffChar$OFFSET = 22;
     private static final OfByte XoffChar$LAYOUT = (OfByte)$LAYOUT.select(groupElement("XoffChar"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * char XoffChar
+     * }
+     */
+    public static final OfByte XoffChar$layout() {
+        return XoffChar$LAYOUT;
+    }
+
+    private static final long XoffChar$OFFSET = $LAYOUT.byteOffset(groupElement("XoffChar"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * char XoffChar
+     * }
+     */
+    public static final long XoffChar$offset() {
+        return XoffChar$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -305,8 +517,29 @@ public class _DCB {
         struct.set(XoffChar$LAYOUT, XoffChar$OFFSET, fieldValue);
     }
 
-    private static final long ErrorChar$OFFSET = 23;
     private static final OfByte ErrorChar$LAYOUT = (OfByte)$LAYOUT.select(groupElement("ErrorChar"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * char ErrorChar
+     * }
+     */
+    public static final OfByte ErrorChar$layout() {
+        return ErrorChar$LAYOUT;
+    }
+
+    private static final long ErrorChar$OFFSET = $LAYOUT.byteOffset(groupElement("ErrorChar"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * char ErrorChar
+     * }
+     */
+    public static final long ErrorChar$offset() {
+        return ErrorChar$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -328,8 +561,29 @@ public class _DCB {
         struct.set(ErrorChar$LAYOUT, ErrorChar$OFFSET, fieldValue);
     }
 
-    private static final long EofChar$OFFSET = 24;
     private static final OfByte EofChar$LAYOUT = (OfByte)$LAYOUT.select(groupElement("EofChar"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * char EofChar
+     * }
+     */
+    public static final OfByte EofChar$layout() {
+        return EofChar$LAYOUT;
+    }
+
+    private static final long EofChar$OFFSET = $LAYOUT.byteOffset(groupElement("EofChar"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * char EofChar
+     * }
+     */
+    public static final long EofChar$offset() {
+        return EofChar$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -351,8 +605,29 @@ public class _DCB {
         struct.set(EofChar$LAYOUT, EofChar$OFFSET, fieldValue);
     }
 
-    private static final long EvtChar$OFFSET = 25;
     private static final OfByte EvtChar$LAYOUT = (OfByte)$LAYOUT.select(groupElement("EvtChar"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * char EvtChar
+     * }
+     */
+    public static final OfByte EvtChar$layout() {
+        return EvtChar$LAYOUT;
+    }
+
+    private static final long EvtChar$OFFSET = $LAYOUT.byteOffset(groupElement("EvtChar"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * char EvtChar
+     * }
+     */
+    public static final long EvtChar$offset() {
+        return EvtChar$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -374,8 +649,29 @@ public class _DCB {
         struct.set(EvtChar$LAYOUT, EvtChar$OFFSET, fieldValue);
     }
 
-    private static final long wReserved1$OFFSET = 26;
     private static final OfShort wReserved1$LAYOUT = (OfShort)$LAYOUT.select(groupElement("wReserved1"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * WORD wReserved1
+     * }
+     */
+    public static final OfShort wReserved1$layout() {
+        return wReserved1$LAYOUT;
+    }
+
+    private static final long wReserved1$OFFSET = $LAYOUT.byteOffset(groupElement("wReserved1"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * WORD wReserved1
+     * }
+     */
+    public static final long wReserved1$offset() {
+        return wReserved1$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -397,24 +693,46 @@ public class _DCB {
         struct.set(wReserved1$LAYOUT, wReserved1$OFFSET, fieldValue);
     }
 
+    /**
+     * Obtains a slice of {@code arrayParam} which selects the array element at {@code index}.
+     * The returned segment has address {@code arrayParam.address() + index * layout().byteSize()}
+     */
     public static MemorySegment asSlice(MemorySegment array, long index) {
         return array.asSlice(layout().byteSize() * index);
     }
 
+    /**
+     * The size (in bytes) of this struct
+     */
     public static long sizeof() { return layout().byteSize(); }
 
+    /**
+     * Allocate a segment of size {@code layout().byteSize()} using {@code allocator}
+     */
     public static MemorySegment allocate(SegmentAllocator allocator) {
         return allocator.allocate(layout());
     }
 
+    /**
+     * Allocate an array of size {@code elementCount} using {@code allocator}.
+     * The returned segment has size {@code elementCount * layout().byteSize()}.
+     */
     public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
         return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
     }
 
+    /**
+     * Reinterprets {@code addr} using target {@code arena} and {@code cleanupAction} (if any).
+     * The returned segment has size {@code layout().byteSize()}
+     */
     public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
         return reinterpret(addr, 1, arena, cleanup);
     }
 
+    /**
+     * Reinterprets {@code addr} using target {@code arena} and {@code cleanupAction} (if any).
+     * The returned segment has size {@code elementCount * layout().byteSize()}
+     */
     public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
         return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
     }

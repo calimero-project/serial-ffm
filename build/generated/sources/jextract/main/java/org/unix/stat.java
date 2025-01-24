@@ -76,7 +76,7 @@ public class stat {
         return st_dev$LAYOUT;
     }
 
-    private static final long st_dev$OFFSET = 0;
+    private static final long st_dev$OFFSET = $LAYOUT.byteOffset(groupElement("st_dev"));
 
     /**
      * Offset for field:
@@ -120,7 +120,7 @@ public class stat {
         return st_ino$LAYOUT;
     }
 
-    private static final long st_ino$OFFSET = 8;
+    private static final long st_ino$OFFSET = $LAYOUT.byteOffset(groupElement("st_ino"));
 
     /**
      * Offset for field:
@@ -164,7 +164,7 @@ public class stat {
         return st_nlink$LAYOUT;
     }
 
-    private static final long st_nlink$OFFSET = 16;
+    private static final long st_nlink$OFFSET = $LAYOUT.byteOffset(groupElement("st_nlink"));
 
     /**
      * Offset for field:
@@ -208,7 +208,7 @@ public class stat {
         return st_mode$LAYOUT;
     }
 
-    private static final long st_mode$OFFSET = 24;
+    private static final long st_mode$OFFSET = $LAYOUT.byteOffset(groupElement("st_mode"));
 
     /**
      * Offset for field:
@@ -252,7 +252,7 @@ public class stat {
         return st_uid$LAYOUT;
     }
 
-    private static final long st_uid$OFFSET = 28;
+    private static final long st_uid$OFFSET = $LAYOUT.byteOffset(groupElement("st_uid"));
 
     /**
      * Offset for field:
@@ -296,7 +296,7 @@ public class stat {
         return st_gid$LAYOUT;
     }
 
-    private static final long st_gid$OFFSET = 32;
+    private static final long st_gid$OFFSET = $LAYOUT.byteOffset(groupElement("st_gid"));
 
     /**
      * Offset for field:
@@ -340,7 +340,7 @@ public class stat {
         return __pad0$LAYOUT;
     }
 
-    private static final long __pad0$OFFSET = 36;
+    private static final long __pad0$OFFSET = $LAYOUT.byteOffset(groupElement("__pad0"));
 
     /**
      * Offset for field:
@@ -384,7 +384,7 @@ public class stat {
         return st_rdev$LAYOUT;
     }
 
-    private static final long st_rdev$OFFSET = 40;
+    private static final long st_rdev$OFFSET = $LAYOUT.byteOffset(groupElement("st_rdev"));
 
     /**
      * Offset for field:
@@ -428,7 +428,7 @@ public class stat {
         return st_size$LAYOUT;
     }
 
-    private static final long st_size$OFFSET = 48;
+    private static final long st_size$OFFSET = $LAYOUT.byteOffset(groupElement("st_size"));
 
     /**
      * Offset for field:
@@ -472,7 +472,7 @@ public class stat {
         return st_blksize$LAYOUT;
     }
 
-    private static final long st_blksize$OFFSET = 56;
+    private static final long st_blksize$OFFSET = $LAYOUT.byteOffset(groupElement("st_blksize"));
 
     /**
      * Offset for field:
@@ -516,7 +516,7 @@ public class stat {
         return st_blocks$LAYOUT;
     }
 
-    private static final long st_blocks$OFFSET = 64;
+    private static final long st_blocks$OFFSET = $LAYOUT.byteOffset(groupElement("st_blocks"));
 
     /**
      * Offset for field:
@@ -560,7 +560,7 @@ public class stat {
         return st_atim$LAYOUT;
     }
 
-    private static final long st_atim$OFFSET = 72;
+    private static final long st_atim$OFFSET = $LAYOUT.byteOffset(groupElement("st_atim"));
 
     /**
      * Offset for field:
@@ -604,7 +604,7 @@ public class stat {
         return st_mtim$LAYOUT;
     }
 
-    private static final long st_mtim$OFFSET = 88;
+    private static final long st_mtim$OFFSET = $LAYOUT.byteOffset(groupElement("st_mtim"));
 
     /**
      * Offset for field:
@@ -648,7 +648,7 @@ public class stat {
         return st_ctim$LAYOUT;
     }
 
-    private static final long st_ctim$OFFSET = 104;
+    private static final long st_ctim$OFFSET = $LAYOUT.byteOffset(groupElement("st_ctim"));
 
     /**
      * Offset for field:
@@ -692,7 +692,7 @@ public class stat {
         return __glibc_reserved$LAYOUT;
     }
 
-    private static final long __glibc_reserved$OFFSET = 120;
+    private static final long __glibc_reserved$OFFSET = $LAYOUT.byteOffset(groupElement("__glibc_reserved"));
 
     /**
      * Offset for field:

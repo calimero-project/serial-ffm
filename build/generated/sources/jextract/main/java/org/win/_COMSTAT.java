@@ -31,8 +31,7 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 public class _COMSTAT {
 
     _COMSTAT() {
-        // Suppresses public default constructor, ensuring non-instantiability,
-        // but allows generated subclasses in same package.
+        // Should not be called directly
     }
 
     private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
@@ -41,12 +40,36 @@ public class _COMSTAT {
         Windows.C_LONG.withName("cbOutQue")
     ).withName("_COMSTAT");
 
+    /**
+     * The layout of this struct
+     */
     public static final GroupLayout layout() {
         return $LAYOUT;
     }
 
-    private static final long cbInQue$OFFSET = 4;
     private static final OfInt cbInQue$LAYOUT = (OfInt)$LAYOUT.select(groupElement("cbInQue"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD cbInQue
+     * }
+     */
+    public static final OfInt cbInQue$layout() {
+        return cbInQue$LAYOUT;
+    }
+
+    private static final long cbInQue$OFFSET = $LAYOUT.byteOffset(groupElement("cbInQue"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD cbInQue
+     * }
+     */
+    public static final long cbInQue$offset() {
+        return cbInQue$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -68,8 +91,29 @@ public class _COMSTAT {
         struct.set(cbInQue$LAYOUT, cbInQue$OFFSET, fieldValue);
     }
 
-    private static final long cbOutQue$OFFSET = 8;
     private static final OfInt cbOutQue$LAYOUT = (OfInt)$LAYOUT.select(groupElement("cbOutQue"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD cbOutQue
+     * }
+     */
+    public static final OfInt cbOutQue$layout() {
+        return cbOutQue$LAYOUT;
+    }
+
+    private static final long cbOutQue$OFFSET = $LAYOUT.byteOffset(groupElement("cbOutQue"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD cbOutQue
+     * }
+     */
+    public static final long cbOutQue$offset() {
+        return cbOutQue$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -91,24 +135,46 @@ public class _COMSTAT {
         struct.set(cbOutQue$LAYOUT, cbOutQue$OFFSET, fieldValue);
     }
 
+    /**
+     * Obtains a slice of {@code arrayParam} which selects the array element at {@code index}.
+     * The returned segment has address {@code arrayParam.address() + index * layout().byteSize()}
+     */
     public static MemorySegment asSlice(MemorySegment array, long index) {
         return array.asSlice(layout().byteSize() * index);
     }
 
+    /**
+     * The size (in bytes) of this struct
+     */
     public static long sizeof() { return layout().byteSize(); }
 
+    /**
+     * Allocate a segment of size {@code layout().byteSize()} using {@code allocator}
+     */
     public static MemorySegment allocate(SegmentAllocator allocator) {
         return allocator.allocate(layout());
     }
 
+    /**
+     * Allocate an array of size {@code elementCount} using {@code allocator}.
+     * The returned segment has size {@code elementCount * layout().byteSize()}.
+     */
     public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
         return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
     }
 
+    /**
+     * Reinterprets {@code addr} using target {@code arena} and {@code cleanupAction} (if any).
+     * The returned segment has size {@code layout().byteSize()}
+     */
     public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
         return reinterpret(addr, 1, arena, cleanup);
     }
 
+    /**
+     * Reinterprets {@code addr} using target {@code arena} and {@code cleanupAction} (if any).
+     * The returned segment has size {@code elementCount * layout().byteSize()}
+     */
     public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
         return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
     }

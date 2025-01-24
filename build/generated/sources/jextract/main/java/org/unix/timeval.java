@@ -50,7 +50,7 @@ public class timeval {
         return tv_sec$LAYOUT;
     }
 
-    private static final long tv_sec$OFFSET = 0;
+    private static final long tv_sec$OFFSET = $LAYOUT.byteOffset(groupElement("tv_sec"));
 
     /**
      * Offset for field:
@@ -94,7 +94,7 @@ public class timeval {
         return tv_usec$LAYOUT;
     }
 
-    private static final long tv_usec$OFFSET = 8;
+    private static final long tv_usec$OFFSET = $LAYOUT.byteOffset(groupElement("tv_usec"));
 
     /**
      * Offset for field:

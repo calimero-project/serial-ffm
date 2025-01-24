@@ -75,7 +75,7 @@ public class serial_icounter_struct {
         return cts$LAYOUT;
     }
 
-    private static final long cts$OFFSET = 0;
+    private static final long cts$OFFSET = $LAYOUT.byteOffset(groupElement("cts"));
 
     /**
      * Offset for field:
@@ -119,7 +119,7 @@ public class serial_icounter_struct {
         return dsr$LAYOUT;
     }
 
-    private static final long dsr$OFFSET = 4;
+    private static final long dsr$OFFSET = $LAYOUT.byteOffset(groupElement("dsr"));
 
     /**
      * Offset for field:
@@ -163,7 +163,7 @@ public class serial_icounter_struct {
         return rng$LAYOUT;
     }
 
-    private static final long rng$OFFSET = 8;
+    private static final long rng$OFFSET = $LAYOUT.byteOffset(groupElement("rng"));
 
     /**
      * Offset for field:
@@ -207,7 +207,7 @@ public class serial_icounter_struct {
         return dcd$LAYOUT;
     }
 
-    private static final long dcd$OFFSET = 12;
+    private static final long dcd$OFFSET = $LAYOUT.byteOffset(groupElement("dcd"));
 
     /**
      * Offset for field:
@@ -251,7 +251,7 @@ public class serial_icounter_struct {
         return rx$LAYOUT;
     }
 
-    private static final long rx$OFFSET = 16;
+    private static final long rx$OFFSET = $LAYOUT.byteOffset(groupElement("rx"));
 
     /**
      * Offset for field:
@@ -295,7 +295,7 @@ public class serial_icounter_struct {
         return tx$LAYOUT;
     }
 
-    private static final long tx$OFFSET = 20;
+    private static final long tx$OFFSET = $LAYOUT.byteOffset(groupElement("tx"));
 
     /**
      * Offset for field:
@@ -339,7 +339,7 @@ public class serial_icounter_struct {
         return frame$LAYOUT;
     }
 
-    private static final long frame$OFFSET = 24;
+    private static final long frame$OFFSET = $LAYOUT.byteOffset(groupElement("frame"));
 
     /**
      * Offset for field:
@@ -383,7 +383,7 @@ public class serial_icounter_struct {
         return overrun$LAYOUT;
     }
 
-    private static final long overrun$OFFSET = 28;
+    private static final long overrun$OFFSET = $LAYOUT.byteOffset(groupElement("overrun"));
 
     /**
      * Offset for field:
@@ -427,7 +427,7 @@ public class serial_icounter_struct {
         return parity$LAYOUT;
     }
 
-    private static final long parity$OFFSET = 32;
+    private static final long parity$OFFSET = $LAYOUT.byteOffset(groupElement("parity"));
 
     /**
      * Offset for field:
@@ -471,7 +471,7 @@ public class serial_icounter_struct {
         return brk$LAYOUT;
     }
 
-    private static final long brk$OFFSET = 36;
+    private static final long brk$OFFSET = $LAYOUT.byteOffset(groupElement("brk"));
 
     /**
      * Offset for field:
@@ -515,7 +515,7 @@ public class serial_icounter_struct {
         return buf_overrun$LAYOUT;
     }
 
-    private static final long buf_overrun$OFFSET = 40;
+    private static final long buf_overrun$OFFSET = $LAYOUT.byteOffset(groupElement("buf_overrun"));
 
     /**
      * Offset for field:
@@ -559,7 +559,7 @@ public class serial_icounter_struct {
         return reserved$LAYOUT;
     }
 
-    private static final long reserved$OFFSET = 44;
+    private static final long reserved$OFFSET = $LAYOUT.byteOffset(groupElement("reserved"));
 
     /**
      * Offset for field:

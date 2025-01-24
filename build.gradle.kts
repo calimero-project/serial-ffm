@@ -20,7 +20,7 @@ extra["junitJupiterVersion"] = "5.11.3"
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
+        languageVersion.set(JavaLanguageVersion.of(23))
     }
     withSourcesJar()
     withJavadocJar()

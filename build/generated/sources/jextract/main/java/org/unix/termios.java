@@ -63,7 +63,7 @@ public class termios {
         return c_iflag$LAYOUT;
     }
 
-    private static final long c_iflag$OFFSET = 0;
+    private static final long c_iflag$OFFSET = $LAYOUT.byteOffset(groupElement("c_iflag"));
 
     /**
      * Offset for field:
@@ -107,7 +107,7 @@ public class termios {
         return c_oflag$LAYOUT;
     }
 
-    private static final long c_oflag$OFFSET = 4;
+    private static final long c_oflag$OFFSET = $LAYOUT.byteOffset(groupElement("c_oflag"));
 
     /**
      * Offset for field:
@@ -151,7 +151,7 @@ public class termios {
         return c_cflag$LAYOUT;
     }
 
-    private static final long c_cflag$OFFSET = 8;
+    private static final long c_cflag$OFFSET = $LAYOUT.byteOffset(groupElement("c_cflag"));
 
     /**
      * Offset for field:
@@ -195,7 +195,7 @@ public class termios {
         return c_lflag$LAYOUT;
     }
 
-    private static final long c_lflag$OFFSET = 12;
+    private static final long c_lflag$OFFSET = $LAYOUT.byteOffset(groupElement("c_lflag"));
 
     /**
      * Offset for field:
@@ -239,7 +239,7 @@ public class termios {
         return c_line$LAYOUT;
     }
 
-    private static final long c_line$OFFSET = 16;
+    private static final long c_line$OFFSET = $LAYOUT.byteOffset(groupElement("c_line"));
 
     /**
      * Offset for field:
@@ -283,7 +283,7 @@ public class termios {
         return c_cc$LAYOUT;
     }
 
-    private static final long c_cc$OFFSET = 17;
+    private static final long c_cc$OFFSET = $LAYOUT.byteOffset(groupElement("c_cc"));
 
     /**
      * Offset for field:
@@ -360,7 +360,7 @@ public class termios {
         return c_ispeed$LAYOUT;
     }
 
-    private static final long c_ispeed$OFFSET = 52;
+    private static final long c_ispeed$OFFSET = $LAYOUT.byteOffset(groupElement("c_ispeed"));
 
     /**
      * Offset for field:
@@ -404,7 +404,7 @@ public class termios {
         return c_ospeed$LAYOUT;
     }
 
-    private static final long c_ospeed$OFFSET = 56;
+    private static final long c_ospeed$OFFSET = $LAYOUT.byteOffset(groupElement("c_ospeed"));
 
     /**
      * Offset for field:

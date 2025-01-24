@@ -93,7 +93,7 @@ public class serial_struct {
         return type$LAYOUT;
     }
 
-    private static final long type$OFFSET = 0;
+    private static final long type$OFFSET = $LAYOUT.byteOffset(groupElement("type"));
 
     /**
      * Offset for field:
@@ -137,7 +137,7 @@ public class serial_struct {
         return line$LAYOUT;
     }
 
-    private static final long line$OFFSET = 4;
+    private static final long line$OFFSET = $LAYOUT.byteOffset(groupElement("line"));
 
     /**
      * Offset for field:
@@ -181,7 +181,7 @@ public class serial_struct {
         return port$LAYOUT;
     }
 
-    private static final long port$OFFSET = 8;
+    private static final long port$OFFSET = $LAYOUT.byteOffset(groupElement("port"));
 
     /**
      * Offset for field:
@@ -225,7 +225,7 @@ public class serial_struct {
         return irq$LAYOUT;
     }
 
-    private static final long irq$OFFSET = 12;
+    private static final long irq$OFFSET = $LAYOUT.byteOffset(groupElement("irq"));
 
     /**
      * Offset for field:
@@ -269,7 +269,7 @@ public class serial_struct {
         return flags$LAYOUT;
     }
 
-    private static final long flags$OFFSET = 16;
+    private static final long flags$OFFSET = $LAYOUT.byteOffset(groupElement("flags"));
 
     /**
      * Offset for field:
@@ -313,7 +313,7 @@ public class serial_struct {
         return xmit_fifo_size$LAYOUT;
     }
 
-    private static final long xmit_fifo_size$OFFSET = 20;
+    private static final long xmit_fifo_size$OFFSET = $LAYOUT.byteOffset(groupElement("xmit_fifo_size"));
 
     /**
      * Offset for field:
@@ -357,7 +357,7 @@ public class serial_struct {
         return custom_divisor$LAYOUT;
     }
 
-    private static final long custom_divisor$OFFSET = 24;
+    private static final long custom_divisor$OFFSET = $LAYOUT.byteOffset(groupElement("custom_divisor"));
 
     /**
      * Offset for field:
@@ -401,7 +401,7 @@ public class serial_struct {
         return baud_base$LAYOUT;
     }
 
-    private static final long baud_base$OFFSET = 28;
+    private static final long baud_base$OFFSET = $LAYOUT.byteOffset(groupElement("baud_base"));
 
     /**
      * Offset for field:
@@ -445,7 +445,7 @@ public class serial_struct {
         return close_delay$LAYOUT;
     }
 
-    private static final long close_delay$OFFSET = 32;
+    private static final long close_delay$OFFSET = $LAYOUT.byteOffset(groupElement("close_delay"));
 
     /**
      * Offset for field:
@@ -489,7 +489,7 @@ public class serial_struct {
         return io_type$LAYOUT;
     }
 
-    private static final long io_type$OFFSET = 34;
+    private static final long io_type$OFFSET = $LAYOUT.byteOffset(groupElement("io_type"));
 
     /**
      * Offset for field:
@@ -533,7 +533,7 @@ public class serial_struct {
         return reserved_char$LAYOUT;
     }
 
-    private static final long reserved_char$OFFSET = 35;
+    private static final long reserved_char$OFFSET = $LAYOUT.byteOffset(groupElement("reserved_char"));
 
     /**
      * Offset for field:
@@ -610,7 +610,7 @@ public class serial_struct {
         return hub6$LAYOUT;
     }
 
-    private static final long hub6$OFFSET = 36;
+    private static final long hub6$OFFSET = $LAYOUT.byteOffset(groupElement("hub6"));
 
     /**
      * Offset for field:
@@ -654,7 +654,7 @@ public class serial_struct {
         return closing_wait$LAYOUT;
     }
 
-    private static final long closing_wait$OFFSET = 40;
+    private static final long closing_wait$OFFSET = $LAYOUT.byteOffset(groupElement("closing_wait"));
 
     /**
      * Offset for field:
@@ -698,7 +698,7 @@ public class serial_struct {
         return closing_wait2$LAYOUT;
     }
 
-    private static final long closing_wait2$OFFSET = 42;
+    private static final long closing_wait2$OFFSET = $LAYOUT.byteOffset(groupElement("closing_wait2"));
 
     /**
      * Offset for field:
@@ -742,7 +742,7 @@ public class serial_struct {
         return iomem_base$LAYOUT;
     }
 
-    private static final long iomem_base$OFFSET = 48;
+    private static final long iomem_base$OFFSET = $LAYOUT.byteOffset(groupElement("iomem_base"));
 
     /**
      * Offset for field:
@@ -786,7 +786,7 @@ public class serial_struct {
         return iomem_reg_shift$LAYOUT;
     }
 
-    private static final long iomem_reg_shift$OFFSET = 56;
+    private static final long iomem_reg_shift$OFFSET = $LAYOUT.byteOffset(groupElement("iomem_reg_shift"));
 
     /**
      * Offset for field:
@@ -830,7 +830,7 @@ public class serial_struct {
         return port_high$LAYOUT;
     }
 
-    private static final long port_high$OFFSET = 60;
+    private static final long port_high$OFFSET = $LAYOUT.byteOffset(groupElement("port_high"));
 
     /**
      * Offset for field:
@@ -874,7 +874,7 @@ public class serial_struct {
         return iomap_base$LAYOUT;
     }
 
-    private static final long iomap_base$OFFSET = 64;
+    private static final long iomap_base$OFFSET = $LAYOUT.byteOffset(groupElement("iomap_base"));
 
     /**
      * Offset for field:

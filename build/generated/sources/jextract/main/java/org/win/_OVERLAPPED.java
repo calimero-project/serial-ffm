@@ -18,7 +18,7 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  *     ULONG_PTR Internal;
  *     ULONG_PTR InternalHigh;
  *     union {
- *         struct S {
+ *         struct O {
  *             DWORD Offset;
  *             DWORD OffsetHigh;
  *         };
@@ -31,8 +31,7 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 public class _OVERLAPPED {
 
     _OVERLAPPED() {
-        // Suppresses public default constructor, ensuring non-instantiability,
-        // but allows generated subclasses in same package.
+        // Should not be called directly
     }
 
     private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
@@ -42,12 +41,36 @@ public class _OVERLAPPED {
         Windows.C_POINTER.withName("hEvent")
     ).withName("_OVERLAPPED");
 
+    /**
+     * The layout of this struct
+     */
     public static final GroupLayout layout() {
         return $LAYOUT;
     }
 
-    private static final long Internal$OFFSET = 0;
     private static final OfLong Internal$LAYOUT = (OfLong)$LAYOUT.select(groupElement("Internal"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * ULONG_PTR Internal
+     * }
+     */
+    public static final OfLong Internal$layout() {
+        return Internal$LAYOUT;
+    }
+
+    private static final long Internal$OFFSET = $LAYOUT.byteOffset(groupElement("Internal"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * ULONG_PTR Internal
+     * }
+     */
+    public static final long Internal$offset() {
+        return Internal$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -69,8 +92,29 @@ public class _OVERLAPPED {
         struct.set(Internal$LAYOUT, Internal$OFFSET, fieldValue);
     }
 
-    private static final long InternalHigh$OFFSET = 8;
     private static final OfLong InternalHigh$LAYOUT = (OfLong)$LAYOUT.select(groupElement("InternalHigh"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * ULONG_PTR InternalHigh
+     * }
+     */
+    public static final OfLong InternalHigh$layout() {
+        return InternalHigh$LAYOUT;
+    }
+
+    private static final long InternalHigh$OFFSET = $LAYOUT.byteOffset(groupElement("InternalHigh"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * ULONG_PTR InternalHigh
+     * }
+     */
+    public static final long InternalHigh$offset() {
+        return InternalHigh$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -92,8 +136,29 @@ public class _OVERLAPPED {
         struct.set(InternalHigh$LAYOUT, InternalHigh$OFFSET, fieldValue);
     }
 
-    private static final long hEvent$OFFSET = 24;
     private static final AddressLayout hEvent$LAYOUT = (AddressLayout)$LAYOUT.select(groupElement("hEvent"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * HANDLE hEvent
+     * }
+     */
+    public static final AddressLayout hEvent$layout() {
+        return hEvent$LAYOUT;
+    }
+
+    private static final long hEvent$OFFSET = $LAYOUT.byteOffset(groupElement("hEvent"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * HANDLE hEvent
+     * }
+     */
+    public static final long hEvent$offset() {
+        return hEvent$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -115,26 +180,47 @@ public class _OVERLAPPED {
         struct.set(hEvent$LAYOUT, hEvent$OFFSET, fieldValue);
     }
 
+    /**
+     * Obtains a slice of {@code arrayParam} which selects the array element at {@code index}.
+     * The returned segment has address {@code arrayParam.address() + index * layout().byteSize()}
+     */
     public static MemorySegment asSlice(MemorySegment array, long index) {
         return array.asSlice(layout().byteSize() * index);
     }
 
+    /**
+     * The size (in bytes) of this struct
+     */
     public static long sizeof() { return layout().byteSize(); }
 
+    /**
+     * Allocate a segment of size {@code layout().byteSize()} using {@code allocator}
+     */
     public static MemorySegment allocate(SegmentAllocator allocator) {
         return allocator.allocate(layout());
     }
 
+    /**
+     * Allocate an array of size {@code elementCount} using {@code allocator}.
+     * The returned segment has size {@code elementCount * layout().byteSize()}.
+     */
     public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
         return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
     }
 
+    /**
+     * Reinterprets {@code addr} using target {@code arena} and {@code cleanupAction} (if any).
+     * The returned segment has size {@code layout().byteSize()}
+     */
     public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
         return reinterpret(addr, 1, arena, cleanup);
     }
 
+    /**
+     * Reinterprets {@code addr} using target {@code arena} and {@code cleanupAction} (if any).
+     * The returned segment has size {@code elementCount * layout().byteSize()}
+     */
     public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
         return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
     }
 }
-

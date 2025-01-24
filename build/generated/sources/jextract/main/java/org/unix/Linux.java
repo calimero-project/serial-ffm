@@ -29,8 +29,7 @@ public class Linux {
     }
 
     static MemorySegment findOrThrow(String symbol) {
-        return SYMBOL_LOOKUP.find(symbol)
-            .orElseThrow(() -> new UnsatisfiedLinkError("unresolved symbol: " + symbol));
+        return SYMBOL_LOOKUP.findOrThrow(symbol);
     }
 
     static MethodHandle upcallHandle(Class<?> fi, String name, FunctionDescriptor fdesc) {
@@ -58,16 +57,16 @@ public class Linux {
     static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.loaderLookup()
             .or(Linker.nativeLinker().defaultLookup());
 
-    public static final ValueLayout.OfBoolean C_BOOL = ValueLayout.JAVA_BOOLEAN;
-    public static final ValueLayout.OfByte C_CHAR = ValueLayout.JAVA_BYTE;
-    public static final ValueLayout.OfShort C_SHORT = ValueLayout.JAVA_SHORT;
-    public static final ValueLayout.OfInt C_INT = ValueLayout.JAVA_INT;
-    public static final ValueLayout.OfLong C_LONG_LONG = ValueLayout.JAVA_LONG;
-    public static final ValueLayout.OfFloat C_FLOAT = ValueLayout.JAVA_FLOAT;
-    public static final ValueLayout.OfDouble C_DOUBLE = ValueLayout.JAVA_DOUBLE;
-    public static final AddressLayout C_POINTER = ValueLayout.ADDRESS
-            .withTargetLayout(MemoryLayout.sequenceLayout(java.lang.Long.MAX_VALUE, JAVA_BYTE));
-    public static final ValueLayout.OfLong C_LONG = ValueLayout.JAVA_LONG;
+    public static final ValueLayout.OfBoolean C_BOOL = (ValueLayout.OfBoolean) Linker.nativeLinker().canonicalLayouts().get("bool");
+    public static final ValueLayout.OfByte C_CHAR =(ValueLayout.OfByte)Linker.nativeLinker().canonicalLayouts().get("char");
+    public static final ValueLayout.OfShort C_SHORT = (ValueLayout.OfShort) Linker.nativeLinker().canonicalLayouts().get("short");
+    public static final ValueLayout.OfInt C_INT = (ValueLayout.OfInt) Linker.nativeLinker().canonicalLayouts().get("int");
+    public static final ValueLayout.OfLong C_LONG_LONG = (ValueLayout.OfLong) Linker.nativeLinker().canonicalLayouts().get("long long");
+    public static final ValueLayout.OfFloat C_FLOAT = (ValueLayout.OfFloat) Linker.nativeLinker().canonicalLayouts().get("float");
+    public static final ValueLayout.OfDouble C_DOUBLE = (ValueLayout.OfDouble) Linker.nativeLinker().canonicalLayouts().get("double");
+    public static final AddressLayout C_POINTER = ((AddressLayout) Linker.nativeLinker().canonicalLayouts().get("void*"))
+            .withTargetLayout(MemoryLayout.sequenceLayout(java.lang.Long.MAX_VALUE, C_CHAR));
+    public static final ValueLayout.OfLong C_LONG = (ValueLayout.OfLong) Linker.nativeLinker().canonicalLayouts().get("long");
     private static final int O_RDWR = (int)2L;
     /**
      * {@snippet lang=c :

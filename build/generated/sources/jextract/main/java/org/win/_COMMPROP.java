@@ -39,8 +39,7 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 public class _COMMPROP {
 
     _COMMPROP() {
-        // Suppresses public default constructor, ensuring non-instantiability,
-        // but allows generated subclasses in same package.
+        // Should not be called directly
     }
 
     private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
@@ -65,12 +64,36 @@ public class _COMMPROP {
         MemoryLayout.paddingLayout(2)
     ).withName("_COMMPROP");
 
+    /**
+     * The layout of this struct
+     */
     public static final GroupLayout layout() {
         return $LAYOUT;
     }
 
-    private static final long wPacketLength$OFFSET = 0;
     private static final OfShort wPacketLength$LAYOUT = (OfShort)$LAYOUT.select(groupElement("wPacketLength"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * WORD wPacketLength
+     * }
+     */
+    public static final OfShort wPacketLength$layout() {
+        return wPacketLength$LAYOUT;
+    }
+
+    private static final long wPacketLength$OFFSET = $LAYOUT.byteOffset(groupElement("wPacketLength"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * WORD wPacketLength
+     * }
+     */
+    public static final long wPacketLength$offset() {
+        return wPacketLength$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -92,8 +115,29 @@ public class _COMMPROP {
         struct.set(wPacketLength$LAYOUT, wPacketLength$OFFSET, fieldValue);
     }
 
-    private static final long wPacketVersion$OFFSET = 2;
     private static final OfShort wPacketVersion$LAYOUT = (OfShort)$LAYOUT.select(groupElement("wPacketVersion"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * WORD wPacketVersion
+     * }
+     */
+    public static final OfShort wPacketVersion$layout() {
+        return wPacketVersion$LAYOUT;
+    }
+
+    private static final long wPacketVersion$OFFSET = $LAYOUT.byteOffset(groupElement("wPacketVersion"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * WORD wPacketVersion
+     * }
+     */
+    public static final long wPacketVersion$offset() {
+        return wPacketVersion$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -115,8 +159,29 @@ public class _COMMPROP {
         struct.set(wPacketVersion$LAYOUT, wPacketVersion$OFFSET, fieldValue);
     }
 
-    private static final long dwServiceMask$OFFSET = 4;
     private static final OfInt dwServiceMask$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dwServiceMask"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD dwServiceMask
+     * }
+     */
+    public static final OfInt dwServiceMask$layout() {
+        return dwServiceMask$LAYOUT;
+    }
+
+    private static final long dwServiceMask$OFFSET = $LAYOUT.byteOffset(groupElement("dwServiceMask"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD dwServiceMask
+     * }
+     */
+    public static final long dwServiceMask$offset() {
+        return dwServiceMask$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -138,8 +203,29 @@ public class _COMMPROP {
         struct.set(dwServiceMask$LAYOUT, dwServiceMask$OFFSET, fieldValue);
     }
 
-    private static final long dwReserved1$OFFSET = 8;
     private static final OfInt dwReserved1$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dwReserved1"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD dwReserved1
+     * }
+     */
+    public static final OfInt dwReserved1$layout() {
+        return dwReserved1$LAYOUT;
+    }
+
+    private static final long dwReserved1$OFFSET = $LAYOUT.byteOffset(groupElement("dwReserved1"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD dwReserved1
+     * }
+     */
+    public static final long dwReserved1$offset() {
+        return dwReserved1$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -161,8 +247,29 @@ public class _COMMPROP {
         struct.set(dwReserved1$LAYOUT, dwReserved1$OFFSET, fieldValue);
     }
 
-    private static final long dwMaxTxQueue$OFFSET = 12;
     private static final OfInt dwMaxTxQueue$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dwMaxTxQueue"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD dwMaxTxQueue
+     * }
+     */
+    public static final OfInt dwMaxTxQueue$layout() {
+        return dwMaxTxQueue$LAYOUT;
+    }
+
+    private static final long dwMaxTxQueue$OFFSET = $LAYOUT.byteOffset(groupElement("dwMaxTxQueue"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD dwMaxTxQueue
+     * }
+     */
+    public static final long dwMaxTxQueue$offset() {
+        return dwMaxTxQueue$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -184,8 +291,29 @@ public class _COMMPROP {
         struct.set(dwMaxTxQueue$LAYOUT, dwMaxTxQueue$OFFSET, fieldValue);
     }
 
-    private static final long dwMaxRxQueue$OFFSET = 16;
     private static final OfInt dwMaxRxQueue$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dwMaxRxQueue"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD dwMaxRxQueue
+     * }
+     */
+    public static final OfInt dwMaxRxQueue$layout() {
+        return dwMaxRxQueue$LAYOUT;
+    }
+
+    private static final long dwMaxRxQueue$OFFSET = $LAYOUT.byteOffset(groupElement("dwMaxRxQueue"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD dwMaxRxQueue
+     * }
+     */
+    public static final long dwMaxRxQueue$offset() {
+        return dwMaxRxQueue$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -207,8 +335,29 @@ public class _COMMPROP {
         struct.set(dwMaxRxQueue$LAYOUT, dwMaxRxQueue$OFFSET, fieldValue);
     }
 
-    private static final long dwMaxBaud$OFFSET = 20;
     private static final OfInt dwMaxBaud$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dwMaxBaud"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD dwMaxBaud
+     * }
+     */
+    public static final OfInt dwMaxBaud$layout() {
+        return dwMaxBaud$LAYOUT;
+    }
+
+    private static final long dwMaxBaud$OFFSET = $LAYOUT.byteOffset(groupElement("dwMaxBaud"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD dwMaxBaud
+     * }
+     */
+    public static final long dwMaxBaud$offset() {
+        return dwMaxBaud$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -230,8 +379,29 @@ public class _COMMPROP {
         struct.set(dwMaxBaud$LAYOUT, dwMaxBaud$OFFSET, fieldValue);
     }
 
-    private static final long dwProvSubType$OFFSET = 24;
     private static final OfInt dwProvSubType$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dwProvSubType"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD dwProvSubType
+     * }
+     */
+    public static final OfInt dwProvSubType$layout() {
+        return dwProvSubType$LAYOUT;
+    }
+
+    private static final long dwProvSubType$OFFSET = $LAYOUT.byteOffset(groupElement("dwProvSubType"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD dwProvSubType
+     * }
+     */
+    public static final long dwProvSubType$offset() {
+        return dwProvSubType$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -253,8 +423,29 @@ public class _COMMPROP {
         struct.set(dwProvSubType$LAYOUT, dwProvSubType$OFFSET, fieldValue);
     }
 
-    private static final long dwProvCapabilities$OFFSET = 28;
     private static final OfInt dwProvCapabilities$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dwProvCapabilities"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD dwProvCapabilities
+     * }
+     */
+    public static final OfInt dwProvCapabilities$layout() {
+        return dwProvCapabilities$LAYOUT;
+    }
+
+    private static final long dwProvCapabilities$OFFSET = $LAYOUT.byteOffset(groupElement("dwProvCapabilities"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD dwProvCapabilities
+     * }
+     */
+    public static final long dwProvCapabilities$offset() {
+        return dwProvCapabilities$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -276,8 +467,29 @@ public class _COMMPROP {
         struct.set(dwProvCapabilities$LAYOUT, dwProvCapabilities$OFFSET, fieldValue);
     }
 
-    private static final long dwSettableParams$OFFSET = 32;
     private static final OfInt dwSettableParams$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dwSettableParams"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD dwSettableParams
+     * }
+     */
+    public static final OfInt dwSettableParams$layout() {
+        return dwSettableParams$LAYOUT;
+    }
+
+    private static final long dwSettableParams$OFFSET = $LAYOUT.byteOffset(groupElement("dwSettableParams"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD dwSettableParams
+     * }
+     */
+    public static final long dwSettableParams$offset() {
+        return dwSettableParams$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -299,8 +511,29 @@ public class _COMMPROP {
         struct.set(dwSettableParams$LAYOUT, dwSettableParams$OFFSET, fieldValue);
     }
 
-    private static final long dwSettableBaud$OFFSET = 36;
     private static final OfInt dwSettableBaud$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dwSettableBaud"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD dwSettableBaud
+     * }
+     */
+    public static final OfInt dwSettableBaud$layout() {
+        return dwSettableBaud$LAYOUT;
+    }
+
+    private static final long dwSettableBaud$OFFSET = $LAYOUT.byteOffset(groupElement("dwSettableBaud"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD dwSettableBaud
+     * }
+     */
+    public static final long dwSettableBaud$offset() {
+        return dwSettableBaud$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -322,8 +555,29 @@ public class _COMMPROP {
         struct.set(dwSettableBaud$LAYOUT, dwSettableBaud$OFFSET, fieldValue);
     }
 
-    private static final long wSettableData$OFFSET = 40;
     private static final OfShort wSettableData$LAYOUT = (OfShort)$LAYOUT.select(groupElement("wSettableData"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * WORD wSettableData
+     * }
+     */
+    public static final OfShort wSettableData$layout() {
+        return wSettableData$LAYOUT;
+    }
+
+    private static final long wSettableData$OFFSET = $LAYOUT.byteOffset(groupElement("wSettableData"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * WORD wSettableData
+     * }
+     */
+    public static final long wSettableData$offset() {
+        return wSettableData$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -345,8 +599,29 @@ public class _COMMPROP {
         struct.set(wSettableData$LAYOUT, wSettableData$OFFSET, fieldValue);
     }
 
-    private static final long wSettableStopParity$OFFSET = 42;
     private static final OfShort wSettableStopParity$LAYOUT = (OfShort)$LAYOUT.select(groupElement("wSettableStopParity"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * WORD wSettableStopParity
+     * }
+     */
+    public static final OfShort wSettableStopParity$layout() {
+        return wSettableStopParity$LAYOUT;
+    }
+
+    private static final long wSettableStopParity$OFFSET = $LAYOUT.byteOffset(groupElement("wSettableStopParity"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * WORD wSettableStopParity
+     * }
+     */
+    public static final long wSettableStopParity$offset() {
+        return wSettableStopParity$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -368,8 +643,29 @@ public class _COMMPROP {
         struct.set(wSettableStopParity$LAYOUT, wSettableStopParity$OFFSET, fieldValue);
     }
 
-    private static final long dwCurrentTxQueue$OFFSET = 44;
     private static final OfInt dwCurrentTxQueue$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dwCurrentTxQueue"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD dwCurrentTxQueue
+     * }
+     */
+    public static final OfInt dwCurrentTxQueue$layout() {
+        return dwCurrentTxQueue$LAYOUT;
+    }
+
+    private static final long dwCurrentTxQueue$OFFSET = $LAYOUT.byteOffset(groupElement("dwCurrentTxQueue"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD dwCurrentTxQueue
+     * }
+     */
+    public static final long dwCurrentTxQueue$offset() {
+        return dwCurrentTxQueue$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -391,8 +687,29 @@ public class _COMMPROP {
         struct.set(dwCurrentTxQueue$LAYOUT, dwCurrentTxQueue$OFFSET, fieldValue);
     }
 
-    private static final long dwCurrentRxQueue$OFFSET = 48;
     private static final OfInt dwCurrentRxQueue$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dwCurrentRxQueue"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD dwCurrentRxQueue
+     * }
+     */
+    public static final OfInt dwCurrentRxQueue$layout() {
+        return dwCurrentRxQueue$LAYOUT;
+    }
+
+    private static final long dwCurrentRxQueue$OFFSET = $LAYOUT.byteOffset(groupElement("dwCurrentRxQueue"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD dwCurrentRxQueue
+     * }
+     */
+    public static final long dwCurrentRxQueue$offset() {
+        return dwCurrentRxQueue$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -414,8 +731,29 @@ public class _COMMPROP {
         struct.set(dwCurrentRxQueue$LAYOUT, dwCurrentRxQueue$OFFSET, fieldValue);
     }
 
-    private static final long dwProvSpec1$OFFSET = 52;
     private static final OfInt dwProvSpec1$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dwProvSpec1"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD dwProvSpec1
+     * }
+     */
+    public static final OfInt dwProvSpec1$layout() {
+        return dwProvSpec1$LAYOUT;
+    }
+
+    private static final long dwProvSpec1$OFFSET = $LAYOUT.byteOffset(groupElement("dwProvSpec1"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD dwProvSpec1
+     * }
+     */
+    public static final long dwProvSpec1$offset() {
+        return dwProvSpec1$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -437,8 +775,29 @@ public class _COMMPROP {
         struct.set(dwProvSpec1$LAYOUT, dwProvSpec1$OFFSET, fieldValue);
     }
 
-    private static final long dwProvSpec2$OFFSET = 56;
     private static final OfInt dwProvSpec2$LAYOUT = (OfInt)$LAYOUT.select(groupElement("dwProvSpec2"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * DWORD dwProvSpec2
+     * }
+     */
+    public static final OfInt dwProvSpec2$layout() {
+        return dwProvSpec2$LAYOUT;
+    }
+
+    private static final long dwProvSpec2$OFFSET = $LAYOUT.byteOffset(groupElement("dwProvSpec2"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * DWORD dwProvSpec2
+     * }
+     */
+    public static final long dwProvSpec2$offset() {
+        return dwProvSpec2$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -460,8 +819,29 @@ public class _COMMPROP {
         struct.set(dwProvSpec2$LAYOUT, dwProvSpec2$OFFSET, fieldValue);
     }
 
-    private static final long wcProvChar$OFFSET = 60;
-    private static final long wcProvChar$SIZE = 2;
+    private static final SequenceLayout wcProvChar$LAYOUT = (SequenceLayout)$LAYOUT.select(groupElement("wcProvChar"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * WCHAR wcProvChar[1]
+     * }
+     */
+    public static final SequenceLayout wcProvChar$layout() {
+        return wcProvChar$LAYOUT;
+    }
+
+    private static final long wcProvChar$OFFSET = $LAYOUT.byteOffset(groupElement("wcProvChar"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * WCHAR wcProvChar[1]
+     * }
+     */
+    public static final long wcProvChar$offset() {
+        return wcProvChar$OFFSET;
+    }
 
     /**
      * Getter for field:
@@ -470,7 +850,7 @@ public class _COMMPROP {
      * }
      */
     public static MemorySegment wcProvChar(MemorySegment struct) {
-        return struct.asSlice(wcProvChar$OFFSET, wcProvChar$SIZE);
+        return struct.asSlice(wcProvChar$OFFSET, wcProvChar$LAYOUT.byteSize());
     }
 
     /**
@@ -480,27 +860,82 @@ public class _COMMPROP {
      * }
      */
     public static void wcProvChar(MemorySegment struct, MemorySegment fieldValue) {
-        MemorySegment.copy(fieldValue, 0L, struct, wcProvChar$OFFSET, wcProvChar$SIZE);
+        MemorySegment.copy(fieldValue, 0L, struct, wcProvChar$OFFSET, wcProvChar$LAYOUT.byteSize());
     }
 
+    private static long[] wcProvChar$DIMS = { 1 };
+
+    /**
+     * Dimensions for array field:
+     * {@snippet lang=c :
+     * WCHAR wcProvChar[1]
+     * }
+     */
+    public static long[] wcProvChar$dimensions() {
+        return wcProvChar$DIMS;
+    }
+    private static final VarHandle wcProvChar$ELEM_HANDLE = wcProvChar$LAYOUT.varHandle(sequenceElement());
+
+    /**
+     * Indexed getter for field:
+     * {@snippet lang=c :
+     * WCHAR wcProvChar[1]
+     * }
+     */
+    public static short wcProvChar(MemorySegment struct, long index0) {
+        return (short)wcProvChar$ELEM_HANDLE.get(struct, 0L, index0);
+    }
+
+    /**
+     * Indexed setter for field:
+     * {@snippet lang=c :
+     * WCHAR wcProvChar[1]
+     * }
+     */
+    public static void wcProvChar(MemorySegment struct, long index0, short fieldValue) {
+        wcProvChar$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+    }
+
+    /**
+     * Obtains a slice of {@code arrayParam} which selects the array element at {@code index}.
+     * The returned segment has address {@code arrayParam.address() + index * layout().byteSize()}
+     */
     public static MemorySegment asSlice(MemorySegment array, long index) {
         return array.asSlice(layout().byteSize() * index);
     }
 
+    /**
+     * The size (in bytes) of this struct
+     */
     public static long sizeof() { return layout().byteSize(); }
 
+    /**
+     * Allocate a segment of size {@code layout().byteSize()} using {@code allocator}
+     */
     public static MemorySegment allocate(SegmentAllocator allocator) {
         return allocator.allocate(layout());
     }
 
+    /**
+     * Allocate an array of size {@code elementCount} using {@code allocator}.
+     * The returned segment has size {@code elementCount * layout().byteSize()}.
+     */
     public static MemorySegment allocateArray(long elementCount, SegmentAllocator allocator) {
         return allocator.allocate(MemoryLayout.sequenceLayout(elementCount, layout()));
     }
 
+    /**
+     * Reinterprets {@code addr} using target {@code arena} and {@code cleanupAction} (if any).
+     * The returned segment has size {@code layout().byteSize()}
+     */
     public static MemorySegment reinterpret(MemorySegment addr, Arena arena, Consumer<MemorySegment> cleanup) {
         return reinterpret(addr, 1, arena, cleanup);
     }
 
+    /**
+     * Reinterprets {@code addr} using target {@code arena} and {@code cleanupAction} (if any).
+     * The returned segment has size {@code elementCount * layout().byteSize()}
+     */
     public static MemorySegment reinterpret(MemorySegment addr, long elementCount, Arena arena, Consumer<MemorySegment> cleanup) {
         return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
     }

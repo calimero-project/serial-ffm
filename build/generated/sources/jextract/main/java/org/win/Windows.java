@@ -14,26 +14,11 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 
 public class Windows {
 
-    static final SymbolLookup SYMBOL_LOOKUP
-            = SymbolLookup.loaderLookup().or(Linker.nativeLinker().defaultLookup());
-
     Windows() {
-        // Suppresses public default constructor, ensuring non-instantiability,
-        // but allows generated subclasses in same package.
+        // Should not be called directly
     }
 
-    public static final ValueLayout.OfBoolean C_BOOL = ValueLayout.JAVA_BOOLEAN;
-    public static final ValueLayout.OfByte C_CHAR = ValueLayout.JAVA_BYTE;
-    public static final ValueLayout.OfShort C_SHORT = ValueLayout.JAVA_SHORT;
-    public static final ValueLayout.OfInt C_INT = ValueLayout.JAVA_INT;
-    public static final ValueLayout.OfLong C_LONG_LONG = ValueLayout.JAVA_LONG;
-    public static final ValueLayout.OfFloat C_FLOAT = ValueLayout.JAVA_FLOAT;
-    public static final ValueLayout.OfDouble C_DOUBLE = ValueLayout.JAVA_DOUBLE;
-    public static final AddressLayout C_POINTER = ValueLayout.ADDRESS
-            .withTargetLayout(MemoryLayout.sequenceLayout(java.lang.Long.MAX_VALUE, JAVA_BYTE));
-    public static final ValueLayout.OfInt C_LONG = ValueLayout.JAVA_INT;
-    public static final ValueLayout.OfDouble C_LONG_DOUBLE = ValueLayout.JAVA_DOUBLE;
-
+    static final Arena LIBRARY_ARENA = Arena.ofAuto();
     static final boolean TRACE_DOWNCALLS = Boolean.getBoolean("jextract.trace.downcalls");
 
     static void traceDowncall(String name, Object... args) {
@@ -44,16 +29,7 @@ public class Windows {
     }
 
     static MemorySegment findOrThrow(String symbol) {
-        return SYMBOL_LOOKUP.find(symbol)
-            .orElseThrow(() -> new UnsatisfiedLinkError("unresolved symbol: " + symbol));
-    }
-
-    static MemoryLayout[] inferVariadicLayouts(Object[] varargs) {
-        MemoryLayout[] result = new MemoryLayout[varargs.length];
-        for (int i = 0; i < varargs.length; i++) {
-            result[i] = variadicLayout(varargs[i].getClass());
-        }
-        return result;
+        return SYMBOL_LOOKUP.findOrThrow(symbol);
     }
 
     static MethodHandle upcallHandle(Class<?> fi, String name, FunctionDescriptor fdesc) {
@@ -64,33 +40,35 @@ public class Windows {
         }
     }
 
-    static MethodHandle downcallHandleVariadic(String name, FunctionDescriptor baseDesc, MemoryLayout[] variadicLayouts) {
-        FunctionDescriptor variadicDesc = baseDesc.appendArgumentLayouts(variadicLayouts);
-        Linker.Option fva = Linker.Option.firstVariadicArg(baseDesc.argumentLayouts().size());
-        return SYMBOL_LOOKUP.find(name)
-                .map(addr -> Linker.nativeLinker().downcallHandle(addr, variadicDesc, fva)
-                        .asSpreader(Object[].class, variadicLayouts.length))
-                .orElse(null);
+    static MemoryLayout align(MemoryLayout layout, long align) {
+        return switch (layout) {
+            case PaddingLayout p -> p;
+            case ValueLayout v -> v.withByteAlignment(align);
+            case GroupLayout g -> {
+                MemoryLayout[] alignedMembers = g.memberLayouts().stream()
+                        .map(m -> align(m, align)).toArray(MemoryLayout[]::new);
+                yield g instanceof StructLayout ?
+                        MemoryLayout.structLayout(alignedMembers) : MemoryLayout.unionLayout(alignedMembers);
+            }
+            case SequenceLayout s -> MemoryLayout.sequenceLayout(s.elementCount(), align(s.elementLayout(), align));
+        };
     }
 
-    // Internals only below this point
+    static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.loaderLookup()
+            .or(Linker.nativeLinker().defaultLookup());
 
-    private static MemoryLayout variadicLayout(Class<?> c) {
-        // apply default argument promotions per C spec
-        // note that all primitives are boxed, since they are passed through an Object[]
-        if (c == Boolean.class || c == Byte.class || c == Character.class || c == Short.class || c == Integer.class) {
-            return JAVA_INT;
-        } else if (c == Long.class) {
-            return JAVA_LONG;
-        } else if (c == Float.class || c == Double.class) {
-            return JAVA_DOUBLE;
-        } else if (MemorySegment.class.isAssignableFrom(c)) {
-            return ADDRESS;
-        }
-        throw new IllegalArgumentException("Invalid type for ABI: " + c.getTypeName());
-    }
+    public static final ValueLayout.OfBoolean C_BOOL = (ValueLayout.OfBoolean) Linker.nativeLinker().canonicalLayouts().get("bool");
+    public static final ValueLayout.OfByte C_CHAR =(ValueLayout.OfByte)Linker.nativeLinker().canonicalLayouts().get("char");
+    public static final ValueLayout.OfShort C_SHORT = (ValueLayout.OfShort) Linker.nativeLinker().canonicalLayouts().get("short");
+    public static final ValueLayout.OfInt C_INT = (ValueLayout.OfInt) Linker.nativeLinker().canonicalLayouts().get("int");
+    public static final ValueLayout.OfLong C_LONG_LONG = (ValueLayout.OfLong) Linker.nativeLinker().canonicalLayouts().get("long long");
+    public static final ValueLayout.OfFloat C_FLOAT = (ValueLayout.OfFloat) Linker.nativeLinker().canonicalLayouts().get("float");
+    public static final ValueLayout.OfDouble C_DOUBLE = (ValueLayout.OfDouble) Linker.nativeLinker().canonicalLayouts().get("double");
+    public static final AddressLayout C_POINTER = ((AddressLayout) Linker.nativeLinker().canonicalLayouts().get("void*"))
+            .withTargetLayout(MemoryLayout.sequenceLayout(java.lang.Long.MAX_VALUE, C_CHAR));
+    public static final ValueLayout.OfInt C_LONG = (ValueLayout.OfInt) Linker.nativeLinker().canonicalLayouts().get("long");
+    public static final ValueLayout.OfDouble C_LONG_DOUBLE = (ValueLayout.OfDouble) Linker.nativeLinker().canonicalLayouts().get("double");
     private static final int FALSE = (int)0L;
-
     /**
      * {@snippet lang=c :
      * #define FALSE 0
@@ -100,7 +78,6 @@ public class Windows {
         return FALSE;
     }
     private static final int TRUE = (int)1L;
-
     /**
      * {@snippet lang=c :
      * #define TRUE 1
@@ -110,7 +87,6 @@ public class Windows {
         return TRUE;
     }
     private static final int FILE_ATTRIBUTE_NORMAL = (int)128L;
-
     /**
      * {@snippet lang=c :
      * #define FILE_ATTRIBUTE_NORMAL 128
@@ -120,7 +96,6 @@ public class Windows {
         return FILE_ATTRIBUTE_NORMAL;
     }
     private static final int OPEN_EXISTING = (int)3L;
-
     /**
      * {@snippet lang=c :
      * #define OPEN_EXISTING 3
@@ -130,7 +105,6 @@ public class Windows {
         return OPEN_EXISTING;
     }
     private static final int FILE_FLAG_OVERLAPPED = (int)1073741824L;
-
     /**
      * {@snippet lang=c :
      * #define FILE_FLAG_OVERLAPPED 1073741824
@@ -140,7 +114,6 @@ public class Windows {
         return FILE_FLAG_OVERLAPPED;
     }
     private static final int DTR_CONTROL_DISABLE = (int)0L;
-
     /**
      * {@snippet lang=c :
      * #define DTR_CONTROL_DISABLE 0
@@ -150,7 +123,6 @@ public class Windows {
         return DTR_CONTROL_DISABLE;
     }
     private static final int RTS_CONTROL_DISABLE = (int)0L;
-
     /**
      * {@snippet lang=c :
      * #define RTS_CONTROL_DISABLE 0
@@ -160,7 +132,6 @@ public class Windows {
         return RTS_CONTROL_DISABLE;
     }
     private static final int RTS_CONTROL_HANDSHAKE = (int)2L;
-
     /**
      * {@snippet lang=c :
      * #define RTS_CONTROL_HANDSHAKE 2
@@ -170,7 +141,6 @@ public class Windows {
         return RTS_CONTROL_HANDSHAKE;
     }
     private static final int FILE_TYPE_UNKNOWN = (int)0L;
-
     /**
      * {@snippet lang=c :
      * #define FILE_TYPE_UNKNOWN 0
@@ -180,7 +150,6 @@ public class Windows {
         return FILE_TYPE_UNKNOWN;
     }
     private static final int FILE_TYPE_CHAR = (int)2L;
-
     /**
      * {@snippet lang=c :
      * #define FILE_TYPE_CHAR 2
@@ -190,7 +159,6 @@ public class Windows {
         return FILE_TYPE_CHAR;
     }
     private static final int NOPARITY = (int)0L;
-
     /**
      * {@snippet lang=c :
      * #define NOPARITY 0
@@ -200,7 +168,6 @@ public class Windows {
         return NOPARITY;
     }
     private static final int ONESTOPBIT = (int)0L;
-
     /**
      * {@snippet lang=c :
      * #define ONESTOPBIT 0
@@ -210,7 +177,6 @@ public class Windows {
         return ONESTOPBIT;
     }
     private static final int TWOSTOPBITS = (int)2L;
-
     /**
      * {@snippet lang=c :
      * #define TWOSTOPBITS 2
@@ -220,7 +186,6 @@ public class Windows {
         return TWOSTOPBITS;
     }
     private static final int CE_RXOVER = (int)1L;
-
     /**
      * {@snippet lang=c :
      * #define CE_RXOVER 1
@@ -230,7 +195,6 @@ public class Windows {
         return CE_RXOVER;
     }
     private static final int CE_OVERRUN = (int)2L;
-
     /**
      * {@snippet lang=c :
      * #define CE_OVERRUN 2
@@ -240,7 +204,6 @@ public class Windows {
         return CE_OVERRUN;
     }
     private static final int CE_RXPARITY = (int)4L;
-
     /**
      * {@snippet lang=c :
      * #define CE_RXPARITY 4
@@ -250,7 +213,6 @@ public class Windows {
         return CE_RXPARITY;
     }
     private static final int CE_FRAME = (int)8L;
-
     /**
      * {@snippet lang=c :
      * #define CE_FRAME 8
@@ -260,7 +222,6 @@ public class Windows {
         return CE_FRAME;
     }
     private static final int CE_BREAK = (int)16L;
-
     /**
      * {@snippet lang=c :
      * #define CE_BREAK 16
@@ -270,7 +231,6 @@ public class Windows {
         return CE_BREAK;
     }
     private static final int EV_RXCHAR = (int)1L;
-
     /**
      * {@snippet lang=c :
      * #define EV_RXCHAR 1
@@ -280,7 +240,6 @@ public class Windows {
         return EV_RXCHAR;
     }
     private static final int EV_RXFLAG = (int)2L;
-
     /**
      * {@snippet lang=c :
      * #define EV_RXFLAG 2
@@ -290,7 +249,6 @@ public class Windows {
         return EV_RXFLAG;
     }
     private static final int EV_CTS = (int)8L;
-
     /**
      * {@snippet lang=c :
      * #define EV_CTS 8
@@ -300,7 +258,6 @@ public class Windows {
         return EV_CTS;
     }
     private static final int EV_DSR = (int)16L;
-
     /**
      * {@snippet lang=c :
      * #define EV_DSR 16
@@ -310,7 +267,6 @@ public class Windows {
         return EV_DSR;
     }
     private static final int EV_RLSD = (int)32L;
-
     /**
      * {@snippet lang=c :
      * #define EV_RLSD 32
@@ -320,7 +276,6 @@ public class Windows {
         return EV_RLSD;
     }
     private static final int EV_BREAK = (int)64L;
-
     /**
      * {@snippet lang=c :
      * #define EV_BREAK 64
@@ -330,7 +285,6 @@ public class Windows {
         return EV_BREAK;
     }
     private static final int EV_ERR = (int)128L;
-
     /**
      * {@snippet lang=c :
      * #define EV_ERR 128
@@ -340,7 +294,6 @@ public class Windows {
         return EV_ERR;
     }
     private static final int EV_RING = (int)256L;
-
     /**
      * {@snippet lang=c :
      * #define EV_RING 256
@@ -350,7 +303,6 @@ public class Windows {
         return EV_RING;
     }
     private static final int SETDTR = (int)5L;
-
     /**
      * {@snippet lang=c :
      * #define SETDTR 5
@@ -360,7 +312,6 @@ public class Windows {
         return SETDTR;
     }
     private static final int FORMAT_MESSAGE_IGNORE_INSERTS = (int)512L;
-
     /**
      * {@snippet lang=c :
      * #define FORMAT_MESSAGE_IGNORE_INSERTS 512
@@ -370,7 +321,6 @@ public class Windows {
         return FORMAT_MESSAGE_IGNORE_INSERTS;
     }
     private static final int FORMAT_MESSAGE_FROM_SYSTEM = (int)4096L;
-
     /**
      * {@snippet lang=c :
      * #define FORMAT_MESSAGE_FROM_SYSTEM 4096
@@ -380,7 +330,6 @@ public class Windows {
         return FORMAT_MESSAGE_FROM_SYSTEM;
     }
     private static final int FORMAT_MESSAGE_MAX_WIDTH_MASK = (int)255L;
-
     /**
      * {@snippet lang=c :
      * #define FORMAT_MESSAGE_MAX_WIDTH_MASK 255
@@ -390,24 +339,51 @@ public class Windows {
         return FORMAT_MESSAGE_MAX_WIDTH_MASK;
     }
 
-    public static MethodHandle CreateFileA$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_POINTER,
-                Windows.C_POINTER,
-                Windows.C_LONG,
-                Windows.C_LONG,
-                Windows.C_POINTER,
-                Windows.C_LONG,
-                Windows.C_LONG,
-                Windows.C_POINTER
-            );
+    private static class CreateFileA {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_POINTER,
+            Windows.C_POINTER,
+            Windows.C_LONG,
+            Windows.C_LONG,
+            Windows.C_POINTER,
+            Windows.C_LONG,
+            Windows.C_LONG,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("CreateFileA"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("CreateFileA");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * HANDLE CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
+     * }
+     */
+    public static FunctionDescriptor CreateFileA$descriptor() {
+        return CreateFileA.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * HANDLE CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
+     * }
+     */
+    public static MethodHandle CreateFileA$handle() {
+        return CreateFileA.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * HANDLE CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
+     * }
+     */
+    public static MemorySegment CreateFileA$address() {
+        return CreateFileA.ADDR;
     }
 
     /**
@@ -416,29 +392,56 @@ public class Windows {
      * }
      */
     public static MemorySegment CreateFileA(MemorySegment lpFileName, int dwDesiredAccess, int dwShareMode, MemorySegment lpSecurityAttributes, int dwCreationDisposition, int dwFlagsAndAttributes, MemorySegment hTemplateFile) {
-        var mh$ = CreateFileA$MH();
+        var mh$ = CreateFileA.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("CreateFileA", lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
             }
-            return (MemorySegment) mh$.invokeExact(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+            return (MemorySegment)mh$.invokeExact(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle FlushFileBuffers$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER
-            );
+    private static class FlushFileBuffers {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("FlushFileBuffers"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("FlushFileBuffers");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL FlushFileBuffers(HANDLE hFile)
+     * }
+     */
+    public static FunctionDescriptor FlushFileBuffers$descriptor() {
+        return FlushFileBuffers.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL FlushFileBuffers(HANDLE hFile)
+     * }
+     */
+    public static MethodHandle FlushFileBuffers$handle() {
+        return FlushFileBuffers.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL FlushFileBuffers(HANDLE hFile)
+     * }
+     */
+    public static MemorySegment FlushFileBuffers$address() {
+        return FlushFileBuffers.ADDR;
     }
 
     /**
@@ -447,29 +450,56 @@ public class Windows {
      * }
      */
     public static int FlushFileBuffers(MemorySegment hFile) {
-        var mh$ = FlushFileBuffers$MH();
+        var mh$ = FlushFileBuffers.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("FlushFileBuffers", hFile);
             }
-            return (int) mh$.invokeExact(hFile);
+            return (int)mh$.invokeExact(hFile);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle GetFileType$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_LONG,
-                Windows.C_POINTER
-            );
+    private static class GetFileType {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_LONG,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("GetFileType"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("GetFileType");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * DWORD GetFileType(HANDLE hFile)
+     * }
+     */
+    public static FunctionDescriptor GetFileType$descriptor() {
+        return GetFileType.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * DWORD GetFileType(HANDLE hFile)
+     * }
+     */
+    public static MethodHandle GetFileType$handle() {
+        return GetFileType.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * DWORD GetFileType(HANDLE hFile)
+     * }
+     */
+    public static MemorySegment GetFileType$address() {
+        return GetFileType.ADDR;
     }
 
     /**
@@ -478,33 +508,60 @@ public class Windows {
      * }
      */
     public static int GetFileType(MemorySegment hFile) {
-        var mh$ = GetFileType$MH();
+        var mh$ = GetFileType.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("GetFileType", hFile);
             }
-            return (int) mh$.invokeExact(hFile);
+            return (int)mh$.invokeExact(hFile);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle ReadFile$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_POINTER,
-                Windows.C_LONG,
-                Windows.C_POINTER,
-                Windows.C_POINTER
-            );
+    private static class ReadFile {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_POINTER,
+            Windows.C_LONG,
+            Windows.C_POINTER,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("ReadFile"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("ReadFile");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
+     * }
+     */
+    public static FunctionDescriptor ReadFile$descriptor() {
+        return ReadFile.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
+     * }
+     */
+    public static MethodHandle ReadFile$handle() {
+        return ReadFile.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
+     * }
+     */
+    public static MemorySegment ReadFile$address() {
+        return ReadFile.ADDR;
     }
 
     /**
@@ -513,33 +570,60 @@ public class Windows {
      * }
      */
     public static int ReadFile(MemorySegment hFile, MemorySegment lpBuffer, int nNumberOfBytesToRead, MemorySegment lpNumberOfBytesRead, MemorySegment lpOverlapped) {
-        var mh$ = ReadFile$MH();
+        var mh$ = ReadFile.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("ReadFile", hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
             }
-            return (int) mh$.invokeExact(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+            return (int)mh$.invokeExact(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle WriteFile$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_POINTER,
-                Windows.C_LONG,
-                Windows.C_POINTER,
-                Windows.C_POINTER
-            );
+    private static class WriteFile {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_POINTER,
+            Windows.C_LONG,
+            Windows.C_POINTER,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("WriteFile"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("WriteFile");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped)
+     * }
+     */
+    public static FunctionDescriptor WriteFile$descriptor() {
+        return WriteFile.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped)
+     * }
+     */
+    public static MethodHandle WriteFile$handle() {
+        return WriteFile.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped)
+     * }
+     */
+    public static MemorySegment WriteFile$address() {
+        return WriteFile.ADDR;
     }
 
     /**
@@ -548,29 +632,56 @@ public class Windows {
      * }
      */
     public static int WriteFile(MemorySegment hFile, MemorySegment lpBuffer, int nNumberOfBytesToWrite, MemorySegment lpNumberOfBytesWritten, MemorySegment lpOverlapped) {
-        var mh$ = WriteFile$MH();
+        var mh$ = WriteFile.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("WriteFile", hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
             }
-            return (int) mh$.invokeExact(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
+            return (int)mh$.invokeExact(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle CloseHandle$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER
-            );
+    private static class CloseHandle {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("CloseHandle"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("CloseHandle");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL CloseHandle(HANDLE hObject)
+     * }
+     */
+    public static FunctionDescriptor CloseHandle$descriptor() {
+        return CloseHandle.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL CloseHandle(HANDLE hObject)
+     * }
+     */
+    public static MethodHandle CloseHandle$handle() {
+        return CloseHandle.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL CloseHandle(HANDLE hObject)
+     * }
+     */
+    public static MemorySegment CloseHandle$address() {
+        return CloseHandle.ADDR;
     }
 
     /**
@@ -579,27 +690,54 @@ public class Windows {
      * }
      */
     public static int CloseHandle(MemorySegment hObject) {
-        var mh$ = CloseHandle$MH();
+        var mh$ = CloseHandle.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("CloseHandle", hObject);
             }
-            return (int) mh$.invokeExact(hObject);
+            return (int)mh$.invokeExact(hObject);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle GetLastError$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_LONG        );
+    private static class GetLastError {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_LONG    );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("GetLastError"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("GetLastError");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * DWORD GetLastError(void)
+     * }
+     */
+    public static FunctionDescriptor GetLastError$descriptor() {
+        return GetLastError.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * DWORD GetLastError(void)
+     * }
+     */
+    public static MethodHandle GetLastError$handle() {
+        return GetLastError.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * DWORD GetLastError(void)
+     * }
+     */
+    public static MemorySegment GetLastError$address() {
+        return GetLastError.ADDR;
     }
 
     /**
@@ -608,32 +746,59 @@ public class Windows {
      * }
      */
     public static int GetLastError() {
-        var mh$ = GetLastError$MH();
+        var mh$ = GetLastError.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("GetLastError");
             }
-            return (int) mh$.invokeExact();
+            return (int)mh$.invokeExact();
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle GetOverlappedResult$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_POINTER,
-                Windows.C_POINTER,
-                Windows.C_INT
-            );
+    private static class GetOverlappedResult {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_POINTER,
+            Windows.C_POINTER,
+            Windows.C_INT
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("GetOverlappedResult"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("GetOverlappedResult");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, BOOL bWait)
+     * }
+     */
+    public static FunctionDescriptor GetOverlappedResult$descriptor() {
+        return GetOverlappedResult.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, BOOL bWait)
+     * }
+     */
+    public static MethodHandle GetOverlappedResult$handle() {
+        return GetOverlappedResult.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, BOOL bWait)
+     * }
+     */
+    public static MemorySegment GetOverlappedResult$address() {
+        return GetOverlappedResult.ADDR;
     }
 
     /**
@@ -642,30 +807,57 @@ public class Windows {
      * }
      */
     public static int GetOverlappedResult(MemorySegment hFile, MemorySegment lpOverlapped, MemorySegment lpNumberOfBytesTransferred, int bWait) {
-        var mh$ = GetOverlappedResult$MH();
+        var mh$ = GetOverlappedResult.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("GetOverlappedResult", hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
             }
-            return (int) mh$.invokeExact(hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
+            return (int)mh$.invokeExact(hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle WaitForSingleObject$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_LONG,
-                Windows.C_POINTER,
-                Windows.C_LONG
-            );
+    private static class WaitForSingleObject {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_LONG,
+            Windows.C_POINTER,
+            Windows.C_LONG
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("WaitForSingleObject"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("WaitForSingleObject");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
+     * }
+     */
+    public static FunctionDescriptor WaitForSingleObject$descriptor() {
+        return WaitForSingleObject.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
+     * }
+     */
+    public static MethodHandle WaitForSingleObject$handle() {
+        return WaitForSingleObject.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
+     * }
+     */
+    public static MemorySegment WaitForSingleObject$address() {
+        return WaitForSingleObject.ADDR;
     }
 
     /**
@@ -674,32 +866,59 @@ public class Windows {
      * }
      */
     public static int WaitForSingleObject(MemorySegment hHandle, int dwMilliseconds) {
-        var mh$ = WaitForSingleObject$MH();
+        var mh$ = WaitForSingleObject.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("WaitForSingleObject", hHandle, dwMilliseconds);
             }
-            return (int) mh$.invokeExact(hHandle, dwMilliseconds);
+            return (int)mh$.invokeExact(hHandle, dwMilliseconds);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle CreateEventA$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_POINTER,
-                Windows.C_POINTER,
-                Windows.C_INT,
-                Windows.C_INT,
-                Windows.C_POINTER
-            );
+    private static class CreateEventA {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_POINTER,
+            Windows.C_POINTER,
+            Windows.C_INT,
+            Windows.C_INT,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("CreateEventA"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("CreateEventA");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * HANDLE CreateEventA(LPSECURITY_ATTRIBUTES lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCSTR lpName)
+     * }
+     */
+    public static FunctionDescriptor CreateEventA$descriptor() {
+        return CreateEventA.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * HANDLE CreateEventA(LPSECURITY_ATTRIBUTES lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCSTR lpName)
+     * }
+     */
+    public static MethodHandle CreateEventA$handle() {
+        return CreateEventA.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * HANDLE CreateEventA(LPSECURITY_ATTRIBUTES lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCSTR lpName)
+     * }
+     */
+    public static MemorySegment CreateEventA$address() {
+        return CreateEventA.ADDR;
     }
 
     /**
@@ -708,31 +927,58 @@ public class Windows {
      * }
      */
     public static MemorySegment CreateEventA(MemorySegment lpEventAttributes, int bManualReset, int bInitialState, MemorySegment lpName) {
-        var mh$ = CreateEventA$MH();
+        var mh$ = CreateEventA.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("CreateEventA", lpEventAttributes, bManualReset, bInitialState, lpName);
             }
-            return (MemorySegment) mh$.invokeExact(lpEventAttributes, bManualReset, bInitialState, lpName);
+            return (MemorySegment)mh$.invokeExact(lpEventAttributes, bManualReset, bInitialState, lpName);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle ClearCommError$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_POINTER,
-                Windows.C_POINTER
-            );
+    private static class ClearCommError {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_POINTER,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("ClearCommError"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("ClearCommError");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpStat)
+     * }
+     */
+    public static FunctionDescriptor ClearCommError$descriptor() {
+        return ClearCommError.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpStat)
+     * }
+     */
+    public static MethodHandle ClearCommError$handle() {
+        return ClearCommError.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpStat)
+     * }
+     */
+    public static MemorySegment ClearCommError$address() {
+        return ClearCommError.ADDR;
     }
 
     /**
@@ -741,31 +987,58 @@ public class Windows {
      * }
      */
     public static int ClearCommError(MemorySegment hFile, MemorySegment lpErrors, MemorySegment lpStat) {
-        var mh$ = ClearCommError$MH();
+        var mh$ = ClearCommError.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("ClearCommError", hFile, lpErrors, lpStat);
             }
-            return (int) mh$.invokeExact(hFile, lpErrors, lpStat);
+            return (int)mh$.invokeExact(hFile, lpErrors, lpStat);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle SetupComm$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_LONG,
-                Windows.C_LONG
-            );
+    private static class SetupComm {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_LONG,
+            Windows.C_LONG
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("SetupComm"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("SetupComm");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL SetupComm(HANDLE hFile, DWORD dwInQueue, DWORD dwOutQueue)
+     * }
+     */
+    public static FunctionDescriptor SetupComm$descriptor() {
+        return SetupComm.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL SetupComm(HANDLE hFile, DWORD dwInQueue, DWORD dwOutQueue)
+     * }
+     */
+    public static MethodHandle SetupComm$handle() {
+        return SetupComm.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL SetupComm(HANDLE hFile, DWORD dwInQueue, DWORD dwOutQueue)
+     * }
+     */
+    public static MemorySegment SetupComm$address() {
+        return SetupComm.ADDR;
     }
 
     /**
@@ -774,30 +1047,57 @@ public class Windows {
      * }
      */
     public static int SetupComm(MemorySegment hFile, int dwInQueue, int dwOutQueue) {
-        var mh$ = SetupComm$MH();
+        var mh$ = SetupComm.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("SetupComm", hFile, dwInQueue, dwOutQueue);
             }
-            return (int) mh$.invokeExact(hFile, dwInQueue, dwOutQueue);
+            return (int)mh$.invokeExact(hFile, dwInQueue, dwOutQueue);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle EscapeCommFunction$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_LONG
-            );
+    private static class EscapeCommFunction {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_LONG
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("EscapeCommFunction"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("EscapeCommFunction");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
+     * }
+     */
+    public static FunctionDescriptor EscapeCommFunction$descriptor() {
+        return EscapeCommFunction.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
+     * }
+     */
+    public static MethodHandle EscapeCommFunction$handle() {
+        return EscapeCommFunction.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
+     * }
+     */
+    public static MemorySegment EscapeCommFunction$address() {
+        return EscapeCommFunction.ADDR;
     }
 
     /**
@@ -806,30 +1106,57 @@ public class Windows {
      * }
      */
     public static int EscapeCommFunction(MemorySegment hFile, int dwFunc) {
-        var mh$ = EscapeCommFunction$MH();
+        var mh$ = EscapeCommFunction.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("EscapeCommFunction", hFile, dwFunc);
             }
-            return (int) mh$.invokeExact(hFile, dwFunc);
+            return (int)mh$.invokeExact(hFile, dwFunc);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle GetCommMask$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_POINTER
-            );
+    private static class GetCommMask {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("GetCommMask"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("GetCommMask");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL GetCommMask(HANDLE hFile, LPDWORD lpEvtMask)
+     * }
+     */
+    public static FunctionDescriptor GetCommMask$descriptor() {
+        return GetCommMask.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL GetCommMask(HANDLE hFile, LPDWORD lpEvtMask)
+     * }
+     */
+    public static MethodHandle GetCommMask$handle() {
+        return GetCommMask.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL GetCommMask(HANDLE hFile, LPDWORD lpEvtMask)
+     * }
+     */
+    public static MemorySegment GetCommMask$address() {
+        return GetCommMask.ADDR;
     }
 
     /**
@@ -838,30 +1165,57 @@ public class Windows {
      * }
      */
     public static int GetCommMask(MemorySegment hFile, MemorySegment lpEvtMask) {
-        var mh$ = GetCommMask$MH();
+        var mh$ = GetCommMask.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("GetCommMask", hFile, lpEvtMask);
             }
-            return (int) mh$.invokeExact(hFile, lpEvtMask);
+            return (int)mh$.invokeExact(hFile, lpEvtMask);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle GetCommProperties$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_POINTER
-            );
+    private static class GetCommProperties {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("GetCommProperties"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("GetCommProperties");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL GetCommProperties(HANDLE hFile, LPCOMMPROP lpCommProp)
+     * }
+     */
+    public static FunctionDescriptor GetCommProperties$descriptor() {
+        return GetCommProperties.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL GetCommProperties(HANDLE hFile, LPCOMMPROP lpCommProp)
+     * }
+     */
+    public static MethodHandle GetCommProperties$handle() {
+        return GetCommProperties.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL GetCommProperties(HANDLE hFile, LPCOMMPROP lpCommProp)
+     * }
+     */
+    public static MemorySegment GetCommProperties$address() {
+        return GetCommProperties.ADDR;
     }
 
     /**
@@ -870,30 +1224,57 @@ public class Windows {
      * }
      */
     public static int GetCommProperties(MemorySegment hFile, MemorySegment lpCommProp) {
-        var mh$ = GetCommProperties$MH();
+        var mh$ = GetCommProperties.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("GetCommProperties", hFile, lpCommProp);
             }
-            return (int) mh$.invokeExact(hFile, lpCommProp);
+            return (int)mh$.invokeExact(hFile, lpCommProp);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle GetCommModemStatus$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_POINTER
-            );
+    private static class GetCommModemStatus {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("GetCommModemStatus"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("GetCommModemStatus");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL GetCommModemStatus(HANDLE hFile, LPDWORD lpModemStat)
+     * }
+     */
+    public static FunctionDescriptor GetCommModemStatus$descriptor() {
+        return GetCommModemStatus.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL GetCommModemStatus(HANDLE hFile, LPDWORD lpModemStat)
+     * }
+     */
+    public static MethodHandle GetCommModemStatus$handle() {
+        return GetCommModemStatus.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL GetCommModemStatus(HANDLE hFile, LPDWORD lpModemStat)
+     * }
+     */
+    public static MemorySegment GetCommModemStatus$address() {
+        return GetCommModemStatus.ADDR;
     }
 
     /**
@@ -902,30 +1283,57 @@ public class Windows {
      * }
      */
     public static int GetCommModemStatus(MemorySegment hFile, MemorySegment lpModemStat) {
-        var mh$ = GetCommModemStatus$MH();
+        var mh$ = GetCommModemStatus.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("GetCommModemStatus", hFile, lpModemStat);
             }
-            return (int) mh$.invokeExact(hFile, lpModemStat);
+            return (int)mh$.invokeExact(hFile, lpModemStat);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle GetCommState$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_POINTER
-            );
+    private static class GetCommState {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("GetCommState"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("GetCommState");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL GetCommState(HANDLE hFile, LPDCB lpDCB)
+     * }
+     */
+    public static FunctionDescriptor GetCommState$descriptor() {
+        return GetCommState.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL GetCommState(HANDLE hFile, LPDCB lpDCB)
+     * }
+     */
+    public static MethodHandle GetCommState$handle() {
+        return GetCommState.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL GetCommState(HANDLE hFile, LPDCB lpDCB)
+     * }
+     */
+    public static MemorySegment GetCommState$address() {
+        return GetCommState.ADDR;
     }
 
     /**
@@ -934,30 +1342,57 @@ public class Windows {
      * }
      */
     public static int GetCommState(MemorySegment hFile, MemorySegment lpDCB) {
-        var mh$ = GetCommState$MH();
+        var mh$ = GetCommState.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("GetCommState", hFile, lpDCB);
             }
-            return (int) mh$.invokeExact(hFile, lpDCB);
+            return (int)mh$.invokeExact(hFile, lpDCB);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle GetCommTimeouts$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_POINTER
-            );
+    private static class GetCommTimeouts {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("GetCommTimeouts"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("GetCommTimeouts");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL GetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
+     * }
+     */
+    public static FunctionDescriptor GetCommTimeouts$descriptor() {
+        return GetCommTimeouts.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL GetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
+     * }
+     */
+    public static MethodHandle GetCommTimeouts$handle() {
+        return GetCommTimeouts.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL GetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
+     * }
+     */
+    public static MemorySegment GetCommTimeouts$address() {
+        return GetCommTimeouts.ADDR;
     }
 
     /**
@@ -966,30 +1401,57 @@ public class Windows {
      * }
      */
     public static int GetCommTimeouts(MemorySegment hFile, MemorySegment lpCommTimeouts) {
-        var mh$ = GetCommTimeouts$MH();
+        var mh$ = GetCommTimeouts.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("GetCommTimeouts", hFile, lpCommTimeouts);
             }
-            return (int) mh$.invokeExact(hFile, lpCommTimeouts);
+            return (int)mh$.invokeExact(hFile, lpCommTimeouts);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle SetCommMask$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_LONG
-            );
+    private static class SetCommMask {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_LONG
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("SetCommMask"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("SetCommMask");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL SetCommMask(HANDLE hFile, DWORD dwEvtMask)
+     * }
+     */
+    public static FunctionDescriptor SetCommMask$descriptor() {
+        return SetCommMask.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL SetCommMask(HANDLE hFile, DWORD dwEvtMask)
+     * }
+     */
+    public static MethodHandle SetCommMask$handle() {
+        return SetCommMask.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL SetCommMask(HANDLE hFile, DWORD dwEvtMask)
+     * }
+     */
+    public static MemorySegment SetCommMask$address() {
+        return SetCommMask.ADDR;
     }
 
     /**
@@ -998,30 +1460,57 @@ public class Windows {
      * }
      */
     public static int SetCommMask(MemorySegment hFile, int dwEvtMask) {
-        var mh$ = SetCommMask$MH();
+        var mh$ = SetCommMask.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("SetCommMask", hFile, dwEvtMask);
             }
-            return (int) mh$.invokeExact(hFile, dwEvtMask);
+            return (int)mh$.invokeExact(hFile, dwEvtMask);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle SetCommState$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_POINTER
-            );
+    private static class SetCommState {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("SetCommState"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("SetCommState");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL SetCommState(HANDLE hFile, LPDCB lpDCB)
+     * }
+     */
+    public static FunctionDescriptor SetCommState$descriptor() {
+        return SetCommState.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL SetCommState(HANDLE hFile, LPDCB lpDCB)
+     * }
+     */
+    public static MethodHandle SetCommState$handle() {
+        return SetCommState.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL SetCommState(HANDLE hFile, LPDCB lpDCB)
+     * }
+     */
+    public static MemorySegment SetCommState$address() {
+        return SetCommState.ADDR;
     }
 
     /**
@@ -1030,30 +1519,57 @@ public class Windows {
      * }
      */
     public static int SetCommState(MemorySegment hFile, MemorySegment lpDCB) {
-        var mh$ = SetCommState$MH();
+        var mh$ = SetCommState.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("SetCommState", hFile, lpDCB);
             }
-            return (int) mh$.invokeExact(hFile, lpDCB);
+            return (int)mh$.invokeExact(hFile, lpDCB);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle SetCommTimeouts$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_POINTER
-            );
+    private static class SetCommTimeouts {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("SetCommTimeouts"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("SetCommTimeouts");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
+     * }
+     */
+    public static FunctionDescriptor SetCommTimeouts$descriptor() {
+        return SetCommTimeouts.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
+     * }
+     */
+    public static MethodHandle SetCommTimeouts$handle() {
+        return SetCommTimeouts.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
+     * }
+     */
+    public static MemorySegment SetCommTimeouts$address() {
+        return SetCommTimeouts.ADDR;
     }
 
     /**
@@ -1062,31 +1578,58 @@ public class Windows {
      * }
      */
     public static int SetCommTimeouts(MemorySegment hFile, MemorySegment lpCommTimeouts) {
-        var mh$ = SetCommTimeouts$MH();
+        var mh$ = SetCommTimeouts.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("SetCommTimeouts", hFile, lpCommTimeouts);
             }
-            return (int) mh$.invokeExact(hFile, lpCommTimeouts);
+            return (int)mh$.invokeExact(hFile, lpCommTimeouts);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle WaitCommEvent$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_INT,
-                Windows.C_POINTER,
-                Windows.C_POINTER,
-                Windows.C_POINTER
-            );
+    private static class WaitCommEvent {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_INT,
+            Windows.C_POINTER,
+            Windows.C_POINTER,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("WaitCommEvent"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("WaitCommEvent");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BOOL WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped)
+     * }
+     */
+    public static FunctionDescriptor WaitCommEvent$descriptor() {
+        return WaitCommEvent.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BOOL WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped)
+     * }
+     */
+    public static MethodHandle WaitCommEvent$handle() {
+        return WaitCommEvent.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BOOL WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped)
+     * }
+     */
+    public static MemorySegment WaitCommEvent$address() {
+        return WaitCommEvent.ADDR;
     }
 
     /**
@@ -1095,35 +1638,62 @@ public class Windows {
      * }
      */
     public static int WaitCommEvent(MemorySegment hFile, MemorySegment lpEvtMask, MemorySegment lpOverlapped) {
-        var mh$ = WaitCommEvent$MH();
+        var mh$ = WaitCommEvent.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("WaitCommEvent", hFile, lpEvtMask, lpOverlapped);
             }
-            return (int) mh$.invokeExact(hFile, lpEvtMask, lpOverlapped);
+            return (int)mh$.invokeExact(hFile, lpEvtMask, lpOverlapped);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle FormatMessageA$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_LONG,
-                Windows.C_LONG,
-                Windows.C_POINTER,
-                Windows.C_LONG,
-                Windows.C_LONG,
-                Windows.C_POINTER,
-                Windows.C_LONG,
-                Windows.C_POINTER
-            );
+    private static class FormatMessageA {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_LONG,
+            Windows.C_LONG,
+            Windows.C_POINTER,
+            Windows.C_LONG,
+            Windows.C_LONG,
+            Windows.C_POINTER,
+            Windows.C_LONG,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("FormatMessageA"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("FormatMessageA");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * DWORD FormatMessageA(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPSTR lpBuffer, DWORD nSize, va_list *Arguments)
+     * }
+     */
+    public static FunctionDescriptor FormatMessageA$descriptor() {
+        return FormatMessageA.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * DWORD FormatMessageA(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPSTR lpBuffer, DWORD nSize, va_list *Arguments)
+     * }
+     */
+    public static MethodHandle FormatMessageA$handle() {
+        return FormatMessageA.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * DWORD FormatMessageA(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPSTR lpBuffer, DWORD nSize, va_list *Arguments)
+     * }
+     */
+    public static MemorySegment FormatMessageA$address() {
+        return FormatMessageA.ADDR;
     }
 
     /**
@@ -1132,29 +1702,56 @@ public class Windows {
      * }
      */
     public static int FormatMessageA(int dwFlags, MemorySegment lpSource, int dwMessageId, int dwLanguageId, MemorySegment lpBuffer, int nSize, MemorySegment Arguments) {
-        var mh$ = FormatMessageA$MH();
+        var mh$ = FormatMessageA.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("FormatMessageA", dwFlags, lpSource, dwMessageId, dwLanguageId, lpBuffer, nSize, Arguments);
             }
-            return (int) mh$.invokeExact(dwFlags, lpSource, dwMessageId, dwLanguageId, lpBuffer, nSize, Arguments);
+            return (int)mh$.invokeExact(dwFlags, lpSource, dwMessageId, dwLanguageId, lpBuffer, nSize, Arguments);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle RegCloseKey$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_LONG,
-                Windows.C_POINTER
-            );
+    private static class RegCloseKey {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_LONG,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("RegCloseKey"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("RegCloseKey");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * LSTATUS RegCloseKey(HKEY hKey)
+     * }
+     */
+    public static FunctionDescriptor RegCloseKey$descriptor() {
+        return RegCloseKey.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * LSTATUS RegCloseKey(HKEY hKey)
+     * }
+     */
+    public static MethodHandle RegCloseKey$handle() {
+        return RegCloseKey.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * LSTATUS RegCloseKey(HKEY hKey)
+     * }
+     */
+    public static MemorySegment RegCloseKey$address() {
+        return RegCloseKey.ADDR;
     }
 
     /**
@@ -1163,36 +1760,63 @@ public class Windows {
      * }
      */
     public static int RegCloseKey(MemorySegment hKey) {
-        var mh$ = RegCloseKey$MH();
+        var mh$ = RegCloseKey.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("RegCloseKey", hKey);
             }
-            return (int) mh$.invokeExact(hKey);
+            return (int)mh$.invokeExact(hKey);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle RegEnumValueA$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_LONG,
-                Windows.C_POINTER,
-                Windows.C_LONG,
-                Windows.C_POINTER,
-                Windows.C_POINTER,
-                Windows.C_POINTER,
-                Windows.C_POINTER,
-                Windows.C_POINTER,
-                Windows.C_POINTER
-            );
+    private static class RegEnumValueA {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_LONG,
+            Windows.C_POINTER,
+            Windows.C_LONG,
+            Windows.C_POINTER,
+            Windows.C_POINTER,
+            Windows.C_POINTER,
+            Windows.C_POINTER,
+            Windows.C_POINTER,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("RegEnumValueA"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("RegEnumValueA");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * LSTATUS RegEnumValueA(HKEY hKey, DWORD dwIndex, LPSTR lpValueName, LPDWORD lpcchValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+     * }
+     */
+    public static FunctionDescriptor RegEnumValueA$descriptor() {
+        return RegEnumValueA.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * LSTATUS RegEnumValueA(HKEY hKey, DWORD dwIndex, LPSTR lpValueName, LPDWORD lpcchValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+     * }
+     */
+    public static MethodHandle RegEnumValueA$handle() {
+        return RegEnumValueA.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * LSTATUS RegEnumValueA(HKEY hKey, DWORD dwIndex, LPSTR lpValueName, LPDWORD lpcchValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+     * }
+     */
+    public static MemorySegment RegEnumValueA$address() {
+        return RegEnumValueA.ADDR;
     }
 
     /**
@@ -1201,33 +1825,60 @@ public class Windows {
      * }
      */
     public static int RegEnumValueA(MemorySegment hKey, int dwIndex, MemorySegment lpValueName, MemorySegment lpcchValueName, MemorySegment lpReserved, MemorySegment lpType, MemorySegment lpData, MemorySegment lpcbData) {
-        var mh$ = RegEnumValueA$MH();
+        var mh$ = RegEnumValueA.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("RegEnumValueA", hKey, dwIndex, lpValueName, lpcchValueName, lpReserved, lpType, lpData, lpcbData);
             }
-            return (int) mh$.invokeExact(hKey, dwIndex, lpValueName, lpcchValueName, lpReserved, lpType, lpData, lpcbData);
+            return (int)mh$.invokeExact(hKey, dwIndex, lpValueName, lpcchValueName, lpReserved, lpType, lpData, lpcbData);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    public static MethodHandle RegOpenKeyExA$MH() {
-        class Holder {
-            static final FunctionDescriptor DESC = FunctionDescriptor.of(
-                Windows.C_LONG,
-                Windows.C_POINTER,
-                Windows.C_POINTER,
-                Windows.C_LONG,
-                Windows.C_LONG,
-                Windows.C_POINTER
-            );
+    private static class RegOpenKeyExA {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Windows.C_LONG,
+            Windows.C_POINTER,
+            Windows.C_POINTER,
+            Windows.C_LONG,
+            Windows.C_LONG,
+            Windows.C_POINTER
+        );
 
-            static final MethodHandle MH = Linker.nativeLinker().downcallHandle(
-                    Windows.findOrThrow("RegOpenKeyExA"),
-                    DESC);
-        }
-        return Holder.MH;
+        public static final MemorySegment ADDR = Windows.findOrThrow("RegOpenKeyExA");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * LSTATUS RegOpenKeyExA(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult)
+     * }
+     */
+    public static FunctionDescriptor RegOpenKeyExA$descriptor() {
+        return RegOpenKeyExA.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * LSTATUS RegOpenKeyExA(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult)
+     * }
+     */
+    public static MethodHandle RegOpenKeyExA$handle() {
+        return RegOpenKeyExA.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * LSTATUS RegOpenKeyExA(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult)
+     * }
+     */
+    public static MemorySegment RegOpenKeyExA$address() {
+        return RegOpenKeyExA.ADDR;
     }
 
     /**
@@ -1236,18 +1887,17 @@ public class Windows {
      * }
      */
     public static int RegOpenKeyExA(MemorySegment hKey, MemorySegment lpSubKey, int ulOptions, int samDesired, MemorySegment phkResult) {
-        var mh$ = RegOpenKeyExA$MH();
+        var mh$ = RegOpenKeyExA.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("RegOpenKeyExA", hKey, lpSubKey, ulOptions, samDesired, phkResult);
             }
-            return (int) mh$.invokeExact(hKey, lpSubKey, ulOptions, samDesired, phkResult);
+            return (int)mh$.invokeExact(hKey, lpSubKey, ulOptions, samDesired, phkResult);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
     private static final MemorySegment NULL = MemorySegment.ofAddress(0L);
-
     /**
      * {@snippet lang=c :
      * #define NULL (void*) 0
@@ -1257,7 +1907,6 @@ public class Windows {
         return NULL;
     }
     private static final int GENERIC_READ = (int)2147483648L;
-
     /**
      * {@snippet lang=c :
      * #define GENERIC_READ 2147483648
@@ -1267,7 +1916,6 @@ public class Windows {
         return GENERIC_READ;
     }
     private static final int GENERIC_WRITE = (int)1073741824L;
-
     /**
      * {@snippet lang=c :
      * #define GENERIC_WRITE 1073741824
@@ -1277,7 +1925,6 @@ public class Windows {
         return GENERIC_WRITE;
     }
     private static final int KEY_READ = (int)131097L;
-
     /**
      * {@snippet lang=c :
      * #define KEY_READ 131097
@@ -1287,7 +1934,6 @@ public class Windows {
         return KEY_READ;
     }
     private static final MemorySegment INVALID_HANDLE_VALUE = MemorySegment.ofAddress(-1L);
-
     /**
      * {@snippet lang=c :
      * #define INVALID_HANDLE_VALUE (void*) -1
@@ -1297,7 +1943,6 @@ public class Windows {
         return INVALID_HANDLE_VALUE;
     }
     private static final int WAIT_OBJECT_0 = (int)0L;
-
     /**
      * {@snippet lang=c :
      * #define WAIT_OBJECT_0 0
@@ -1307,7 +1952,6 @@ public class Windows {
         return WAIT_OBJECT_0;
     }
     private static final int INFINITE = (int)4294967295L;
-
     /**
      * {@snippet lang=c :
      * #define INFINITE 4294967295
@@ -1317,7 +1961,6 @@ public class Windows {
         return INFINITE;
     }
     private static final int ERROR_SUCCESS = (int)0L;
-
     /**
      * {@snippet lang=c :
      * #define ERROR_SUCCESS 0
@@ -1327,7 +1970,6 @@ public class Windows {
         return ERROR_SUCCESS;
     }
     private static final int NO_ERROR = (int)0L;
-
     /**
      * {@snippet lang=c :
      * #define NO_ERROR 0
@@ -1337,7 +1979,6 @@ public class Windows {
         return NO_ERROR;
     }
     private static final int ERROR_FILE_NOT_FOUND = (int)2L;
-
     /**
      * {@snippet lang=c :
      * #define ERROR_FILE_NOT_FOUND 2
@@ -1347,7 +1988,6 @@ public class Windows {
         return ERROR_FILE_NOT_FOUND;
     }
     private static final int ERROR_PATH_NOT_FOUND = (int)3L;
-
     /**
      * {@snippet lang=c :
      * #define ERROR_PATH_NOT_FOUND 3
@@ -1357,7 +1997,6 @@ public class Windows {
         return ERROR_PATH_NOT_FOUND;
     }
     private static final int ERROR_NO_MORE_ITEMS = (int)259L;
-
     /**
      * {@snippet lang=c :
      * #define ERROR_NO_MORE_ITEMS 259
@@ -1367,7 +2006,6 @@ public class Windows {
         return ERROR_NO_MORE_ITEMS;
     }
     private static final int ERROR_IO_PENDING = (int)997L;
-
     /**
      * {@snippet lang=c :
      * #define ERROR_IO_PENDING 997
@@ -1377,7 +2015,6 @@ public class Windows {
         return ERROR_IO_PENDING;
     }
     private static final MemorySegment HKEY_LOCAL_MACHINE = MemorySegment.ofAddress(-2147483646L);
-
     /**
      * {@snippet lang=c :
      * #define HKEY_LOCAL_MACHINE (void*) -2147483646
