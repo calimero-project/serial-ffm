@@ -16,7 +16,7 @@ repositories {
 group = "io.calimero"
 version = "0.1-SNAPSHOT"
 
-extra["junitJupiterVersion"] = "5.11.3"
+extra["junitJupiterVersion"] = "5.12.0"
 
 java {
     toolchain {
