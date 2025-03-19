@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2024 B. Malinowsky
+// Copyright (c) 2022, 2025 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -130,7 +130,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 			var /*DIR*/ addr = Linux.opendir(arena.allocateFrom(dir));
 			if (addr.equals(Linux.NULL())) {
-				logger.log(WARNING, "can't open {0}: ", dir, errnoMsg());
+				logger.log(WARNING, "cannot open {0}: ", dir, errnoMsg());
 				return ports;
 			}
 
@@ -550,7 +550,7 @@ final class UnixSerialPort extends ReadWritePort {
 		final String dir = "/dev/serial/by-id";
 		var /*DIR*/ addr = Linux.opendir(arena.allocateFrom(dir));
 		if (addr.equals(Linux.NULL())) {
-			logger.log(WARNING, "can't open {0}: ", dir, errnoMsg());
+			logger.log(WARNING, "cannot open {0}: ", dir, errnoMsg());
 			return false;
 		}
 
