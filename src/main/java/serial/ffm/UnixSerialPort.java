@@ -459,9 +459,10 @@ final class UnixSerialPort extends ReadWritePort {
 		final var lockFile = createLockName(lockDir, lckPrefix, name);
 //		logger.log(TRACE, "release lock {0}", lockFile);
 		lockedPort = "";
-		final int pid = readPid(Path.of(lockFile));
+		var path = Path.of(lockFile);
+		final int pid = readPid(path);
 		if (pid != -1 && pid == Linux.getpid())
-			Files.deleteIfExists(Path.of(lockFile));
+			Files.deleteIfExists(path);
 	}
 
 	private boolean setPortDefaults(final int fd) {

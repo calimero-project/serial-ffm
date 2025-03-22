@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2024 B. Malinowsky
+// Copyright (c) 2022, 2025 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -253,6 +253,8 @@ abstract class ReadWritePort implements SerialPort {
 		}
 	}
 
+	abstract int status(Arena arena, Status type) throws IOException;
+
 	void open(final String portId) throws IOException {
 		logger.log(TRACE, "open {0}", portId);
 		lock.lock();
@@ -266,8 +268,6 @@ abstract class ReadWritePort implements SerialPort {
 	}
 
 	abstract void open(Arena arena, String portId) throws IOException;
-
-	abstract int status(Arena arena, Status type) throws IOException;
 
 	final int read() throws IOException {
 		try (var arena = Arena.ofConfined()) {
