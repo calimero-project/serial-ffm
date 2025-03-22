@@ -309,6 +309,9 @@ abstract class ReadWritePort implements SerialPort {
 			if (written != 1)
 				throw new IOException("write failed");
 		}
+		finally {
+			logger.log(TRACE, "end write");
+		}
 	}
 
 	final int writeBytes(final byte[] bytes, final int offset, final int length) throws IOException {
