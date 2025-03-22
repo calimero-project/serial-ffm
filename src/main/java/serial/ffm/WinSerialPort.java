@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2024 B. Malinowsky
+// Copyright (c) 2022, 2025 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -38,13 +38,13 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.win.HKEY__;
-import org.win.Windows;
-import org.win._COMMPROP;
-import org.win._COMMTIMEOUTS;
-import org.win._COMSTAT;
-import org.win._DCB;
-import org.win._OVERLAPPED;
+import serial.ffm.win.HKEY__;
+import serial.ffm.win.Windows;
+import serial.ffm.win._COMMPROP;
+import serial.ffm.win._COMMTIMEOUTS;
+import serial.ffm.win._COMSTAT;
+import serial.ffm.win._DCB;
+import serial.ffm.win._OVERLAPPED;
 
 /**
  * Serial communication using Panama FFM to invoke the Windows Comm API. The implementation of this API

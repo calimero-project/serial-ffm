@@ -117,7 +117,7 @@ tasks.jextract {
 //            paths = listOf("C:/mingw64/x86_64-w64-mingw32/include")
             val sdkDir = "C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0"
             paths = listOf("$sdkDir/um", "$sdkDir/shared", "$sdkDir/ucrt")
-            tgtPkg = "org.win"
+            tgtPkg = "serial.ffm.win"
             clsName = "Windows"
 
             // adjust filters for Windows
