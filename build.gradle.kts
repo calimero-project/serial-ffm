@@ -146,6 +146,9 @@ tasks.jextract {
             typedefFilter = listOf("fd_set")
         }
         os.contains("mac") -> {
+            headersDir = "unix"
+            tgtPkg = "serial.ffm.mac"
+            clsName = "Mac"
             paths = listOf("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include")
             funcFilter = funcFilter + listOf("__error")
         }
