@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2023 B. Malinowsky
+// Copyright (c) 2022, 2025 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -198,6 +198,16 @@ class SerialPortTests {
 		finally {
 			port.close();
 		}
+	}
+
+	@Test
+	void write() throws IOException {
+		port.outputStream().write(0);
+	}
+
+	@Test
+	void writeArray() throws IOException {
+		port.outputStream().write(new byte[]{ 1, 2, 3 });
 	}
 
 	@Test
