@@ -1087,21 +1087,16 @@ final class UnixSerialPort extends ReadWritePort {
 	int writeBytes(final Arena arena, final MemorySegment bytes) throws IOException {
 		lock.lock();
 		try {
-			return (int) write(fd, bytes);
+			final long written = Linux.write(fd.value(), bytes, bytes.byteSize());
+			if (written < 0)
+				throw newException(errno());
+			else if (!drain(fd))
+				throw newException(errno());
+			return (int) written;
 		}
 		finally {
 			lock.unlock();
 		}
-	}
-
-	private long write(final fd_t fd, /*uint8_t*/ final MemorySegment buf) throws IOException {
-		final long written = Linux.write(fd.value(), buf, buf.byteSize());
-		if (written < 0)
-			throw newException(errno());
-		else if (!drain(fd))
-			throw newException(errno());
-		logger.log(TRACE, "end write");
-		return written;
 	}
 
 	private static /*uint*/ long isInputWaiting(final Arena arena, final fd_t fd) throws IOException {
