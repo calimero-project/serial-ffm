@@ -92,10 +92,10 @@ tasks.test {
 tasks.jextract {
     val os = System.getProperty("os.name").lowercase(Locale.ENGLISH)
 
-	var headersDir = "unix"
-	val paths: List<String>
-    var tgtPkg = "org.unix"
-	var clsName = "Linux"
+	var headersDir: String   // directory of our headers.h file
+	val paths: List<String>  // system directories containing header files
+    var tgtPkg: String       // package name for extracted headers
+	var clsName: String
 	// filters for extracted header file definitions, initialized for Unix (Linux, macOS)
     var funcFilter = listOf("opendir", "readdir", "realpath", "stat", "closedir",
         "cfgetispeed", "cfsetispeed", "cfsetospeed", "cfget", "ioctl",
@@ -140,6 +140,9 @@ tasks.jextract {
                 "FORMAT_MESSAGE_FROM_SYSTEM", "FORMAT_MESSAGE_IGNORE_INSERTS", "FORMAT_MESSAGE_MAX_WIDTH_MASK")
         }
         os.contains("linux") -> {
+            headersDir = "unix"
+            tgtPkg = "serial.ffm.linux"
+            clsName = "Linux"
             paths = listOf("/usr/include")
             funcFilter = funcFilter + listOf("__errno_location")
             structFilter = structFilter + listOf("serial_icounter_struct", "serial_struct")
