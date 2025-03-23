@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2023 B. Malinowsky
+// Copyright (c) 2022, 2025 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@ import java.util.Locale;
 /**
  * Current operating system.
  */
-enum OS {
+public enum OS {
 	Linux, Windows, Mac, Other;
 
 	private static final OS os = switch (osName().toLowerCase(Locale.ENGLISH)) {
@@ -37,7 +37,7 @@ enum OS {
 		default -> Other;
 	};
 
-	static OS current() { return os; }
+	public static OS current() { return os; }
 
 	static String osName() { return System.getProperty("os.name"); }
 }

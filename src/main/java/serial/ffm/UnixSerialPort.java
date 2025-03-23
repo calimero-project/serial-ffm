@@ -26,15 +26,14 @@ import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.INFO;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.lang.System.Logger.Level.WARNING;
+import static serial.ffm.Unix.errno;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout.PathElement;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.invoke.VarHandle;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,14 +43,14 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.unix.Linux;
-import org.unix.dirent;
-import org.unix.fd_set;
-import org.unix.stat;
-import org.unix.termios;
-import org.unix.timeval;
+import serial.ffm.linux.Linux;
 import serial.ffm.linux.serial_icounter_struct;
 import serial.ffm.linux.serial_struct;
+import serial.ffm.unix.dirent;
+import serial.ffm.unix.fd_set;
+import serial.ffm.unix.stat;
+import serial.ffm.unix.termios;
+import serial.ffm.unix.timeval;
 
 
 /**
@@ -242,7 +241,7 @@ final class UnixSerialPort extends ReadWritePort {
 		final var options = tcgetattr(arena);
 		long iflag = termios.c_iflag(options);
 		// disable SW flow ctrl
-		iflag &= ~(Linux.IXON() | Linux.IXOFF() | Linux.IXANY());
+		iflag &= ~(Unix.IXON | Unix.IXOFF | Unix.IXANY);
 		termios.c_iflag(options, (int) iflag);
 		long cflag = termios.c_cflag(options);
 		cflag = switch (flowControl) {
@@ -264,8 +263,8 @@ final class UnixSerialPort extends ReadWritePort {
 	void open(final Arena arena, final String portId) throws IOException {
 		final AtomicInteger error = new AtomicInteger();
 		fd = openPort(arena, portId, true, error);
-		if (error.get() == Linux.EBUSY())
-			throw newException(Linux.EBUSY());
+		if (error.get() == Unix.EBUSY)
+			throw newException(Unix.EBUSY);
 
 		if (debug()) {
 // #if !defined TXSETIHOG
@@ -285,10 +284,10 @@ final class UnixSerialPort extends ReadWritePort {
 		}
 
 		final var status = arena.allocate(Linux.C_INT);
-		int ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCMGET(), status);
+		int ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.TIOCMGET, status);
 		if (ret != -1) {
-			status.set(Linux.C_INT, 0, status.get(Linux.C_INT, 0) | Linux.TIOCM_DTR());
-			ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCMSET(), status);
+			status.set(Linux.C_INT, 0, status.get(Linux.C_INT, 0) | Unix.TIOCM_DTR);
+			ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.TIOCMSET, status);
 		}
 		if (ret == -1) {
 			final int err = errno();
@@ -343,7 +342,7 @@ final class UnixSerialPort extends ReadWritePort {
 			}
 			else {
 				final var status = arena.allocate(Linux.C_INT);
-				final int ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCMGET(), status);
+				final int ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.TIOCMGET, status);
 				valid = ret == 0;
 				logger.log(TRACE, "check port type: {0}", errnoMsg());
 			}
@@ -352,9 +351,9 @@ final class UnixSerialPort extends ReadWritePort {
 			return valid;
 		}
 		catch (final IOException e) {
-			if (error.get() == Linux.ENOENT())
+			if (error.get() == Unix.ENOENT)
 				return false;
-			if (error.get() == Linux.EBUSY() || error.get() == Linux.EPERM() || error.get() == Linux.EACCES())
+			if (error.get() == Unix.EBUSY || error.get() == Unix.EPERM || error.get() == Unix.EACCES)
 				return true;
 			logger.log(TRACE, "{0}", e.getMessage());
 			return false;
@@ -406,7 +405,7 @@ final class UnixSerialPort extends ReadWritePort {
 		final String pidFile = createLockName(lockDir, pidPrefix, "" + myPid);
 		try (var arena = Arena.ofConfined()) {
 			final var mpidFile = arena.allocateFrom(pidFile);
-			final fd_t fd = fd_t.of(Linux.open.makeInvoker(Linux.C_INT).apply(mpidFile, Linux.O_RDWR() | Linux.O_EXCL() | Linux.O_CREAT(), 0644));
+			final fd_t fd = fd_t.of(Linux.open.makeInvoker(Linux.C_INT).apply(mpidFile, Unix.O_RDWR | Unix.O_EXCL | Unix.O_CREAT, 0644));
 			if (fd.equals(fd_t.Invalid)) {
 				logger.log(WARNING, "open {0}", pidFile);
 				return false;
@@ -434,7 +433,7 @@ final class UnixSerialPort extends ReadWritePort {
 					locked = true;
 				}
 				// check the read pid, if stale, try to remove lock file
-				else if (Linux.kill(pid, 0) == -1 && errno() != Linux.EPERM()) {
+				else if (Linux.kill(pid, 0) == -1 && errno() != Unix.EPERM) {
 					Linux.unlink(mlckFile);
 					if (tryLink(mpidFile, mlckFile)) {
 						lockedPort = port;
@@ -459,7 +458,7 @@ final class UnixSerialPort extends ReadWritePort {
 		final var lockFile = createLockName(lockDir, lckPrefix, name);
 //		logger.log(TRACE, "release lock {0}", lockFile);
 		lockedPort = "";
-		var path = Path.of(lockFile);
+		final var path = Path.of(lockFile);
 		final int pid = readPid(path);
 		if (pid != -1 && pid == Linux.getpid())
 			Files.deleteIfExists(path);
@@ -472,23 +471,23 @@ final class UnixSerialPort extends ReadWritePort {
 				logger.log(WARNING, "setting port defaults, tcgetattr: {0}", errnoMsg());
 				return false;
 			}
-			Linux.cfsetispeed(options, Linux.B9600());
-			Linux.cfsetospeed(options, Linux.B9600());
+			Linux.cfsetispeed(options, Unix.B9600);
+			Linux.cfsetospeed(options, Unix.B9600);
 			long cflag = termios.c_cflag(options);
-			cflag |= Linux.CREAD() | Linux.CLOCAL();
-			cflag &= ~Linux.CSIZE();
-			cflag |= Linux.CS8();
+			cflag |= Unix.CREAD | Unix.CLOCAL;
+			cflag &= ~Unix.CSIZE;
+			cflag |= Unix.CS8;
 			termios.c_cflag(options, (int) cflag);
-			termios.c_iflag(options, Linux.INPCK());
+			termios.c_iflag(options, Unix.INPCK);
 			termios.c_lflag(options, 0);
 			termios.c_oflag(options, 0);
-			termios.c_cc(options).set(Linux.C_CHAR, Linux.VMIN(), (byte) 0);
-			termios.c_cc(options).set(Linux.C_CHAR, Linux.VTIME(), (byte) 0);
-			if (Linux.tcsetattr(fd, Linux.TCSANOW(), options) == -1) {
+			termios.c_cc(options).set(Linux.C_CHAR, Unix.VMIN, (byte) 0);
+			termios.c_cc(options).set(Linux.C_CHAR, Unix.VTIME, (byte) 0);
+			if (Linux.tcsetattr(fd, Unix.TCSANOW, options) == -1) {
 				logger.log(WARNING, "setting port defaults, tcsetattr: {0}", errnoMsg());
 				return false;
 			}
-			Linux.fcntl.makeInvoker(Linux.C_INT).apply(fd, Linux.F_SETOWN(), Linux.getpid());
+			Linux.fcntl.makeInvoker(Linux.C_INT).apply(fd, Unix.F_SETOWN, Linux.getpid());
 		}
 		return true;
 	}
@@ -504,11 +503,11 @@ final class UnixSerialPort extends ReadWritePort {
 
 			do {
 				// we set the port exclusive below, not here
-				fd = fd_t.of(Linux.open.makeInvoker().apply(port, /*O_EXCL |*/Linux.O_RDWR() | Linux.O_NOCTTY() | Linux.O_NONBLOCK()));
+				fd = fd_t.of(Linux.open.makeInvoker().apply(port, /*O_EXCL |*/Unix.O_RDWR | Unix.O_NOCTTY | Unix.O_NONBLOCK));
 				if (!fd.equals(fd_t.Invalid))
 					break;
 			}
-			while (errno() == Linux.EINTR());
+			while (errno() == Unix.EINTR);
 		}
 		else
 			throw new IOException("obtaining port lock for " + portId + ": " + errnoMsg());
@@ -518,7 +517,7 @@ final class UnixSerialPort extends ReadWritePort {
 			releaseLock();
 			throw new IOException("opening " + portId + ": " + errnoMsg());
 		}
-		if (errno() == Linux.EBUSY()) {
+		if (errno() == Unix.EBUSY) {
 			logger.log(TRACE, "busy {0}", fd);
 			lastError.set(errno());
 			releaseLock();
@@ -526,7 +525,7 @@ final class UnixSerialPort extends ReadWritePort {
 		}
 
 		// we continue if we are not able to set exclusive mode
-		if (Linux.ioctl.makeInvoker().apply(fd.value(), Linux.TIOCEXCL()) == -1) {
+		if (Linux.ioctl.makeInvoker().apply(fd.value(), Unix.TIOCEXCL) == -1) {
 			error = errno();
 			perror("set exclusive");
 		}
@@ -571,7 +570,7 @@ final class UnixSerialPort extends ReadWritePort {
 				continue;
 			}
 
-			final var cresolved = arena.allocate(Linux.PATH_MAX());
+			final var cresolved = arena.allocate(Unix.PATH_MAX);
 			if (Linux.realpath(cfilename, cresolved) == Linux.NULL())
 				logger.log(WARNING, "realpath failed for {0}: {1}", filename, errnoMsg());
 			final String resolved = cresolved.getString(0);
@@ -609,7 +608,7 @@ final class UnixSerialPort extends ReadWritePort {
 			if (closed)
 				break;
 		}
-		while (errno() == Linux.EINTR());
+		while (errno() == Unix.EINTR);
 
 		releaseLock();
 
@@ -617,7 +616,7 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private void tcsetattr(final MemorySegment options) throws IOException {
-		if (Linux.tcsetattr(fd.value(), Linux.TCSANOW(), options) == -1) {
+		if (Linux.tcsetattr(fd.value(), Unix.TCSANOW, options) == -1) {
 			logger.log(WARNING, "tcsetattr: {0}", errnoMsg());
 			throw newException(errno());
 		}
@@ -634,10 +633,10 @@ final class UnixSerialPort extends ReadWritePort {
 	private static void setTermiosStopBits(final MemorySegment cflags, /*uint8_t*/ final StopBits stopbits) {
 		long flags = termios.c_cflag(cflags);
 
-		flags &= ~Linux.CSTOPB();
+		flags &= ~Unix.CSTOPB;
 		switch (stopbits) {
 			case Two:
-				flags |= Linux.CSTOPB();
+				flags |= Unix.CSTOPB;
 				break;
 //		case STOPBITS_15: /* does not exist */
 //			break;
@@ -651,8 +650,8 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private static StopBits genericStopBits(final MemorySegment cflags) {
 		final long flags = termios.c_cflag(cflags);
-		final int stopbits = (int) (flags & Linux.CSTOPB());
-		if (stopbits == Linux.CSTOPB())
+		final int stopbits = (int) (flags & Unix.CSTOPB);
+		if (stopbits == Unix.CSTOPB)
 			return StopBits.Two;
 		return StopBits.One;
 	}
@@ -666,39 +665,39 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private void setTermiosParity(final MemorySegment flags, final Parity parity) {
 		long cflags = termios.c_cflag(flags);
-		cflags &= ~(Linux.PARENB() | Linux.PARODD() | CMSPAR);
+		cflags &= ~(Unix.PARENB | Unix.PARODD | CMSPAR);
 
 		switch (parity) {
 			case None:
 				break;
 			case Even:
-				cflags |= Linux.PARENB();
+				cflags |= Unix.PARENB;
 				break;
 			case Odd:
-				cflags |= Linux.PARENB() | Linux.PARODD();
+				cflags |= Unix.PARENB | Unix.PARODD;
 				break;
 			case Mark:
-				if ((cflags & Linux.CS7()) == Linux.CS7()) {
+				if ((cflags & Unix.CS7) == Unix.CS7) {
 					logger.log(TRACE, "setting mark parity for 7M1");
 					// for mark parity use 7 data bits, 2 stop bits
-					cflags &= ~Linux.CSIZE();
-					cflags |= Linux.CSTOPB() | Linux.CS7();
+					cflags &= ~Unix.CSIZE;
+					cflags |= Unix.CSTOPB | Unix.CS7;
 				}
-				else if ((cflags & Linux.CS8()) == Linux.CS8()) {
+				else if ((cflags & Unix.CS8) == Unix.CS8) {
 					logger.log(TRACE, "setting mark parity for 8M1");
 					if (markSpaceParitySupport())
-						cflags |= CMSPAR | Linux.PARENB() | Linux.PARODD();
+						cflags |= CMSPAR | Unix.PARENB | Unix.PARODD;
 					else {
 						// emulate with 8N2
-						cflags |= Linux.CSTOPB();
+						cflags |= Unix.CSTOPB;
 					}
 				}
 				break;
 			case Space:
-				if ((cflags & Linux.CS8()) == Linux.CS8()) {
+				if ((cflags & Unix.CS8) == Unix.CS8) {
 					if (markSpaceParitySupport()) {
-						cflags |= CMSPAR | Linux.PARENB();
-						cflags &= ~Linux.PARODD();
+						cflags |= CMSPAR | Unix.PARENB;
+						cflags &= ~Unix.PARODD;
 					}
 					else {
 						// NYI emulate 8S1
@@ -710,16 +709,16 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private static Parity genericParity(final long cflags) {
 		if (markSpaceParitySupport()) {
-			if ((cflags & Linux.PARENB()) == Linux.PARENB() && (cflags & Linux.PARODD()) == Linux.PARODD()
+			if ((cflags & Unix.PARENB) == Unix.PARENB && (cflags & Unix.PARODD) == Unix.PARODD
 					&& (cflags & CMSPAR) == CMSPAR)
 				return Parity.Mark;
-			if ((cflags & Linux.PARENB()) == Linux.PARENB() && (cflags & CMSPAR) == CMSPAR)
+			if ((cflags & Unix.PARENB) == Unix.PARENB && (cflags & CMSPAR) == CMSPAR)
 				return Parity.Space;
 		}
 
-		if ((cflags & Linux.PARENB()) != 0 && (cflags & Linux.PARODD()) != 0)
+		if ((cflags & Unix.PARENB) != 0 && (cflags & Unix.PARODD) != 0)
 			return Parity.Odd;
-		if ((cflags & Linux.PARENB()) != 0)
+		if ((cflags & Unix.PARENB) != 0)
 			return Parity.Even;
 
 		return Parity.None;
@@ -727,186 +726,186 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private static int termiosBaudrate(final /*uint*/ int baudrate) {
 		return switch (baudrate) {
-			case 0 -> Linux.B0();
-			case 50 -> Linux.B50();
-			case 75 -> Linux.B75();
-			case 110 -> Linux.B110();
-			case 134 -> Linux.B134();
-			case 150 -> Linux.B150();
-			case 200 -> Linux.B200();
-			case 300 -> Linux.B300();
-			case 600 -> Linux.B600();
-			case 1200 -> Linux.B1200();
-			case 1800 -> Linux.B1800();
-			case 2400 -> Linux.B2400();
-			case 4800 -> Linux.B4800();
-			case 9600 -> Linux.B9600();
+			case 0 -> Unix.B0;
+			case 50 -> Unix.B50;
+			case 75 -> Unix.B75;
+			case 110 -> Unix.B110;
+			case 134 -> Unix.B134;
+			case 150 -> Unix.B150;
+			case 200 -> Unix.B200;
+			case 300 -> Unix.B300;
+			case 600 -> Unix.B600;
+			case 1200 -> Unix.B1200;
+			case 1800 -> Unix.B1800;
+			case 2400 -> Unix.B2400;
+			case 4800 -> Unix.B4800;
+			case 9600 -> Unix.B9600;
 //#ifdef B14400
 // undefined on Linux
 //		case 14400:
-//			return Linux.B14400();
+//			return Unix.B14400)
 //#endif /* B14400 */
-			case 19200 -> Linux.B19200();
+			case 19200 -> Unix.B19200;
 //#ifdef B28800
 // undefined on Linux
 //		case 28800:
-//			return Linux.B28800();
+//			return Unix.B28800)
 //#endif /* B28800 */
-			case 38400 -> Linux.B38400();
+			case 38400 -> Unix.B38400;
 //#ifdef B57600 // MacOS X does not define this Baud rate
-			case 57600 -> Linux.B57600();
+			case 57600 -> Unix.B57600;
 //#endif // B57600
 //#ifdef B115200
-			case 115200 -> Linux.B115200();
+			case 115200 -> Unix.B115200;
 //#endif /*  B115200 */
 //#ifdef B230400
-			case 230400 -> Linux.B230400();
+			case 230400 -> Unix.B230400;
 //#endif /* B230400 */
 //#ifdef B460800
 //    case 460800:
-//        return Linux.B460800();
+//        return Unix.B460800)
 //#endif /* B460800 */
 //#ifdef B500000
 //    case 500000:
-//        return Linux.B500000();
+//        return Unix.B500000)
 //#endif /* B500000 */
 //#ifdef B576000
 //    case 576000:
-//        return Linux.B576000();
+//        return Unix.B576000)
 //#endif /* B57600 */
 //#ifdef B921600
 //    case 921600:
-//        return Linux.B921600();
+//        return Unix.B921600)
 //#endif /* B921600 */
 //#ifdef B1000000
 //    case 1000000:
-//        return Linux.B1000000();
+//        return Unix.B1000000)
 //#endif /* B1000000 */
 //#ifdef B1152000
 //    case 1152000:
-//        return Linux.B1152000();
+//        return Unix.B1152000)
 //#endif /* B1152000 */
 //#ifdef B1500000
 //    case 1500000:
-//        return Linux.B1500000();
+//        return Unix.B1500000)
 //#endif /* B1500000 */
 //#ifdef B2000000
 //    case 2000000:
-//        return Linux.B2000000();
+//        return Unix.B2000000)
 //#endif /* B2000000 */
 //#ifdef B2500000
 //    case 2500000:
-//        return Linux.B2500000();
+//        return Unix.B2500000)
 //#endif /* B2500000 */
 //#ifdef B3000000
 //    case 3000000:
-//        return Linux.B3000000();
+//        return Unix.B3000000)
 //#endif /* B3000000 */
 //#ifdef B3500000
 //    case 3500000:
-//        return Linux.B3500000();
+//        return Unix.B3500000)
 //#endif /* B3500000 */
 //#ifdef B4000000
 //    case 4000000:
-//        return Linux.B4000000();
+//        return Unix.B4000000)
 //#endif /* B4000000 */
 			default -> -1;
 		};
 	}
 
 	private static int genericBaudrate(final long baudrate) {
-		if (baudrate == Linux.B0())
+		if (baudrate == Unix.B0)
 			return 0;
-		else if (baudrate == Linux.B50())
+		else if (baudrate == Unix.B50)
 			return 50;
-		else if (baudrate == Linux.B75())
+		else if (baudrate == Unix.B75)
 			return 75;
-		else if (baudrate == Linux.B110())
+		else if (baudrate == Unix.B110)
 			return 110;
-		else if (baudrate == Linux.B134())
+		else if (baudrate == Unix.B134)
 			return 134;
-		else if (baudrate == Linux.B150())
+		else if (baudrate == Unix.B150)
 			return 150;
-		else if (baudrate == Linux.B200())
+		else if (baudrate == Unix.B200)
 			return 200;
-		else if (baudrate == Linux.B300())
+		else if (baudrate == Unix.B300)
 			return 300;
-		else if (baudrate == Linux.B600())
+		else if (baudrate == Unix.B600)
 			return 600;
-		else if (baudrate == Linux.B1200())
+		else if (baudrate == Unix.B1200)
 			return 1200;
-		else if (baudrate == Linux.B1800())
+		else if (baudrate == Unix.B1800)
 			return 1800;
-		else if (baudrate == Linux.B2400())
+		else if (baudrate == Unix.B2400)
 			return 2400;
-		else if (baudrate == Linux.B4800())
+		else if (baudrate == Unix.B4800)
 			return 4800;
-		else if (baudrate == Linux.B9600())
+		else if (baudrate == Unix.B9600)
 			return 9600;
-//		else if (baudrate == Linux.B14400())
+//		else if (baudrate == Unix.B14400)
 //			return 14400;
-		else if (baudrate == Linux.B19200())
+		else if (baudrate == Unix.B19200)
 			return 19200;
-//		else if (baudrate == Linux.B28800())
+//		else if (baudrate == Unix.B28800)
 //			return 28800;
-		else if (baudrate == Linux.B38400())
+		else if (baudrate == Unix.B38400)
 			return 38400;
-		else if (baudrate == Linux.B57600())
+		else if (baudrate == Unix.B57600)
 			return 57600;
-		else if (baudrate == Linux.B115200())
+		else if (baudrate == Unix.B115200)
 			return 115200;
-		else if (baudrate == Linux.B230400())
+		else if (baudrate == Unix.B230400)
 			return 230400;
 		else
 			return -1;
 
 //#endif /* B230400 */
 //#ifdef B460800
-//    case Linux.B460800():
+//    case Unix.B460800():
 //        return 460800;
 //#endif /* B460800 */
 //#ifdef B500000
-//    case Linux.B500000():
+//    case Unix.B500000():
 //        return 500000;
 //#endif /* B500000 */
 //#ifdef B576000
-//    case Linux.B576000():
+//    case Unix.B576000():
 //        return 576000;
 //#endif /* B576000 */
 //#ifdef B921600
-//    case Linux.B921600():
+//    case Unix.B921600():
 //        return 921600;
 //#endif /* B921600 */
 //#ifdef B1000000
-//    case Linux.B1000000():
+//    case Unix.B1000000():
 //        return 1000000;
 //#endif /* B1000000 */
 //#ifdef B1152000
-//    case Linux.B1152000():
+//    case Unix.B1152000():
 //        return 1152000;
 //#endif /* B1152000 */
 //#ifdef B1500000
-//    case Linux.B1500000():
+//    case Unix.B1500000():
 //        return 1500000;
 //#endif /* B1500000 */
 //#ifdef B2000000
-//    case Linux.B2000000():
+//    case Unix.B2000000():
 //        return 2000000;
 //#endif /* B2000000 */
 //#ifdef B2500000
-//    case Linux.B2500000():
+//    case Unix.B2500000():
 //        return 2500000;
 //#endif /* B2500000 */
 //#ifdef B3000000
-//    case Linux.B3000000():
+//    case Unix.B3000000():
 //        return 3000000;
 //#endif /* B3000000 */
 //#ifdef B3500000
-//    case Linux.B3500000():
+//    case Unix.B3500000():
 //        return 3500000;
 //#endif /* B3500000 */
 //#ifdef B4000000
-//    case Linux.B4000000():
+//    case Unix.B4000000():
 //        return 4000000;
 //#endif /* B4000000 */
 //    default:
@@ -916,25 +915,25 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private static void setTermiosDataBits(final MemorySegment flags, /*uint8_t*/ final int databits) {
 		long cflags = termios.c_cflag(flags);
-		cflags &= ~Linux.CSIZE();
+		cflags &= ~Unix.CSIZE;
 		cflags |= switch (databits) {
-			case 5 -> Linux.CS5();
-			case 6 -> Linux.CS6();
-			case 7 -> Linux.CS7();
-			default -> Linux.CS8();
+			case 5 -> Unix.CS5;
+			case 6 -> Unix.CS6;
+			case 7 -> Unix.CS7;
+			default -> Unix.CS8;
 		};
 		termios.c_cflag(flags, (int) cflags);
 	}
 
 	private static /*uint8_t*/ int genericDataBits(final long cflags) {
-		final long i = cflags & Linux.CSIZE();
-		if (i == Linux.CS5())
+		final long i = cflags & Unix.CSIZE;
+		if (i == Unix.CS5)
 			return 5;
-		else if (i == Linux.CS6())
+		else if (i == Unix.CS6)
 			return 6;
-		else if (i == Linux.CS7())
+		else if (i == Unix.CS7)
 			return 7;
-		else if (i == Linux.CS8())
+		else if (i == Unix.CS8)
 			return 8;
 		else
 			return -1;
@@ -951,7 +950,7 @@ final class UnixSerialPort extends ReadWritePort {
 //		#define HW_FLOWCTL 0
 //	#endif
 
-		HW_FLOWCTL = Linux.CRTSCTS();
+		HW_FLOWCTL = Unix.CRTSCTS;
 	}
 
 	// NYI SW flow control missing
@@ -966,7 +965,7 @@ final class UnixSerialPort extends ReadWritePort {
 		do {
 			ret = Linux.tcdrain(fd.value());
 		}
-		while (ret != 0 && errno() == Linux.EINTR());
+		while (ret != 0 && errno() == Unix.EINTR);
 		return ret == 0;
 	}
 
@@ -987,7 +986,7 @@ final class UnixSerialPort extends ReadWritePort {
 	private fd_t fd() throws IOException {
 		final var lfd = fd;
 		if (lfd.equals(fd_t.Invalid))
-			throw newException(Linux.EBADF());
+			throw newException(Unix.EBADF);
 		return lfd;
 	}
 
@@ -1020,7 +1019,7 @@ final class UnixSerialPort extends ReadWritePort {
 				perror("select failed");
 				// EINTR: simply continue with the byte counting loop, since we have to calculate
 				// a new timeout
-				if (errno() == Linux.EINTR())
+				if (errno() == Unix.EINTR)
 					;
 				else
 					// e.g., EBADF
@@ -1046,20 +1045,20 @@ final class UnixSerialPort extends ReadWritePort {
 					// get number of bytes that are immediately available for reading:
 					// if 0, this indicates other errors, e.g., disconnected usb adapter
 					final /*size_t*/ var nread = arena.allocateFrom(ValueLayout.JAVA_LONG, 0);
-					Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.FIONREAD(), nread);
+					Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.FIONREAD, nread);
 					if (nread.get(ValueLayout.JAVA_LONG, 0) == 0)
 						return -1;
 
 					final long ret = Linux.read(fd.value(), MemorySegment.ofAddress(buffer.address() + offset), remaining);
 					if (ret == -1) {
 						perror("read");
-						// retry if error is EAGAIN or Linux.EINTR(), otherwise bail out
+						// retry if error is EAGAIN or Unix.EINTR, otherwise bail out
 						//#ifdef EWOULDBLOCK
-						if (errno() == Linux.EWOULDBLOCK()) // alias for EAGAIN
+						if (errno() == Unix.EWOULDBLOCK) // alias for EAGAIN
 							;
 						else
 							//#endif // EWOULDBLOCK
-							if (errno() == Linux.EAGAIN() || errno() == Linux.EINTR())
+							if (errno() == Unix.EAGAIN || errno() == Unix.EINTR)
 								;
 							else
 								break;
@@ -1100,13 +1099,13 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private static /*uint*/ long isInputWaiting(final Arena arena, final fd_t fd) throws IOException {
-		Linux.fcntl.makeInvoker(Linux.C_INT).apply(fd.value(), Linux.F_SETFL(), Linux.O_NONBLOCK());
+		Linux.fcntl.makeInvoker(Linux.C_INT).apply(fd.value(), Unix.F_SETFL, Unix.O_NONBLOCK);
 		/*uint*/ final var bytes = arena.allocate(ValueLayout.JAVA_INT);
-		if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.FIONREAD(), bytes) == -1) {
+		if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.FIONREAD, bytes) == -1) {
 
 			//#if defined FIORDCHK
 			if (definedFIORDCHK()) {
-				//        final int rdchk = Linux.ioctl(fd, Linux.FIORDCHK, 0);
+				//        final int rdchk = Linux.ioctl(fd, Unix.FIORDCHK, 0);
 				//        if (rdchk > -1)
 				//            bytes = rdchk;
 				//        else
@@ -1134,18 +1133,18 @@ final class UnixSerialPort extends ReadWritePort {
 			events |= 0;
 
 		if ((eventMask & EVENT_CTS) != 0)
-			events |= Linux.TIOCM_CTS();
+			events |= Unix.TIOCM_CTS;
 		if ((eventMask & EVENT_DSR) != 0)
-			events |= Linux.TIOCM_DSR();
+			events |= Unix.TIOCM_DSR;
 		if ((eventMask & EVENT_RLSD) != 0)
-			events |= Linux.TIOCM_CAR();
+			events |= Unix.TIOCM_CAR;
 		// XXX assign those
 		if ((eventMask & EVENT_BREAK) != 0)
 			events |= 0;
 		if ((eventMask & EVENT_ERR) != 0)
 			events |= 0;
 		if ((eventMask & EVENT_RING) != 0)
-			events |= Linux.TIOCM_RNG();
+			events |= Unix.TIOCM_RNG;
 
 		if (enable) {
 			currentEventMask |= eventMask;
@@ -1214,7 +1213,7 @@ final class UnixSerialPort extends ReadWritePort {
 			do {
 				ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TIOCGICOUNT, icount);
 			}
-			while (ret == -1 && errno() == Linux.EINTR());
+			while (ret == -1 && errno() == Unix.EINTR);
 			if (ret == -1)
 				throw newException(errno());
 			return icount;
@@ -1247,10 +1246,10 @@ final class UnixSerialPort extends ReadWritePort {
 			int ret;
 			do {
 				ret = Linux.ioctl.makeInvoker(Linux.C_INT).apply(fd.value(), TIOCMIWAIT, mask);
-				if (ret == -1 && errno() == Linux.EINTR())
+				if (ret == -1 && errno() == Unix.EINTR)
 					logger.log(TRACE, "waitEvent interrupted");
 			}
-			while (ret == -1 && errno() == Linux.EINTR());
+			while (ret == -1 && errno() == Unix.EINTR);
 			if (ret == -1)
 				throw newException(errno());
 
@@ -1276,7 +1275,7 @@ final class UnixSerialPort extends ReadWritePort {
 				int ret;
 				do {
 					ret = Linux.select(maxFd, fdset, Linux.NULL(), Linux.NULL(), timeout);
-				} while (ret == -1 && errno() == Linux.EINTR());
+				} while (ret == -1 && errno() == Unix.EINTR);
 
 				if ((currentEventMask & (EVENT_CTS | EVENT_DSR | EVENT_RING | EVENT_RLSD)) != 0) {
 					final int lineStatus = status(Status.Line);
@@ -1336,23 +1335,23 @@ final class UnixSerialPort extends ReadWritePort {
 		return (int) /*uint*/ switch (type) {
 			case Line -> {
 				/*uint*/ final var mstatus = arena.allocate(ValueLayout.JAVA_INT);
-				final int ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCMGET(), mstatus);
+				final int ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.TIOCMGET, mstatus);
 				if (ret == -1)
 					throw newException(errno());
 
 				long v = 0;
 				final long status = mstatus.get(ValueLayout.JAVA_INT, 0);
-				if ((status & Linux.TIOCM_DTR()) != 0)
+				if ((status & Unix.TIOCM_DTR) != 0)
 					v |= DTR;
-				if ((status & Linux.TIOCM_RTS()) != 0)
+				if ((status & Unix.TIOCM_RTS) != 0)
 					v |= RTS;
-				if ((status & Linux.TIOCM_CTS()) != 0)
+				if ((status & Unix.TIOCM_CTS) != 0)
 					v |= LINE_CTS;
-				if ((status & Linux.TIOCM_DSR()) != 0)
+				if ((status & Unix.TIOCM_DSR) != 0)
 					v |= LINE_DSR;
-				if ((status & Linux.TIOCM_RNG()) != 0)
+				if ((status & Unix.TIOCM_RNG) != 0)
 					v |= LINE_RING;
-				if ((status & Linux.TIOCM_CAR()) != 0)
+				if ((status & Unix.TIOCM_CAR) != 0)
 					v |= LINE_DCD;
 				yield v;
 			}
@@ -1424,10 +1423,10 @@ final class UnixSerialPort extends ReadWritePort {
 			// if we're here we have: multiplier > 0 or totalConstant > 0 or interval = 0
 		}
 
-		termios.c_cc(options).set(ValueLayout.JAVA_BYTE, Linux.VMIN(), (byte) vmin);
-		termios.c_cc(options).set(ValueLayout.JAVA_BYTE, Linux.VTIME(), (byte) vtime);
+		termios.c_cc(options).set(ValueLayout.JAVA_BYTE, Unix.VMIN, (byte) vmin);
+		termios.c_cc(options).set(ValueLayout.JAVA_BYTE, Unix.VTIME, (byte) vtime);
 
-		if (Linux.tcsetattr(fd.value(), Linux.TCSANOW(), options) == -1) {
+		if (Linux.tcsetattr(fd.value(), Unix.TCSANOW, options) == -1) {
 			logger.log(WARNING, "set timeouts, tcsetattr: {0}", errnoMsg());
 			throw newException(errno());
 		}
@@ -1441,8 +1440,8 @@ final class UnixSerialPort extends ReadWritePort {
 			throw newException(errno());
 		}
 
-		final byte vmin = termios.c_cc(options).get(ValueLayout.JAVA_BYTE, Linux.VMIN());
-		final byte vtime = termios.c_cc(options).get(ValueLayout.JAVA_BYTE, Linux.VTIME());
+		final byte vmin = termios.c_cc(options).get(ValueLayout.JAVA_BYTE, Unix.VMIN);
+		final byte vtime = termios.c_cc(options).get(ValueLayout.JAVA_BYTE, Unix.VTIME);
 
 		/*uint*/ int readIntervalTimeout = 0;
 		/*uint*/ int readTotalTimeoutMultiplier = 0;
@@ -1538,37 +1537,6 @@ final class UnixSerialPort extends ReadWritePort {
 	private void perror(final String msg) {
 		final String err = errnoMsg();
 		logger.log(WARNING, "{0}: {1}", msg, err);
-	}
-
-	private static final MethodHandle errno;
-	static {
-		final String name = OS.current() == OS.Mac ? "__error" : "__errno_location";
-		try {
-			errno = MethodHandles.lookup().findStatic(Linux.class, name, MethodType.methodType(MemorySegment.class));
-		}
-		catch (NoSuchMethodException | IllegalAccessException e) {
-			throw new AssertionError("should not reach here", e);
-		}
-	}
-
-	private static int errno() {
-		try {
-			final var addr = (MemorySegment) errno.invokeExact();
-			return addr.get(ValueLayout.JAVA_INT, 0);
-		}
-		catch (final Throwable e) {
-			throw new AssertionError("should not reach here", e);
-		}
-	}
-
-	private static void errno(final int error) {
-		try {
-			final var addr = (MemorySegment) errno.invokeExact();
-			addr.set(ValueLayout.JAVA_INT, 0, error);
-		}
-		catch (final Throwable e) {
-			throw new AssertionError("should not reach here", e);
-		}
 	}
 
 	private static String errnoMsg() {
