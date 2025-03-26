@@ -1237,8 +1237,8 @@ final class UnixSerialPort extends ReadWritePort {
 	public int waitEvent() throws IOException {
 		logger.log(TRACE, "enter wait event");
 		try {
-			if (OS.current() == OS.Mac) {
-				logger.log(INFO, "waitEvent on macOS, not expected to work yet");
+			if (OS.current() == OS.Mac || OS.current() == OS.Linux) {
+				logger.log(INFO, "use polledWaitEvent, waitEvent not working yet");
 				return polledWaitEvent();
 			}
 

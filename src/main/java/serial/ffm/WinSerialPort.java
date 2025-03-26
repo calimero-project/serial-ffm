@@ -178,7 +178,7 @@ final class WinSerialPort extends ReadWritePort {
 				throw newIoException();
 
 			maxBaudRate = _COMMPROP.dwMaxBaud(cp);
-			System.out.println("max baud rate = " + maxBaudRate);
+			logger.log(TRACE, "max baud rate = " + maxBaudRate);
 		} catch (final IOException e) {
 			close();
 			throw e;

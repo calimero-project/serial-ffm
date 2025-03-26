@@ -314,13 +314,13 @@ abstract class ReadWritePort implements SerialPort {
 		}
 	}
 
-	final int writeBytes(final byte[] bytes, final int offset, final int length) throws IOException {
+	final void writeBytes(final byte[] bytes, final int offset, final int length) throws IOException {
 		final var hex = HexFormat.ofDelimiter(" ").formatHex(bytes, offset, offset + length);
 		logger.log(TRACE, "start write (length {0}): {1}", length, hex);
 		try (var arena = Arena.ofConfined()) {
 			final var buf = arena.allocate(length);
 			MemorySegment.copy(bytes, offset, buf, ValueLayout.JAVA_BYTE, 0, length);
-			return writeBytes(arena, buf);
+			writeBytes(arena, buf);
 		}
 		finally {
 			logger.log(TRACE, "end write");
