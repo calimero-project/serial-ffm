@@ -28,6 +28,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 
 import serial.ffm.OS;
 
@@ -42,42 +43,24 @@ public final class termios {
 	private static final MethodHandle c_cc;
 
 	static {
-		final var lookup = MethodHandles.lookup();
-		final var alloc = methodType(MemorySegment.class, SegmentAllocator.class);
-		final var cc = methodType(MemorySegment.class, MemorySegment.class);
-		try {
-			switch (OS.current()) {
-				case Linux -> {
-					final var setInt = methodType(void.class, MemorySegment.class, int.class);
-					final var getInt = methodType(int.class, MemorySegment.class);
+		final var mh = new MH(MethodHandles.lookup(), switch (OS.current()) {
+			case Linux -> serial.ffm.linux.termios.class;
+			case Mac -> serial.ffm.mac.termios.class;
+			default -> throw new IllegalStateException();
+		});
 
-					allocate    = lookup.findStatic(serial.ffm.linux.termios.class, "allocate", alloc);
-					c_cflag     = lookup.findStatic(serial.ffm.linux.termios.class, "c_cflag", getInt);
-					c_cflag_set = lookup.findStatic(serial.ffm.linux.termios.class, "c_cflag", setInt);
-					c_iflag     = lookup.findStatic(serial.ffm.linux.termios.class, "c_iflag", getInt);
-					c_iflag_set = lookup.findStatic(serial.ffm.linux.termios.class, "c_iflag", setInt);
-					c_lflag     = lookup.findStatic(serial.ffm.linux.termios.class, "c_lflag", setInt);
-					c_oflag     = lookup.findStatic(serial.ffm.linux.termios.class, "c_oflag", setInt);
-					c_cc        = lookup.findStatic(serial.ffm.linux.termios.class, "c_cc", cc);
-				}
-				case Mac -> {
-					final var setLong = methodType(void.class, MemorySegment.class, long.class);
-					final var getLong = methodType(long.class, MemorySegment.class);
+		final var type = OS.current() == OS.Linux ? int.class : long.class;
+		final MethodType setter = methodType(void.class, MemorySegment.class, type);
+		final MethodType getter = methodType(type, MemorySegment.class);
 
-					allocate    = lookup.findStatic(serial.ffm.mac.termios.class, "allocate", alloc);
-					c_cflag     = lookup.findStatic(serial.ffm.mac.termios.class, "c_cflag", getLong);
-					c_cflag_set = lookup.findStatic(serial.ffm.mac.termios.class, "c_cflag", setLong);
-					c_iflag     = lookup.findStatic(serial.ffm.mac.termios.class, "c_iflag", getLong);
-					c_iflag_set = lookup.findStatic(serial.ffm.mac.termios.class, "c_iflag", setLong);
-					c_lflag     = lookup.findStatic(serial.ffm.mac.termios.class, "c_lflag", setLong);
-					c_oflag     = lookup.findStatic(serial.ffm.mac.termios.class, "c_oflag", setLong);
-					c_cc        = lookup.findStatic(serial.ffm.mac.termios.class, "c_cc", cc);
-				}
-				default -> throw new IllegalStateException();
-			}
-		} catch (final ReflectiveOperationException e) {
-			throw new AssertionError(e);
-		}
+		allocate    = mh.allocate();
+		c_cc        = mh.findStatic("c_cc", methodType(MemorySegment.class, MemorySegment.class));
+		c_cflag     = mh.findStatic("c_cflag", getter);
+		c_cflag_set = mh.findStatic("c_cflag", setter);
+		c_iflag     = mh.findStatic("c_iflag", getter);
+		c_iflag_set = mh.findStatic("c_iflag", setter);
+		c_lflag     = mh.findStatic("c_lflag", setter);
+		c_oflag     = mh.findStatic("c_oflag", setter);
 	}
 
 	/**

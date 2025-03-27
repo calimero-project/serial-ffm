@@ -41,30 +41,15 @@ public final class dirent {
 	private static final MethodHandle d_name;
 
 	static {
-		final var lookup = MethodHandles.lookup();
-		final var alloc = methodType(MemorySegment.class, SegmentAllocator.class);
-		final var getLayout = methodType(GroupLayout.class);
-		final var name = methodType(MemorySegment.class, MemorySegment.class);
-		final var reinterp = methodType(MemorySegment.class, MemorySegment.class, Arena.class, Consumer.class);
-		try {
-			switch (OS.current()) {
-				case Linux -> {
-					allocate    = lookup.findStatic(serial.ffm.linux.dirent.class, "allocate", alloc);
-					reinterpret = lookup.findStatic(serial.ffm.linux.dirent.class, "reinterpret", reinterp);
-					layout      = lookup.findStatic(serial.ffm.linux.dirent.class, "layout", getLayout);
-					d_name      = lookup.findStatic(serial.ffm.linux.dirent.class, "d_name", name);
-				}
-				case Mac -> {
-					allocate    = lookup.findStatic(serial.ffm.mac.dirent.class, "allocate", alloc);
-					reinterpret = lookup.findStatic(serial.ffm.mac.dirent.class, "reinterpret", reinterp);
-					layout      = lookup.findStatic(serial.ffm.mac.dirent.class, "layout", getLayout);
-					d_name      = lookup.findStatic(serial.ffm.mac.dirent.class, "d_name", name);
-				}
-				default -> throw new IllegalStateException();
-			}
-		} catch (final ReflectiveOperationException e) {
-			throw new AssertionError(e);
-		}
+		final var mh = new MH(MethodHandles.lookup(), switch (OS.current()) {
+			case Linux -> serial.ffm.linux.dirent.class;
+			case Mac -> serial.ffm.mac.dirent.class;
+			default -> throw new IllegalStateException();
+		});
+		allocate    = mh.allocate();
+		reinterpret = mh.reinterpret();
+		layout      = mh.layout();
+		d_name      = mh.findStatic("d_name", methodType(MemorySegment.class, MemorySegment.class));
 	}
 
 	/**

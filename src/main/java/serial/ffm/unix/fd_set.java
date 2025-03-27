@@ -22,8 +22,6 @@
 
 package serial.ffm.unix;
 
-import static java.lang.invoke.MethodType.methodType;
-
 import java.lang.foreign.GroupLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
@@ -37,24 +35,13 @@ public final class fd_set {
 	private static final MethodHandle layout;
 
 	static {
-		final var lookup = MethodHandles.lookup();
-		final var alloc = methodType(MemorySegment.class, SegmentAllocator.class);
-		final var getLayout = methodType(GroupLayout.class);
-		try {
-			switch (OS.current()) {
-				case Linux -> {
-					allocate = lookup.findStatic(serial.ffm.linux.fd_set.class, "allocate", alloc);
-					layout   = lookup.findStatic(serial.ffm.linux.fd_set.class, "layout", getLayout);
-				}
-				case Mac -> {
-					allocate = lookup.findStatic(serial.ffm.mac.fd_set.class, "allocate", alloc);
-					layout   = lookup.findStatic(serial.ffm.mac.fd_set.class, "layout", getLayout);
-				}
-				default -> throw new IllegalStateException();
-			}
-		} catch (final ReflectiveOperationException e) {
-			throw new AssertionError(e);
-		}
+		final var mh = new MH(MethodHandles.lookup(), switch (OS.current()) {
+			case Linux -> serial.ffm.linux.fd_set.class;
+			case Mac -> serial.ffm.mac.fd_set.class;
+			default -> throw new IllegalStateException();
+		});
+		allocate = mh.allocate();
+		layout   = mh.layout();
 	}
 
 	/**

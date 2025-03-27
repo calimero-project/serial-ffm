@@ -37,26 +37,17 @@ public final class timeval {
 	private static final MethodHandle tv_usec;
 
 	static {
-		final var lookup = MethodHandles.lookup();
-		final var alloc = methodType(MemorySegment.class, SegmentAllocator.class);
+		final var mh = new MH(MethodHandles.lookup(), switch (OS.current()) {
+			case Linux -> serial.ffm.linux.timeval.class;
+			case Mac -> serial.ffm.mac.timeval.class;
+			default -> throw new IllegalStateException();
+		});
 		final var setLong = methodType(void.class, MemorySegment.class, long.class);
-		try {
-			switch (OS.current()) {
-				case Linux -> {
-					allocate = lookup.findStatic(serial.ffm.linux.timeval.class, "allocate", alloc);
-					tv_sec   = lookup.findStatic(serial.ffm.linux.timeval.class, "tv_sec", setLong);
-					tv_usec  = lookup.findStatic(serial.ffm.linux.timeval.class, "tv_usec", setLong);
-				}
-				case Mac -> {
-					allocate = lookup.findStatic(serial.ffm.mac.timeval.class, "allocate", alloc);
-					tv_sec   = lookup.findStatic(serial.ffm.mac.timeval.class, "tv_sec", setLong);
-					tv_usec  = lookup.findStatic(serial.ffm.mac.timeval.class, "tv_usec", methodType(void.class, MemorySegment.class, int.class));
-				}
-				default -> throw new IllegalStateException();
-			}
-		} catch (final ReflectiveOperationException e) {
-			throw new AssertionError(e);
-		}
+
+		allocate = mh.allocate();
+		tv_sec   = mh.findStatic("tv_sec", setLong);
+		tv_usec  = mh.findStatic("tv_usec",
+				OS.current() == OS.Linux ? setLong : methodType(void.class, MemorySegment.class, int.class));
 	}
 
 	/**

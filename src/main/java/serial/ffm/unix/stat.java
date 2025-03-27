@@ -38,26 +38,14 @@ public final class stat {
 	private static final MethodHandle st_nlink;
 
 	static {
-		final var lookup = MethodHandles.lookup();
-		final var alloc = methodType(MemorySegment.class, SegmentAllocator.class);
-		final var getLayout = methodType(GroupLayout.class);
-		try {
-			switch (OS.current()) {
-				case Linux -> {
-					allocate = lookup.findStatic(serial.ffm.linux.stat.class, "allocate", alloc);
-					layout   = lookup.findStatic(serial.ffm.linux.stat.class, "layout", getLayout);
-					st_nlink = lookup.findStatic(serial.ffm.linux.stat.class, "st_nlink", methodType(long.class, MemorySegment.class));
-				}
-				case Mac -> {
-					allocate = lookup.findStatic(serial.ffm.mac.stat.class, "allocate", alloc);
-					layout   = lookup.findStatic(serial.ffm.mac.stat.class, "layout", getLayout);
-					st_nlink = lookup.findStatic(serial.ffm.mac.stat.class, "st_nlink", methodType(short.class, MemorySegment.class));
-				}
-				default -> throw new IllegalStateException();
-			}
-		} catch (final ReflectiveOperationException e) {
-			throw new AssertionError(e);
-		}
+		final var mh = new MH(MethodHandles.lookup(), switch (OS.current()) {
+			case Linux -> serial.ffm.linux.stat.class;
+			case Mac -> serial.ffm.mac.stat.class;
+			default -> throw new IllegalStateException();
+		});
+		allocate = mh.allocate();
+		layout   = mh.layout();
+		st_nlink = mh.findStatic("st_nlink", methodType(OS.current() == OS.Linux ? long.class : short.class, MemorySegment.class));
 	}
 
 	/**
