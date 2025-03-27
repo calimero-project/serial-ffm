@@ -5,14 +5,20 @@ This Java library provides serial port access for Linux, macOS, and Windows usin
 
 [Project Panama](https://openjdk.org/projects/panama/) aims at improving interoperability between Java and native libraries. It provides the new Foreign Function & Memory API, and enables access to native code in pure Java.
 
-Serial-ffm requires Java 23 (_java.base_) or newer. The implementation is a port of the [serial-native](https://github.com/calimero-project/serial-native) C libraries written to use JNI.
+`serial-ffm` requires Java 23 (_java.base_) or newer. 
+(Older versions exist for [JDK 19](https://github.com/calimero-project/serial-ffm/tree/jdk19), [JDK 21](https://github.com/calimero-project/serial-ffm/tree/jdk21), and [JDK 22](https://github.com/calimero-project/serial-ffm/releases/tag/jdk22)). 
+The implementation is a port of the [serial-native](https://github.com/calimero-project/serial-native) C libraries written to use JNI.
 
-The header files are generated using [jextract](https://github.com/openjdk/jextract), leveraging the [gradle-jextract](https://plugins.gradle.org/plugin/io.github.krakowski.jextract) plugin in the gradle build file.
+The Java bindings from native library headers are generated using [jextract](https://github.com/openjdk/jextract), leveraging the [gradle-jextract](https://plugins.gradle.org/plugin/io.github.krakowski.jextract) plugin in the gradle build file.
 
 
 ### Build with Gradle 
 
     ./gradlew build -x test
+
+Skip the header extraction step for your OS by using
+
+    ./gradlew build -x test -x jextract
 
 ### Examples
 
