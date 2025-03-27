@@ -1,6 +1,12 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import java.util.Locale
 
+buildscript {
+    dependencies {
+        classpath("com.guardsquare:proguard-gradle:7.7.0")
+    }
+}
+
 plugins {
     id("java-library")
 	id("com.github.ben-manes.versions") version "0.52.0"
@@ -169,6 +175,66 @@ tasks.jextract {
 	}
 }
 
+tasks.named("jar") { finalizedBy("strip") }
+
+tasks.register<proguard.gradle.ProGuardTask>("strip") {
+    injars(tasks.named("jar").map { it.outputs.files })
+    outjars("build/libs/stripped/${project.name}-${project.version}.jar")
+
+    val jdkPath = javaToolchains.launcherFor(java.toolchain).map { it.metadata.installationPath }
+    libraryjars(
+        mapOf(
+            "jarfilter" to "!**.jar",
+            "filter"    to "!module-info.class"
+        ),
+        "${jdkPath.get()}/jmods/java.base.jmod"
+    )
+
+//    verbose()
+    dontwarn("""
+        java.lang.invoke.VarHandle,
+        java.lang.invoke.MethodHandle,
+        java.lang.foreign.ValueLayout,
+        java.lang.foreign.Arena,
+        java.lang.foreign.MemorySegment,
+        java.lang.foreign.SymbolLookup,
+        java.lang.foreign.Linker
+        """
+    )
+
+    // keep public API and enums
+    keep(mapOf("includedescriptorclasses" to true), "public interface serial.ffm.SerialPort { public *; }")
+    keep("""
+        public enum serial.ffm.SerialPort$** {
+            **[] ${'$'}VALUES;
+            public *;
+        }"""
+    )
+    // keep linux/mac methods we reference via MethodHandles
+    keepclassmembers("""
+        public class serial.ffm.*.* {
+            public static ** allocate(...);
+            public static ** reinterpret(...);
+            public static ** layout();
+            public static ** d_name(...);
+            public static *** st_nlink(...);
+            public static *** c_cflag(...);
+            public static *** c_iflag(...);
+            public static void c_lflag(...);
+            public static void c_oflag(...);
+            public static ** c_cc(...);
+            public static void tv_sec(...);
+            public static void tv_usec(...);
+        }"""
+    )
+    keep("class module-info")
+    optimizationpasses(2)
+
+    dontobfuscate()
+    keepattributes()
+    keepparameternames()
+}
+
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:${project.extra["junitJupiterVersion"]}")
 
@@ -205,6 +271,7 @@ publishing {
             }
         }
     }
+
     repositories {
         maven {
             name = "maven"
