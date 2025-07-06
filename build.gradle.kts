@@ -69,6 +69,10 @@ tasks.withType<Jar> {
 //    archiveBaseName.set(rootProject.name)
 }
 
+tasks.withType<JavaExec>() {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+
 testing {
     suites {
         // Configure the built-in test suite
