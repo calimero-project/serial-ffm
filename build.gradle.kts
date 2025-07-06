@@ -9,7 +9,7 @@ buildscript {
 
 plugins {
     id("java-library")
-	id("com.github.ben-manes.versions") version "0.52.0"
+    id("com.github.ben-manes.versions") version "0.52.0"
     id("io.github.krakowski.jextract") version "0.5.0"
     id("maven-publish")
     signing
