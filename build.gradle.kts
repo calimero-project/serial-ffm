@@ -236,8 +236,6 @@ tasks.register<proguard.gradle.ProGuardTask>("strip") {
 }
 
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter:${project.extra["junitJupiterVersion"]}")
-
     testRuntimeOnly("org.slf4j:slf4j-jdk-platform-logging:2.0.17")
     testRuntimeOnly("org.slf4j:slf4j-simple:2.0.17")
 }
