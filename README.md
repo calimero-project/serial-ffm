@@ -1,4 +1,4 @@
-Serial port communication using the Foreign Function and Memory API
+Serial port communication using the Foreign Function and Memory API [![](https://jitpack.io/v/calimero-project/serial-ffm.svg)](https://jitpack.io/#calimero-project/serial-ffm) [![](https://img.shields.io/badge/jitpack-master-brightgreen?label=JitPack)](https://jitpack.io/#calimero-project/serial-ffm/master)
 =====
 
 This Java library provides serial port access for Linux, macOS, and Windows using Java's [Foreign Function and Memory (FFM) API](https://openjdk.org/jeps/442).
