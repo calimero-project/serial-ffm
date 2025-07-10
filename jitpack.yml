@@ -1,2 +1,2 @@
 install:
-  - ./gradlew build -x jextract -x test
+  - ./gradlew -x jextract -x test publishToMavenLocal
