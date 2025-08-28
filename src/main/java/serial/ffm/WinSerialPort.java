@@ -307,8 +307,9 @@ final class WinSerialPort extends ReadWritePort {
 	public void close() {
 		if (h.valid()) {
 			logger.log(TRACE, "close handle {0}", h);
-			final boolean closed = Windows.CloseHandle(h.handle()) == Windows.TRUE();
+			final var handle = h.handle();
 			h = HANDLE.Invalid;
+			final boolean closed = Windows.CloseHandle(handle) == Windows.TRUE();
 			if (!closed)
 				logger.log(ERROR, "closing serial port: {0}", formatWinError(QUERY_GETLASTERROR));
 		}
