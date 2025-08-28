@@ -269,8 +269,8 @@ final class WinSerialPort extends ReadWritePort {
 		setDcbBits(dcb, "fTXContinueOnXoff", Windows.FALSE());
 		setDcbBits(dcb, "fOutX", Windows.FALSE());
 		setDcbBits(dcb, "fInX", Windows.FALSE());
-		_DCB.XonChar(dcb, (byte) 0);
-		_DCB.XoffChar(dcb, (byte) 0);
+		_DCB.XonChar(dcb, (byte) 0x11);
+		_DCB.XoffChar(dcb, (byte) 0x13);
 		switch (flowControl) {
 			case CtsRts -> {
 				setDcbBits(dcb, "fOutxCtsFlow", Windows.TRUE());
