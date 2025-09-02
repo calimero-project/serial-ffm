@@ -26,13 +26,14 @@ Using a serial port named _portId_ in a try-with-resources statement:
 
 ```java
 try (var port = SerialPort.open(portId)
-		.baudrate(19_200)
-		.databits(8)
-		.parity(Parity.Even)
-		.stopbits(StopBits.One)
-		.flowControl(FlowControl.None)) {
-	var in = port.inputStream();
-	var out = port.outputStream();
-	// use streams ...
+                          .baudrate(19_200)
+                          .databits(8)
+                          .parity(Parity.Even)
+                          .stopbits(StopBits.One)
+                          .flowControl(FlowControl.None)) {
+
+    var in = port.inputStream();
+    var out = port.outputStream();
+    // use streams ...
 }
 ```

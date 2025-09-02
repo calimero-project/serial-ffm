@@ -434,9 +434,9 @@ final class WinSerialPort extends ReadWritePort {
 
 	//call *immediately* after read/write
 	private static void waitPendingIO(final HANDLE h, /*OVERLAPPED* */ final MemorySegment overlapped,
-		final MemorySegment transferred) throws IOException {
+			final MemorySegment transferred) throws IOException {
 //		logger.log(TRACE, "wait pending I/O");
-		// the only status tolerated is I/O pending
+		// the only error status tolerated is I/O pending
 		if (Windows.GetLastError() != Windows.NO_ERROR() && Windows.GetLastError() != Windows.ERROR_IO_PENDING())
 			// some I/O problem, throw error
 			throw newIoException();
