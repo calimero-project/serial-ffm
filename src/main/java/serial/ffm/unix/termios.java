@@ -80,6 +80,7 @@ public final class termios {
 	 * tcflag_t c_cflag
 	 * }
 	 */
+	@SuppressWarnings("cast")
 	public static int c_cflag(final MemorySegment struct) {
 		try {
 			return (int) (long) c_cflag.invoke(struct);
@@ -108,6 +109,7 @@ public final class termios {
 	 * tcflag_t c_iflag
 	 * }
 	 */
+	@SuppressWarnings("cast")
 	public static int c_iflag(final MemorySegment struct) {
 		try {
 			return (int) (long) c_iflag.invoke(struct);
