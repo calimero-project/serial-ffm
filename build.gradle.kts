@@ -97,9 +97,11 @@ tasks.test {
 	})
 }
 
-//project.gradle.startParameter.excludedTaskNames.add("jextract")
-
 tasks.jextract {
+    // skip jextract by default, pass -PrunJextract to run it
+    val runJextract = project.hasProperty("runJextract")
+    onlyIf { runJextract }
+
     val os = System.getProperty("os.name").lowercase(Locale.ENGLISH)
 
 	var headersDir: String   // directory of our headers.h file

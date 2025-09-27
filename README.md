@@ -16,9 +16,7 @@ The Java bindings from native library headers are generated using [jextract](htt
 
     ./gradlew build -x test
 
-Skip the header extraction step for your OS by using
-
-    ./gradlew build -x test -x jextract
+Jextract is not run by default; to run it, pass `-PrunJextract`.
 
 ### Examples
 
