@@ -11,11 +11,12 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 /**
  * {@snippet lang=c :
  * struct dirent {
- *     ino_t d_ino;
+ *     __uint64_t d_ino;
+ *     __uint64_t d_seekoff;
  *     __uint16_t d_reclen;
+ *     __uint16_t d_namlen;
  *     __uint8_t d_type;
- *     __uint8_t d_namlen;
- *     char d_name[256];
+ *     char d_name[1024];
  * }
  * }
  */
@@ -26,11 +27,13 @@ public class dirent {
     }
 
     private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
-        Mac.C_INT.withName("d_ino"),
+        Mac.C_LONG_LONG.withName("d_ino"),
+        Mac.C_LONG_LONG.withName("d_seekoff"),
         Mac.C_SHORT.withName("d_reclen"),
+        Mac.C_SHORT.withName("d_namlen"),
         Mac.C_CHAR.withName("d_type"),
-        Mac.C_CHAR.withName("d_namlen"),
-        MemoryLayout.sequenceLayout(256, Mac.C_CHAR).withName("d_name")
+        MemoryLayout.sequenceLayout(1024, Mac.C_CHAR).withName("d_name"),
+        MemoryLayout.paddingLayout(3)
     ).withName("dirent");
 
     /**
@@ -40,15 +43,15 @@ public class dirent {
         return $LAYOUT;
     }
 
-    private static final OfInt d_ino$LAYOUT = (OfInt)$LAYOUT.select(groupElement("d_ino"));
+    private static final OfLong d_ino$LAYOUT = (OfLong)$LAYOUT.select(groupElement("d_ino"));
 
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * ino_t d_ino
+     * __uint64_t d_ino
      * }
      */
-    public static final OfInt d_ino$layout() {
+    public static final OfLong d_ino$layout() {
         return d_ino$LAYOUT;
     }
 
@@ -57,7 +60,7 @@ public class dirent {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * ino_t d_ino
+     * __uint64_t d_ino
      * }
      */
     public static final long d_ino$offset() {
@@ -67,21 +70,65 @@ public class dirent {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * ino_t d_ino
+     * __uint64_t d_ino
      * }
      */
-    public static int d_ino(MemorySegment struct) {
+    public static long d_ino(MemorySegment struct) {
         return struct.get(d_ino$LAYOUT, d_ino$OFFSET);
     }
 
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * ino_t d_ino
+     * __uint64_t d_ino
      * }
      */
-    public static void d_ino(MemorySegment struct, int fieldValue) {
+    public static void d_ino(MemorySegment struct, long fieldValue) {
         struct.set(d_ino$LAYOUT, d_ino$OFFSET, fieldValue);
+    }
+
+    private static final OfLong d_seekoff$LAYOUT = (OfLong)$LAYOUT.select(groupElement("d_seekoff"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * __uint64_t d_seekoff
+     * }
+     */
+    public static final OfLong d_seekoff$layout() {
+        return d_seekoff$LAYOUT;
+    }
+
+    private static final long d_seekoff$OFFSET = $LAYOUT.byteOffset(groupElement("d_seekoff"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * __uint64_t d_seekoff
+     * }
+     */
+    public static final long d_seekoff$offset() {
+        return d_seekoff$OFFSET;
+    }
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * __uint64_t d_seekoff
+     * }
+     */
+    public static long d_seekoff(MemorySegment struct) {
+        return struct.get(d_seekoff$LAYOUT, d_seekoff$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * __uint64_t d_seekoff
+     * }
+     */
+    public static void d_seekoff(MemorySegment struct, long fieldValue) {
+        struct.set(d_seekoff$LAYOUT, d_seekoff$OFFSET, fieldValue);
     }
 
     private static final OfShort d_reclen$LAYOUT = (OfShort)$LAYOUT.select(groupElement("d_reclen"));
@@ -128,6 +175,50 @@ public class dirent {
         struct.set(d_reclen$LAYOUT, d_reclen$OFFSET, fieldValue);
     }
 
+    private static final OfShort d_namlen$LAYOUT = (OfShort)$LAYOUT.select(groupElement("d_namlen"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * __uint16_t d_namlen
+     * }
+     */
+    public static final OfShort d_namlen$layout() {
+        return d_namlen$LAYOUT;
+    }
+
+    private static final long d_namlen$OFFSET = $LAYOUT.byteOffset(groupElement("d_namlen"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * __uint16_t d_namlen
+     * }
+     */
+    public static final long d_namlen$offset() {
+        return d_namlen$OFFSET;
+    }
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * __uint16_t d_namlen
+     * }
+     */
+    public static short d_namlen(MemorySegment struct) {
+        return struct.get(d_namlen$LAYOUT, d_namlen$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * __uint16_t d_namlen
+     * }
+     */
+    public static void d_namlen(MemorySegment struct, short fieldValue) {
+        struct.set(d_namlen$LAYOUT, d_namlen$OFFSET, fieldValue);
+    }
+
     private static final OfByte d_type$LAYOUT = (OfByte)$LAYOUT.select(groupElement("d_type"));
 
     /**
@@ -172,56 +263,12 @@ public class dirent {
         struct.set(d_type$LAYOUT, d_type$OFFSET, fieldValue);
     }
 
-    private static final OfByte d_namlen$LAYOUT = (OfByte)$LAYOUT.select(groupElement("d_namlen"));
-
-    /**
-     * Layout for field:
-     * {@snippet lang=c :
-     * __uint8_t d_namlen
-     * }
-     */
-    public static final OfByte d_namlen$layout() {
-        return d_namlen$LAYOUT;
-    }
-
-    private static final long d_namlen$OFFSET = $LAYOUT.byteOffset(groupElement("d_namlen"));
-
-    /**
-     * Offset for field:
-     * {@snippet lang=c :
-     * __uint8_t d_namlen
-     * }
-     */
-    public static final long d_namlen$offset() {
-        return d_namlen$OFFSET;
-    }
-
-    /**
-     * Getter for field:
-     * {@snippet lang=c :
-     * __uint8_t d_namlen
-     * }
-     */
-    public static byte d_namlen(MemorySegment struct) {
-        return struct.get(d_namlen$LAYOUT, d_namlen$OFFSET);
-    }
-
-    /**
-     * Setter for field:
-     * {@snippet lang=c :
-     * __uint8_t d_namlen
-     * }
-     */
-    public static void d_namlen(MemorySegment struct, byte fieldValue) {
-        struct.set(d_namlen$LAYOUT, d_namlen$OFFSET, fieldValue);
-    }
-
     private static final SequenceLayout d_name$LAYOUT = (SequenceLayout)$LAYOUT.select(groupElement("d_name"));
 
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * char d_name[256]
+     * char d_name[1024]
      * }
      */
     public static final SequenceLayout d_name$layout() {
@@ -233,7 +280,7 @@ public class dirent {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * char d_name[256]
+     * char d_name[1024]
      * }
      */
     public static final long d_name$offset() {
@@ -243,7 +290,7 @@ public class dirent {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * char d_name[256]
+     * char d_name[1024]
      * }
      */
     public static MemorySegment d_name(MemorySegment struct) {
@@ -253,19 +300,19 @@ public class dirent {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * char d_name[256]
+     * char d_name[1024]
      * }
      */
     public static void d_name(MemorySegment struct, MemorySegment fieldValue) {
         MemorySegment.copy(fieldValue, 0L, struct, d_name$OFFSET, d_name$LAYOUT.byteSize());
     }
 
-    private static long[] d_name$DIMS = { 256 };
+    private static long[] d_name$DIMS = { 1024 };
 
     /**
      * Dimensions for array field:
      * {@snippet lang=c :
-     * char d_name[256]
+     * char d_name[1024]
      * }
      */
     public static long[] d_name$dimensions() {
@@ -276,7 +323,7 @@ public class dirent {
     /**
      * Indexed getter for field:
      * {@snippet lang=c :
-     * char d_name[256]
+     * char d_name[1024]
      * }
      */
     public static byte d_name(MemorySegment struct, long index0) {
@@ -286,7 +333,7 @@ public class dirent {
     /**
      * Indexed setter for field:
      * {@snippet lang=c :
-     * char d_name[256]
+     * char d_name[1024]
      * }
      */
     public static void d_name(MemorySegment struct, long index0, byte fieldValue) {

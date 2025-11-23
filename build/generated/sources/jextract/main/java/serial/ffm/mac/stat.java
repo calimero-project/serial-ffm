@@ -12,15 +12,16 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  * {@snippet lang=c :
  * struct stat {
  *     dev_t st_dev;
- *     ino_t st_ino;
  *     mode_t st_mode;
  *     nlink_t st_nlink;
+ *     __darwin_ino64_t st_ino;
  *     uid_t st_uid;
  *     gid_t st_gid;
  *     dev_t st_rdev;
  *     struct timespec st_atimespec;
  *     struct timespec st_mtimespec;
  *     struct timespec st_ctimespec;
+ *     struct timespec st_birthtimespec;
  *     off_t st_size;
  *     blkcnt_t st_blocks;
  *     blksize_t st_blksize;
@@ -39,15 +40,17 @@ public class stat {
 
     private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
         Mac.C_INT.withName("st_dev"),
-        Mac.C_INT.withName("st_ino"),
         Mac.C_SHORT.withName("st_mode"),
         Mac.C_SHORT.withName("st_nlink"),
+        Mac.C_LONG_LONG.withName("st_ino"),
         Mac.C_INT.withName("st_uid"),
         Mac.C_INT.withName("st_gid"),
         Mac.C_INT.withName("st_rdev"),
+        MemoryLayout.paddingLayout(4),
         timespec.layout().withName("st_atimespec"),
         timespec.layout().withName("st_mtimespec"),
         timespec.layout().withName("st_ctimespec"),
+        timespec.layout().withName("st_birthtimespec"),
         Mac.C_LONG_LONG.withName("st_size"),
         Mac.C_LONG_LONG.withName("st_blocks"),
         Mac.C_INT.withName("st_blksize"),
@@ -106,50 +109,6 @@ public class stat {
      */
     public static void st_dev(MemorySegment struct, int fieldValue) {
         struct.set(st_dev$LAYOUT, st_dev$OFFSET, fieldValue);
-    }
-
-    private static final OfInt st_ino$LAYOUT = (OfInt)$LAYOUT.select(groupElement("st_ino"));
-
-    /**
-     * Layout for field:
-     * {@snippet lang=c :
-     * ino_t st_ino
-     * }
-     */
-    public static final OfInt st_ino$layout() {
-        return st_ino$LAYOUT;
-    }
-
-    private static final long st_ino$OFFSET = $LAYOUT.byteOffset(groupElement("st_ino"));
-
-    /**
-     * Offset for field:
-     * {@snippet lang=c :
-     * ino_t st_ino
-     * }
-     */
-    public static final long st_ino$offset() {
-        return st_ino$OFFSET;
-    }
-
-    /**
-     * Getter for field:
-     * {@snippet lang=c :
-     * ino_t st_ino
-     * }
-     */
-    public static int st_ino(MemorySegment struct) {
-        return struct.get(st_ino$LAYOUT, st_ino$OFFSET);
-    }
-
-    /**
-     * Setter for field:
-     * {@snippet lang=c :
-     * ino_t st_ino
-     * }
-     */
-    public static void st_ino(MemorySegment struct, int fieldValue) {
-        struct.set(st_ino$LAYOUT, st_ino$OFFSET, fieldValue);
     }
 
     private static final OfShort st_mode$LAYOUT = (OfShort)$LAYOUT.select(groupElement("st_mode"));
@@ -238,6 +197,50 @@ public class stat {
      */
     public static void st_nlink(MemorySegment struct, short fieldValue) {
         struct.set(st_nlink$LAYOUT, st_nlink$OFFSET, fieldValue);
+    }
+
+    private static final OfLong st_ino$LAYOUT = (OfLong)$LAYOUT.select(groupElement("st_ino"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * __darwin_ino64_t st_ino
+     * }
+     */
+    public static final OfLong st_ino$layout() {
+        return st_ino$LAYOUT;
+    }
+
+    private static final long st_ino$OFFSET = $LAYOUT.byteOffset(groupElement("st_ino"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * __darwin_ino64_t st_ino
+     * }
+     */
+    public static final long st_ino$offset() {
+        return st_ino$OFFSET;
+    }
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * __darwin_ino64_t st_ino
+     * }
+     */
+    public static long st_ino(MemorySegment struct) {
+        return struct.get(st_ino$LAYOUT, st_ino$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * __darwin_ino64_t st_ino
+     * }
+     */
+    public static void st_ino(MemorySegment struct, long fieldValue) {
+        struct.set(st_ino$LAYOUT, st_ino$OFFSET, fieldValue);
     }
 
     private static final OfInt st_uid$LAYOUT = (OfInt)$LAYOUT.select(groupElement("st_uid"));
@@ -502,6 +505,50 @@ public class stat {
      */
     public static void st_ctimespec(MemorySegment struct, MemorySegment fieldValue) {
         MemorySegment.copy(fieldValue, 0L, struct, st_ctimespec$OFFSET, st_ctimespec$LAYOUT.byteSize());
+    }
+
+    private static final GroupLayout st_birthtimespec$LAYOUT = (GroupLayout)$LAYOUT.select(groupElement("st_birthtimespec"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * struct timespec st_birthtimespec
+     * }
+     */
+    public static final GroupLayout st_birthtimespec$layout() {
+        return st_birthtimespec$LAYOUT;
+    }
+
+    private static final long st_birthtimespec$OFFSET = $LAYOUT.byteOffset(groupElement("st_birthtimespec"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * struct timespec st_birthtimespec
+     * }
+     */
+    public static final long st_birthtimespec$offset() {
+        return st_birthtimespec$OFFSET;
+    }
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * struct timespec st_birthtimespec
+     * }
+     */
+    public static MemorySegment st_birthtimespec(MemorySegment struct) {
+        return struct.asSlice(st_birthtimespec$OFFSET, st_birthtimespec$LAYOUT.byteSize());
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * struct timespec st_birthtimespec
+     * }
+     */
+    public static void st_birthtimespec(MemorySegment struct, MemorySegment fieldValue) {
+        MemorySegment.copy(fieldValue, 0L, struct, st_birthtimespec$OFFSET, st_birthtimespec$LAYOUT.byteSize());
     }
 
     private static final OfLong st_size$LAYOUT = (OfLong)$LAYOUT.select(groupElement("st_size"));

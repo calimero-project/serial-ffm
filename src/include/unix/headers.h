@@ -2,7 +2,8 @@
 
 // macOS: disable for dirent and stat, which otherwise contain additional fields
 // and create mismatch during runtime
-#define __DARWIN_64_BIT_INO_T 0
+// not necessary for macOS Tahoe 26
+//#define __DARWIN_64_BIT_INO_T 0
 
 #include <unistd.h> // write
 #include <sys/stat.h>

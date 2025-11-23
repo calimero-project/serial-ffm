@@ -7,61 +7,17 @@ import java.lang.foreign.*;
 import java.util.*;
 import java.util.stream.*;
 
-public class Mac {
+public class Mac extends Mac$shared {
 
     Mac() {
         // Should not be called directly
     }
 
     static final Arena LIBRARY_ARENA = Arena.ofAuto();
-    static final boolean TRACE_DOWNCALLS = Boolean.getBoolean("jextract.trace.downcalls");
-
-    static void traceDowncall(String name, Object... args) {
-         String traceArgs = Arrays.stream(args)
-                       .map(Object::toString)
-                       .collect(Collectors.joining(", "));
-         System.out.printf("%s(%s)\n", name, traceArgs);
-    }
-
-    static MemorySegment findOrThrow(String symbol) {
-        return SYMBOL_LOOKUP.findOrThrow(symbol);
-    }
-
-    static MethodHandle upcallHandle(Class<?> fi, String name, FunctionDescriptor fdesc) {
-        try {
-            return MethodHandles.lookup().findVirtual(fi, name, fdesc.toMethodType());
-        } catch (ReflectiveOperationException ex) {
-            throw new AssertionError(ex);
-        }
-    }
-
-    static MemoryLayout align(MemoryLayout layout, long align) {
-        return switch (layout) {
-            case PaddingLayout p -> p;
-            case ValueLayout v -> v.withByteAlignment(align);
-            case GroupLayout g -> {
-                MemoryLayout[] alignedMembers = g.memberLayouts().stream()
-                        .map(m -> align(m, align)).toArray(MemoryLayout[]::new);
-                yield g instanceof StructLayout ?
-                        MemoryLayout.structLayout(alignedMembers) : MemoryLayout.unionLayout(alignedMembers);
-            }
-            case SequenceLayout s -> MemoryLayout.sequenceLayout(s.elementCount(), align(s.elementLayout(), align));
-        };
-    }
 
     static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.loaderLookup()
             .or(Linker.nativeLinker().defaultLookup());
 
-    public static final ValueLayout.OfBoolean C_BOOL = (ValueLayout.OfBoolean) Linker.nativeLinker().canonicalLayouts().get("bool");
-    public static final ValueLayout.OfByte C_CHAR =(ValueLayout.OfByte)Linker.nativeLinker().canonicalLayouts().get("char");
-    public static final ValueLayout.OfShort C_SHORT = (ValueLayout.OfShort) Linker.nativeLinker().canonicalLayouts().get("short");
-    public static final ValueLayout.OfInt C_INT = (ValueLayout.OfInt) Linker.nativeLinker().canonicalLayouts().get("int");
-    public static final ValueLayout.OfLong C_LONG_LONG = (ValueLayout.OfLong) Linker.nativeLinker().canonicalLayouts().get("long long");
-    public static final ValueLayout.OfFloat C_FLOAT = (ValueLayout.OfFloat) Linker.nativeLinker().canonicalLayouts().get("float");
-    public static final ValueLayout.OfDouble C_DOUBLE = (ValueLayout.OfDouble) Linker.nativeLinker().canonicalLayouts().get("double");
-    public static final AddressLayout C_POINTER = ((AddressLayout) Linker.nativeLinker().canonicalLayouts().get("void*"))
-            .withTargetLayout(MemoryLayout.sequenceLayout(java.lang.Long.MAX_VALUE, C_CHAR));
-    public static final ValueLayout.OfLong C_LONG = (ValueLayout.OfLong) Linker.nativeLinker().canonicalLayouts().get("long");
     private static final int O_RDWR = (int)2L;
     /**
      * {@snippet lang=c :
@@ -582,7 +538,7 @@ public class Mac {
             Mac.C_INT
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("close");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("close");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -590,7 +546,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * int close(int)
+     * int close(int) asm("_close")
      * }
      */
     public static FunctionDescriptor close$descriptor() {
@@ -600,7 +556,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * int close(int)
+     * int close(int) asm("_close")
      * }
      */
     public static MethodHandle close$handle() {
@@ -610,7 +566,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * int close(int)
+     * int close(int) asm("_close")
      * }
      */
     public static MemorySegment close$address() {
@@ -619,7 +575,7 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * int close(int)
+     * int close(int) asm("_close")
      * }
      */
     public static int close(int x0) {
@@ -629,6 +585,8 @@ public class Mac {
                 traceDowncall("close", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -638,7 +596,7 @@ public class Mac {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             Mac.C_INT    );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("getpid");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getpid");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -646,7 +604,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * pid_t getpid()
+     * pid_t getpid(void)
      * }
      */
     public static FunctionDescriptor getpid$descriptor() {
@@ -656,7 +614,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * pid_t getpid()
+     * pid_t getpid(void)
      * }
      */
     public static MethodHandle getpid$handle() {
@@ -666,7 +624,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * pid_t getpid()
+     * pid_t getpid(void)
      * }
      */
     public static MemorySegment getpid$address() {
@@ -675,7 +633,7 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * pid_t getpid()
+     * pid_t getpid(void)
      * }
      */
     public static int getpid() {
@@ -685,6 +643,8 @@ public class Mac {
                 traceDowncall("getpid");
             }
             return (int)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -697,7 +657,7 @@ public class Mac {
             Mac.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("link");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("link");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -744,6 +704,8 @@ public class Mac {
                 traceDowncall("link", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -757,7 +719,7 @@ public class Mac {
             Mac.C_LONG
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("read");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("read");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -765,7 +727,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * ssize_t read(int, void *, size_t)
+     * ssize_t read(int, void *, size_t __nbyte) asm("_read")
      * }
      */
     public static FunctionDescriptor read$descriptor() {
@@ -775,7 +737,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * ssize_t read(int, void *, size_t)
+     * ssize_t read(int, void *, size_t __nbyte) asm("_read")
      * }
      */
     public static MethodHandle read$handle() {
@@ -785,7 +747,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * ssize_t read(int, void *, size_t)
+     * ssize_t read(int, void *, size_t __nbyte) asm("_read")
      * }
      */
     public static MemorySegment read$address() {
@@ -794,16 +756,18 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * ssize_t read(int, void *, size_t)
+     * ssize_t read(int, void *, size_t __nbyte) asm("_read")
      * }
      */
-    public static long read(int x0, MemorySegment x1, long x2) {
+    public static long read(int x0, MemorySegment x1, long __nbyte) {
         var mh$ = read.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
-                traceDowncall("read", x0, x1, x2);
+                traceDowncall("read", x0, x1, __nbyte);
             }
-            return (long)mh$.invokeExact(x0, x1, x2);
+            return (long)mh$.invokeExact(x0, x1, __nbyte);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -815,7 +779,7 @@ public class Mac {
             Mac.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("unlink");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("unlink");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -862,6 +826,8 @@ public class Mac {
                 traceDowncall("unlink", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -875,7 +841,7 @@ public class Mac {
             Mac.C_LONG
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("write");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("write");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -883,7 +849,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * ssize_t write(int __fd, const void *__buf, size_t __nbyte)
+     * ssize_t write(int __fd, const void *__buf, size_t __nbyte) asm("_write")
      * }
      */
     public static FunctionDescriptor write$descriptor() {
@@ -893,7 +859,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * ssize_t write(int __fd, const void *__buf, size_t __nbyte)
+     * ssize_t write(int __fd, const void *__buf, size_t __nbyte) asm("_write")
      * }
      */
     public static MethodHandle write$handle() {
@@ -903,7 +869,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * ssize_t write(int __fd, const void *__buf, size_t __nbyte)
+     * ssize_t write(int __fd, const void *__buf, size_t __nbyte) asm("_write")
      * }
      */
     public static MemorySegment write$address() {
@@ -912,7 +878,7 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * ssize_t write(int __fd, const void *__buf, size_t __nbyte)
+     * ssize_t write(int __fd, const void *__buf, size_t __nbyte) asm("_write")
      * }
      */
     public static long write(int __fd, MemorySegment __buf, long __nbyte) {
@@ -922,6 +888,8 @@ public class Mac {
                 traceDowncall("write", __fd, __buf, __nbyte);
             }
             return (long)mh$.invokeExact(__fd, __buf, __nbyte);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -937,7 +905,7 @@ public class Mac {
             Mac.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("select$1050");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("select");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -945,7 +913,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * int select(int, fd_set *restrict, fd_set *restrict, fd_set *restrict, struct timeval *restrict)
+     * int select(int, fd_set *restrict, fd_set *restrict, fd_set *restrict, struct timeval *restrict) asm("_select")
      * }
      */
     public static FunctionDescriptor select$descriptor() {
@@ -955,7 +923,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * int select(int, fd_set *restrict, fd_set *restrict, fd_set *restrict, struct timeval *restrict)
+     * int select(int, fd_set *restrict, fd_set *restrict, fd_set *restrict, struct timeval *restrict) asm("_select")
      * }
      */
     public static MethodHandle select$handle() {
@@ -965,7 +933,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * int select(int, fd_set *restrict, fd_set *restrict, fd_set *restrict, struct timeval *restrict)
+     * int select(int, fd_set *restrict, fd_set *restrict, fd_set *restrict, struct timeval *restrict) asm("_select")
      * }
      */
     public static MemorySegment select$address() {
@@ -974,7 +942,7 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * int select(int, fd_set *restrict, fd_set *restrict, fd_set *restrict, struct timeval *restrict)
+     * int select(int, fd_set *restrict, fd_set *restrict, fd_set *restrict, struct timeval *restrict) asm("_select")
      * }
      */
     public static int select(int x0, MemorySegment x1, MemorySegment x2, MemorySegment x3, MemorySegment x4) {
@@ -984,6 +952,8 @@ public class Mac {
                 traceDowncall("select", x0, x1, x2, x3, x4);
             }
             return (int)mh$.invokeExact(x0, x1, x2, x3, x4);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -996,7 +966,7 @@ public class Mac {
             Mac.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("stat");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("stat");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1004,7 +974,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * int stat(const char *, struct stat *)
+     * int stat(const char *, struct stat *) asm("_stat")
      * }
      */
     public static FunctionDescriptor stat$descriptor() {
@@ -1014,7 +984,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * int stat(const char *, struct stat *)
+     * int stat(const char *, struct stat *) asm("_stat")
      * }
      */
     public static MethodHandle stat$handle() {
@@ -1024,7 +994,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * int stat(const char *, struct stat *)
+     * int stat(const char *, struct stat *) asm("_stat")
      * }
      */
     public static MemorySegment stat$address() {
@@ -1033,7 +1003,7 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * int stat(const char *, struct stat *)
+     * int stat(const char *, struct stat *) asm("_stat")
      * }
      */
     public static int stat(MemorySegment x0, MemorySegment x1) {
@@ -1043,6 +1013,8 @@ public class Mac {
                 traceDowncall("stat", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1051,7 +1023,7 @@ public class Mac {
     /**
      * Variadic invoker class for:
      * {@snippet lang=c :
-     * int open(const char *, int, ...)
+     * int open(const char *, int, ...) asm("_open")
      * }
      */
     public static class open {
@@ -1060,7 +1032,7 @@ public class Mac {
                 Mac.C_POINTER,
                 Mac.C_INT
             );
-        private static final MemorySegment ADDR = Mac.findOrThrow("open");
+        private static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("open");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -1075,7 +1047,7 @@ public class Mac {
         /**
          * Variadic invoker factory for:
          * {@snippet lang=c :
-         * int open(const char *, int, ...)
+         * int open(const char *, int, ...) asm("_open")
          * }
          */
         public static open makeInvoker(MemoryLayout... layouts) {
@@ -1124,7 +1096,7 @@ public class Mac {
     /**
      * Variadic invoker class for:
      * {@snippet lang=c :
-     * int fcntl(int, int, ...)
+     * int fcntl(int, int, ...) asm("_fcntl")
      * }
      */
     public static class fcntl {
@@ -1133,7 +1105,7 @@ public class Mac {
                 Mac.C_INT,
                 Mac.C_INT
             );
-        private static final MemorySegment ADDR = Mac.findOrThrow("fcntl");
+        private static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("fcntl");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -1148,7 +1120,7 @@ public class Mac {
         /**
          * Variadic invoker factory for:
          * {@snippet lang=c :
-         * int fcntl(int, int, ...)
+         * int fcntl(int, int, ...) asm("_fcntl")
          * }
          */
         public static fcntl makeInvoker(MemoryLayout... layouts) {
@@ -1200,7 +1172,7 @@ public class Mac {
             Mac.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("cfgetispeed");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cfgetispeed");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1247,6 +1219,8 @@ public class Mac {
                 traceDowncall("cfgetispeed", x0);
             }
             return (long)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1259,7 +1233,7 @@ public class Mac {
             Mac.C_LONG
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("cfsetispeed");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cfsetispeed");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1306,6 +1280,8 @@ public class Mac {
                 traceDowncall("cfsetispeed", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1318,7 +1294,7 @@ public class Mac {
             Mac.C_LONG
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("cfsetospeed");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cfsetospeed");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1365,6 +1341,8 @@ public class Mac {
                 traceDowncall("cfsetospeed", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1377,7 +1355,7 @@ public class Mac {
             Mac.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("tcgetattr");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("tcgetattr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1424,6 +1402,8 @@ public class Mac {
                 traceDowncall("tcgetattr", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1437,7 +1417,7 @@ public class Mac {
             Mac.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("tcsetattr");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("tcsetattr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1484,6 +1464,8 @@ public class Mac {
                 traceDowncall("tcsetattr", x0, x1, x2);
             }
             return (int)mh$.invokeExact(x0, x1, x2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1495,7 +1477,7 @@ public class Mac {
             Mac.C_INT
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("tcdrain");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("tcdrain");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1503,7 +1485,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * int tcdrain(int)
+     * int tcdrain(int) asm("_tcdrain")
      * }
      */
     public static FunctionDescriptor tcdrain$descriptor() {
@@ -1513,7 +1495,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * int tcdrain(int)
+     * int tcdrain(int) asm("_tcdrain")
      * }
      */
     public static MethodHandle tcdrain$handle() {
@@ -1523,7 +1505,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * int tcdrain(int)
+     * int tcdrain(int) asm("_tcdrain")
      * }
      */
     public static MemorySegment tcdrain$address() {
@@ -1532,7 +1514,7 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * int tcdrain(int)
+     * int tcdrain(int) asm("_tcdrain")
      * }
      */
     public static int tcdrain(int x0) {
@@ -1542,6 +1524,8 @@ public class Mac {
                 traceDowncall("tcdrain", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1559,7 +1543,7 @@ public class Mac {
                 Mac.C_INT,
                 Mac.C_LONG
             );
-        private static final MemorySegment ADDR = Mac.findOrThrow("ioctl");
+        private static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ioctl");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -1626,7 +1610,7 @@ public class Mac {
             Mac.C_INT
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("strerror");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strerror");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1634,7 +1618,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * char *strerror(int __errnum)
+     * char *strerror(int __errnum) asm("_strerror")
      * }
      */
     public static FunctionDescriptor strerror$descriptor() {
@@ -1644,7 +1628,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * char *strerror(int __errnum)
+     * char *strerror(int __errnum) asm("_strerror")
      * }
      */
     public static MethodHandle strerror$handle() {
@@ -1654,7 +1638,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * char *strerror(int __errnum)
+     * char *strerror(int __errnum) asm("_strerror")
      * }
      */
     public static MemorySegment strerror$address() {
@@ -1663,7 +1647,7 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * char *strerror(int __errnum)
+     * char *strerror(int __errnum) asm("_strerror")
      * }
      */
     public static MemorySegment strerror(int __errnum) {
@@ -1673,6 +1657,8 @@ public class Mac {
                 traceDowncall("strerror", __errnum);
             }
             return (MemorySegment)mh$.invokeExact(__errnum);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1684,7 +1670,7 @@ public class Mac {
             Mac.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("strlen");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strlen");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1731,6 +1717,8 @@ public class Mac {
                 traceDowncall("strlen", __s);
             }
             return (long)mh$.invokeExact(__s);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1740,7 +1728,7 @@ public class Mac {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             Mac.C_POINTER    );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("__error");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("__error");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1748,7 +1736,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * extern int *__error()
+     * extern int *__error(void)
      * }
      */
     public static FunctionDescriptor __error$descriptor() {
@@ -1758,7 +1746,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * extern int *__error()
+     * extern int *__error(void)
      * }
      */
     public static MethodHandle __error$handle() {
@@ -1768,7 +1756,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * extern int *__error()
+     * extern int *__error(void)
      * }
      */
     public static MemorySegment __error$address() {
@@ -1777,7 +1765,7 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * extern int *__error()
+     * extern int *__error(void)
      * }
      */
     public static MemorySegment __error() {
@@ -1787,6 +1775,8 @@ public class Mac {
                 traceDowncall("__error");
             }
             return (MemorySegment)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1799,7 +1789,7 @@ public class Mac {
             Mac.C_INT
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("kill");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("kill");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1807,7 +1797,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * int kill(pid_t, int)
+     * int kill(pid_t, int) asm("_kill")
      * }
      */
     public static FunctionDescriptor kill$descriptor() {
@@ -1817,7 +1807,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * int kill(pid_t, int)
+     * int kill(pid_t, int) asm("_kill")
      * }
      */
     public static MethodHandle kill$handle() {
@@ -1827,7 +1817,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * int kill(pid_t, int)
+     * int kill(pid_t, int) asm("_kill")
      * }
      */
     public static MemorySegment kill$address() {
@@ -1836,7 +1826,7 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * int kill(pid_t, int)
+     * int kill(pid_t, int) asm("_kill")
      * }
      */
     public static int kill(int x0, int x1) {
@@ -1846,6 +1836,8 @@ public class Mac {
                 traceDowncall("kill", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1857,7 +1849,7 @@ public class Mac {
             Mac.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("closedir");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("closedir");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1865,7 +1857,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * int closedir(DIR *)
+     * int closedir(DIR *) asm("_closedir")
      * }
      */
     public static FunctionDescriptor closedir$descriptor() {
@@ -1875,7 +1867,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * int closedir(DIR *)
+     * int closedir(DIR *) asm("_closedir")
      * }
      */
     public static MethodHandle closedir$handle() {
@@ -1885,7 +1877,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * int closedir(DIR *)
+     * int closedir(DIR *) asm("_closedir")
      * }
      */
     public static MemorySegment closedir$address() {
@@ -1894,7 +1886,7 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * int closedir(DIR *)
+     * int closedir(DIR *) asm("_closedir")
      * }
      */
     public static int closedir(MemorySegment x0) {
@@ -1904,6 +1896,8 @@ public class Mac {
                 traceDowncall("closedir", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1915,7 +1909,7 @@ public class Mac {
             Mac.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("opendir");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("opendir");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1923,7 +1917,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * DIR *opendir(const char *)
+     * DIR *opendir(const char *) asm("_opendir")
      * }
      */
     public static FunctionDescriptor opendir$descriptor() {
@@ -1933,7 +1927,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * DIR *opendir(const char *)
+     * DIR *opendir(const char *) asm("_opendir")
      * }
      */
     public static MethodHandle opendir$handle() {
@@ -1943,7 +1937,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * DIR *opendir(const char *)
+     * DIR *opendir(const char *) asm("_opendir")
      * }
      */
     public static MemorySegment opendir$address() {
@@ -1952,7 +1946,7 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * DIR *opendir(const char *)
+     * DIR *opendir(const char *) asm("_opendir")
      * }
      */
     public static MemorySegment opendir(MemorySegment x0) {
@@ -1962,6 +1956,8 @@ public class Mac {
                 traceDowncall("opendir", x0);
             }
             return (MemorySegment)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1973,7 +1969,7 @@ public class Mac {
             Mac.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("readdir");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("readdir");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1981,7 +1977,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * struct dirent *readdir(DIR *)
+     * struct dirent *readdir(DIR *) asm("_readdir")
      * }
      */
     public static FunctionDescriptor readdir$descriptor() {
@@ -1991,7 +1987,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * struct dirent *readdir(DIR *)
+     * struct dirent *readdir(DIR *) asm("_readdir")
      * }
      */
     public static MethodHandle readdir$handle() {
@@ -2001,7 +1997,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * struct dirent *readdir(DIR *)
+     * struct dirent *readdir(DIR *) asm("_readdir")
      * }
      */
     public static MemorySegment readdir$address() {
@@ -2010,7 +2006,7 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * struct dirent *readdir(DIR *)
+     * struct dirent *readdir(DIR *) asm("_readdir")
      * }
      */
     public static MemorySegment readdir(MemorySegment x0) {
@@ -2020,6 +2016,8 @@ public class Mac {
                 traceDowncall("readdir", x0);
             }
             return (MemorySegment)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2032,7 +2030,7 @@ public class Mac {
             Mac.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Mac.findOrThrow("realpath$DARWIN_EXTSN");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("realpath$DARWIN_EXTSN");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2040,7 +2038,7 @@ public class Mac {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * char *realpath(const char *restrict, char *restrict)
+     * char *realpath(const char *restrict, char *restrict) asm("_realpath$DARWIN_EXTSN")
      * }
      */
     public static FunctionDescriptor realpath$descriptor() {
@@ -2050,7 +2048,7 @@ public class Mac {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * char *realpath(const char *restrict, char *restrict)
+     * char *realpath(const char *restrict, char *restrict) asm("_realpath$DARWIN_EXTSN")
      * }
      */
     public static MethodHandle realpath$handle() {
@@ -2060,7 +2058,7 @@ public class Mac {
     /**
      * Address for:
      * {@snippet lang=c :
-     * char *realpath(const char *restrict, char *restrict)
+     * char *realpath(const char *restrict, char *restrict) asm("_realpath$DARWIN_EXTSN")
      * }
      */
     public static MemorySegment realpath$address() {
@@ -2069,7 +2067,7 @@ public class Mac {
 
     /**
      * {@snippet lang=c :
-     * char *realpath(const char *restrict, char *restrict)
+     * char *realpath(const char *restrict, char *restrict) asm("_realpath$DARWIN_EXTSN")
      * }
      */
     public static MemorySegment realpath(MemorySegment x0, MemorySegment x1) {
@@ -2079,6 +2077,8 @@ public class Mac {
                 traceDowncall("realpath", x0, x1);
             }
             return (MemorySegment)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
