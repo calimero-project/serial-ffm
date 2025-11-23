@@ -55,7 +55,7 @@ class SerialPortTests {
 
 	private static String osPort() {
 		return switch (OS.current()) {
-			case Mac     -> "/dev/tty.usbmodem14101";
+			case Mac     -> "/dev/tty.usbmodem21201";
 			case Linux   -> "/dev/ttyACM0";
 			case Windows -> "COM1";
 			case Other   -> throw new UnsupportedOperationException("unsupported platform: " + OS.osName());
