@@ -70,7 +70,7 @@ tasks.withType<Jar> {
 //    archiveBaseName.set(rootProject.name)
 }
 
-tasks.withType<JavaExec>() {
+tasks.withType<Test> {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
