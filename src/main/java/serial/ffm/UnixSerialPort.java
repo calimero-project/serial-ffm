@@ -366,7 +366,8 @@ final class UnixSerialPort extends ReadWritePort {
 
 	boolean tryLink(final MemorySegment forName, final MemorySegment linkName) {
 		if (Linux.link(forName, linkName) == -1) {
-			logger.log(TRACE, "create link {0} failed ({1}), try stat", linkName.getString(0), errnoMsg());
+			logger.log(TRACE, "failed to create link {0} ({1}), try stat {2}", linkName.getString(0), errnoMsg(),
+					forName.getString(0));
 			try (var arena = Arena.ofConfined()) {
 				// we are nevertheless successful if lock count states 2 locks
 				final var seg = stat.allocate(arena);
