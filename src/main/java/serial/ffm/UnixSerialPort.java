@@ -372,7 +372,7 @@ final class UnixSerialPort extends ReadWritePort {
 				// we are nevertheless successful if lock count states 2 locks
 				final var seg = stat.allocate(arena);
 				if (Linux.stat(forName, seg) == -1) {
-					logger.log(TRACE, "stat {0} failed: {1}", forName, errnoMsg());
+					logger.log(TRACE, "stat failed for {0}: {1}", forName, errnoMsg());
 					return false;
 				}
 				if (debug())
