@@ -1,0 +1,177 @@
+{
+  "reflection": [
+    {
+      "type": "serial.ffm.linux.dirent"
+    },
+    {
+      "type": "serial.ffm.linux.fd_set"
+    },
+    {
+      "type": "serial.ffm.linux.stat"
+    },
+    {
+      "type": "serial.ffm.linux.termios"
+    },
+    {
+      "type": "serial.ffm.linux.timeval"
+    },
+    {
+      "type": "serial.ffm.mac.dirent"
+    },
+    {
+      "type": "serial.ffm.mac.fd_set"
+    },
+    {
+      "type": "serial.ffm.mac.stat"
+    },
+    {
+      "type": "serial.ffm.mac.termios"
+    },
+    {
+      "type": "serial.ffm.mac.timeval"
+    }
+  ],
+  "foreign": {
+    "downcalls": [
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "void*",
+          "void*"
+        ]
+      },
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "jint",
+          "jlong",
+          "void*"
+        ],
+        "options": {
+          "firstVariadicArg": 2
+        }
+      },
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "jint",
+          "jint",
+          "jint"
+        ],
+        "options": {
+          "firstVariadicArg": 2
+        }
+      },
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "jint"
+        ]
+      },
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "jint",
+          "jint",
+          "void*"
+        ]
+      },
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "void*",
+          "jint",
+          "jint"
+        ],
+        "options": {
+          "firstVariadicArg": 2
+        }
+      },
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "void*",
+          "jint"
+        ],
+        "options": {
+          "firstVariadicArg": 2
+        }
+      },
+      {
+        "returnType": "jlong",
+        "parameterTypes": [
+          "void*"
+        ]
+      },
+      {
+        "returnType": "void*",
+        "parameterTypes": []
+      },
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "jint",
+          "void*",
+          "void*",
+          "void*",
+          "void*"
+        ]
+      },
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "jint",
+          "void*"
+        ]
+      },
+      {
+        "returnType": "void*",
+        "parameterTypes": [
+          "jint"
+        ]
+      },
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "void*"
+        ]
+      },
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "void*",
+          "jint"
+        ]
+      },
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "jint",
+          "jlong"
+        ],
+        "options": {
+          "firstVariadicArg": 2
+        }
+      },
+      {
+        "returnType": "jint",
+        "parameterTypes": []
+      },
+      {
+        "returnType": "jlong",
+        "parameterTypes": [
+          "jint",
+          "void*",
+          "jlong"
+        ]
+      },
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "jint",
+          "jint"
+        ]
+      }
+    ]
+  }
+}
