@@ -4,8 +4,6 @@ package serial.ffm.mac;
 
 import java.lang.invoke.*;
 import java.lang.foreign.*;
-import java.util.*;
-import java.util.stream.*;
 
 public class Mac extends Mac$shared {
 
