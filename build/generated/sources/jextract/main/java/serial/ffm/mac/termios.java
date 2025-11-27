@@ -285,7 +285,7 @@ public class termios {
      * }
      */
     public static byte c_cc(MemorySegment struct, long index0) {
-        return (byte)c_cc$ELEM_HANDLE.get(struct, 0L, index0);
+        return (byte)c_cc$ELEM_HANDLE.get(struct, c_cc$OFFSET, index0);
     }
 
     /**
@@ -295,7 +295,7 @@ public class termios {
      * }
      */
     public static void c_cc(MemorySegment struct, long index0, byte fieldValue) {
-        c_cc$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+        c_cc$ELEM_HANDLE.set(struct, c_cc$OFFSET, index0, fieldValue);
     }
 
     private static final OfLong c_ispeed$LAYOUT = (OfLong)$LAYOUT.select(groupElement("c_ispeed"));

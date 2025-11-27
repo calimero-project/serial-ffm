@@ -95,7 +95,7 @@ public class fd_set {
      * }
      */
     public static int fds_bits(MemorySegment struct, long index0) {
-        return (int)fds_bits$ELEM_HANDLE.get(struct, 0L, index0);
+        return (int)fds_bits$ELEM_HANDLE.get(struct, fds_bits$OFFSET, index0);
     }
 
     /**
@@ -105,7 +105,7 @@ public class fd_set {
      * }
      */
     public static void fds_bits(MemorySegment struct, long index0, int fieldValue) {
-        fds_bits$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+        fds_bits$ELEM_HANDLE.set(struct, fds_bits$OFFSET, index0, fieldValue);
     }
 
     /**

@@ -879,7 +879,7 @@ public class stat {
      * }
      */
     public static long st_qspare(MemorySegment struct, long index0) {
-        return (long)st_qspare$ELEM_HANDLE.get(struct, 0L, index0);
+        return (long)st_qspare$ELEM_HANDLE.get(struct, st_qspare$OFFSET, index0);
     }
 
     /**
@@ -889,7 +889,7 @@ public class stat {
      * }
      */
     public static void st_qspare(MemorySegment struct, long index0, long fieldValue) {
-        st_qspare$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+        st_qspare$ELEM_HANDLE.set(struct, st_qspare$OFFSET, index0, fieldValue);
     }
 
     /**
