@@ -7,62 +7,17 @@ import java.lang.foreign.*;
 import java.util.*;
 import java.util.stream.*;
 
-public class Windows {
+public class Windows extends Windows$shared {
 
     Windows() {
         // Should not be called directly
     }
 
     static final Arena LIBRARY_ARENA = Arena.ofAuto();
-    static final boolean TRACE_DOWNCALLS = Boolean.getBoolean("jextract.trace.downcalls");
-
-    static void traceDowncall(String name, Object... args) {
-         String traceArgs = Arrays.stream(args)
-                       .map(Object::toString)
-                       .collect(Collectors.joining(", "));
-         System.out.printf("%s(%s)\n", name, traceArgs);
-    }
-
-    static MemorySegment findOrThrow(String symbol) {
-        return SYMBOL_LOOKUP.findOrThrow(symbol);
-    }
-
-    static MethodHandle upcallHandle(Class<?> fi, String name, FunctionDescriptor fdesc) {
-        try {
-            return MethodHandles.lookup().findVirtual(fi, name, fdesc.toMethodType());
-        } catch (ReflectiveOperationException ex) {
-            throw new AssertionError(ex);
-        }
-    }
-
-    static MemoryLayout align(MemoryLayout layout, long align) {
-        return switch (layout) {
-            case PaddingLayout p -> p;
-            case ValueLayout v -> v.withByteAlignment(align);
-            case GroupLayout g -> {
-                MemoryLayout[] alignedMembers = g.memberLayouts().stream()
-                        .map(m -> align(m, align)).toArray(MemoryLayout[]::new);
-                yield g instanceof StructLayout ?
-                        MemoryLayout.structLayout(alignedMembers) : MemoryLayout.unionLayout(alignedMembers);
-            }
-            case SequenceLayout s -> MemoryLayout.sequenceLayout(s.elementCount(), align(s.elementLayout(), align));
-        };
-    }
 
     static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.loaderLookup()
             .or(Linker.nativeLinker().defaultLookup());
 
-    public static final ValueLayout.OfBoolean C_BOOL = (ValueLayout.OfBoolean) Linker.nativeLinker().canonicalLayouts().get("bool");
-    public static final ValueLayout.OfByte C_CHAR =(ValueLayout.OfByte)Linker.nativeLinker().canonicalLayouts().get("char");
-    public static final ValueLayout.OfShort C_SHORT = (ValueLayout.OfShort) Linker.nativeLinker().canonicalLayouts().get("short");
-    public static final ValueLayout.OfInt C_INT = (ValueLayout.OfInt) Linker.nativeLinker().canonicalLayouts().get("int");
-    public static final ValueLayout.OfLong C_LONG_LONG = (ValueLayout.OfLong) Linker.nativeLinker().canonicalLayouts().get("long long");
-    public static final ValueLayout.OfFloat C_FLOAT = (ValueLayout.OfFloat) Linker.nativeLinker().canonicalLayouts().get("float");
-    public static final ValueLayout.OfDouble C_DOUBLE = (ValueLayout.OfDouble) Linker.nativeLinker().canonicalLayouts().get("double");
-    public static final AddressLayout C_POINTER = ((AddressLayout) Linker.nativeLinker().canonicalLayouts().get("void*"))
-            .withTargetLayout(MemoryLayout.sequenceLayout(java.lang.Long.MAX_VALUE, C_CHAR));
-    public static final ValueLayout.OfInt C_LONG = (ValueLayout.OfInt) Linker.nativeLinker().canonicalLayouts().get("long");
-    public static final ValueLayout.OfDouble C_LONG_DOUBLE = (ValueLayout.OfDouble) Linker.nativeLinker().canonicalLayouts().get("double");
     private static final int FALSE = (int)0L;
     /**
      * {@snippet lang=c :
@@ -346,7 +301,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("CreateFileA");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CreateFileA");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -393,6 +348,8 @@ public class Windows {
                 traceDowncall("CreateFileA", lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
             }
             return (MemorySegment)mh$.invokeExact(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -404,7 +361,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("FlushFileBuffers");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("FlushFileBuffers");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -451,6 +408,8 @@ public class Windows {
                 traceDowncall("FlushFileBuffers", hFile);
             }
             return (int)mh$.invokeExact(hFile);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -462,7 +421,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("GetFileType");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetFileType");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -509,6 +468,8 @@ public class Windows {
                 traceDowncall("GetFileType", hFile);
             }
             return (int)mh$.invokeExact(hFile);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -524,7 +485,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("ReadFile");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ReadFile");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -571,6 +532,8 @@ public class Windows {
                 traceDowncall("ReadFile", hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
             }
             return (int)mh$.invokeExact(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -586,7 +549,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("WriteFile");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("WriteFile");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -633,6 +596,8 @@ public class Windows {
                 traceDowncall("WriteFile", hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
             }
             return (int)mh$.invokeExact(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -644,7 +609,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("CloseHandle");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CloseHandle");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -691,6 +656,8 @@ public class Windows {
                 traceDowncall("CloseHandle", hObject);
             }
             return (int)mh$.invokeExact(hObject);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -700,7 +667,7 @@ public class Windows {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             Windows.C_LONG    );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("GetLastError");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetLastError");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -747,6 +714,8 @@ public class Windows {
                 traceDowncall("GetLastError");
             }
             return (int)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -761,7 +730,7 @@ public class Windows {
             Windows.C_INT
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("GetOverlappedResult");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetOverlappedResult");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -808,6 +777,8 @@ public class Windows {
                 traceDowncall("GetOverlappedResult", hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
             }
             return (int)mh$.invokeExact(hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -820,7 +791,7 @@ public class Windows {
             Windows.C_LONG
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("WaitForSingleObject");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("WaitForSingleObject");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -867,6 +838,8 @@ public class Windows {
                 traceDowncall("WaitForSingleObject", hHandle, dwMilliseconds);
             }
             return (int)mh$.invokeExact(hHandle, dwMilliseconds);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -881,7 +854,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("CreateEventA");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CreateEventA");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -928,6 +901,8 @@ public class Windows {
                 traceDowncall("CreateEventA", lpEventAttributes, bManualReset, bInitialState, lpName);
             }
             return (MemorySegment)mh$.invokeExact(lpEventAttributes, bManualReset, bInitialState, lpName);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -941,7 +916,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("ClearCommError");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ClearCommError");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -988,6 +963,8 @@ public class Windows {
                 traceDowncall("ClearCommError", hFile, lpErrors, lpStat);
             }
             return (int)mh$.invokeExact(hFile, lpErrors, lpStat);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1001,7 +978,7 @@ public class Windows {
             Windows.C_LONG
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("SetupComm");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("SetupComm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1048,6 +1025,8 @@ public class Windows {
                 traceDowncall("SetupComm", hFile, dwInQueue, dwOutQueue);
             }
             return (int)mh$.invokeExact(hFile, dwInQueue, dwOutQueue);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1060,7 +1039,7 @@ public class Windows {
             Windows.C_LONG
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("EscapeCommFunction");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("EscapeCommFunction");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1107,6 +1086,8 @@ public class Windows {
                 traceDowncall("EscapeCommFunction", hFile, dwFunc);
             }
             return (int)mh$.invokeExact(hFile, dwFunc);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1119,7 +1100,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("GetCommMask");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetCommMask");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1166,6 +1147,8 @@ public class Windows {
                 traceDowncall("GetCommMask", hFile, lpEvtMask);
             }
             return (int)mh$.invokeExact(hFile, lpEvtMask);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1178,7 +1161,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("GetCommProperties");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetCommProperties");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1225,6 +1208,8 @@ public class Windows {
                 traceDowncall("GetCommProperties", hFile, lpCommProp);
             }
             return (int)mh$.invokeExact(hFile, lpCommProp);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1237,7 +1222,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("GetCommModemStatus");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetCommModemStatus");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1284,6 +1269,8 @@ public class Windows {
                 traceDowncall("GetCommModemStatus", hFile, lpModemStat);
             }
             return (int)mh$.invokeExact(hFile, lpModemStat);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1296,7 +1283,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("GetCommState");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetCommState");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1343,6 +1330,8 @@ public class Windows {
                 traceDowncall("GetCommState", hFile, lpDCB);
             }
             return (int)mh$.invokeExact(hFile, lpDCB);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1355,7 +1344,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("GetCommTimeouts");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetCommTimeouts");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1402,6 +1391,8 @@ public class Windows {
                 traceDowncall("GetCommTimeouts", hFile, lpCommTimeouts);
             }
             return (int)mh$.invokeExact(hFile, lpCommTimeouts);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1414,7 +1405,7 @@ public class Windows {
             Windows.C_LONG
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("SetCommMask");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("SetCommMask");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1461,6 +1452,8 @@ public class Windows {
                 traceDowncall("SetCommMask", hFile, dwEvtMask);
             }
             return (int)mh$.invokeExact(hFile, dwEvtMask);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1473,7 +1466,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("SetCommState");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("SetCommState");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1520,6 +1513,8 @@ public class Windows {
                 traceDowncall("SetCommState", hFile, lpDCB);
             }
             return (int)mh$.invokeExact(hFile, lpDCB);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1532,7 +1527,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("SetCommTimeouts");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("SetCommTimeouts");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1579,6 +1574,8 @@ public class Windows {
                 traceDowncall("SetCommTimeouts", hFile, lpCommTimeouts);
             }
             return (int)mh$.invokeExact(hFile, lpCommTimeouts);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1592,7 +1589,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("WaitCommEvent");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("WaitCommEvent");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1639,6 +1636,8 @@ public class Windows {
                 traceDowncall("WaitCommEvent", hFile, lpEvtMask, lpOverlapped);
             }
             return (int)mh$.invokeExact(hFile, lpEvtMask, lpOverlapped);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1656,7 +1655,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("FormatMessageA");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("FormatMessageA");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1703,6 +1702,8 @@ public class Windows {
                 traceDowncall("FormatMessageA", dwFlags, lpSource, dwMessageId, dwLanguageId, lpBuffer, nSize, Arguments);
             }
             return (int)mh$.invokeExact(dwFlags, lpSource, dwMessageId, dwLanguageId, lpBuffer, nSize, Arguments);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1714,7 +1715,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("RegCloseKey");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("RegCloseKey");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1761,6 +1762,8 @@ public class Windows {
                 traceDowncall("RegCloseKey", hKey);
             }
             return (int)mh$.invokeExact(hKey);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1779,7 +1782,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("RegEnumValueA");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("RegEnumValueA");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1826,6 +1829,8 @@ public class Windows {
                 traceDowncall("RegEnumValueA", hKey, dwIndex, lpValueName, lpcchValueName, lpReserved, lpType, lpData, lpcbData);
             }
             return (int)mh$.invokeExact(hKey, dwIndex, lpValueName, lpcchValueName, lpReserved, lpType, lpData, lpcbData);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1841,7 +1846,7 @@ public class Windows {
             Windows.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Windows.findOrThrow("RegOpenKeyExA");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("RegOpenKeyExA");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1888,6 +1893,8 @@ public class Windows {
                 traceDowncall("RegOpenKeyExA", hKey, lpSubKey, ulOptions, samDesired, phkResult);
             }
             return (int)mh$.invokeExact(hKey, lpSubKey, ulOptions, samDesired, phkResult);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }

@@ -879,7 +879,7 @@ public class _COMMPROP {
      * }
      */
     public static short wcProvChar(MemorySegment struct, long index0) {
-        return (short)wcProvChar$ELEM_HANDLE.get(struct, 0L, index0);
+        return (short)wcProvChar$ELEM_HANDLE.get(struct, wcProvChar$OFFSET, index0);
     }
 
     /**
@@ -889,7 +889,7 @@ public class _COMMPROP {
      * }
      */
     public static void wcProvChar(MemorySegment struct, long index0, short fieldValue) {
-        wcProvChar$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+        wcProvChar$ELEM_HANDLE.set(struct, wcProvChar$OFFSET, index0, fieldValue);
     }
 
     /**
