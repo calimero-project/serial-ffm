@@ -331,7 +331,7 @@ public class termios {
      * }
      */
     public static byte c_cc(MemorySegment struct, long index0) {
-        return (byte)c_cc$ELEM_HANDLE.get(struct, 0L, index0);
+        return (byte)c_cc$ELEM_HANDLE.get(struct, c_cc$OFFSET, index0);
     }
 
     /**

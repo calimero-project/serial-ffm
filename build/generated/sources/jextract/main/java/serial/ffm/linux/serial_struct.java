@@ -572,7 +572,7 @@ public class serial_struct {
      * }
      */
     public static byte reserved_char(MemorySegment struct, long index0) {
-        return (byte)reserved_char$ELEM_HANDLE.get(struct, 0L, index0);
+        return (byte)reserved_char$ELEM_HANDLE.get(struct, reserved_char$OFFSET, index0);
     }
 
     /**
@@ -582,7 +582,7 @@ public class serial_struct {
      * }
      */
     public static void reserved_char(MemorySegment struct, long index0, byte fieldValue) {
-        reserved_char$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+        reserved_char$ELEM_HANDLE.set(struct, reserved_char$OFFSET, index0, fieldValue);
     }
 
     private static final OfInt hub6$LAYOUT = (OfInt)$LAYOUT.select(groupElement("hub6"));

@@ -7,61 +7,17 @@ import java.lang.foreign.*;
 import java.util.*;
 import java.util.stream.*;
 
-public class Linux {
+public class Linux extends Linux$shared {
 
     Linux() {
         // Should not be called directly
     }
 
     static final Arena LIBRARY_ARENA = Arena.ofAuto();
-    static final boolean TRACE_DOWNCALLS = Boolean.getBoolean("jextract.trace.downcalls");
-
-    static void traceDowncall(String name, Object... args) {
-         String traceArgs = Arrays.stream(args)
-                       .map(Object::toString)
-                       .collect(Collectors.joining(", "));
-         System.out.printf("%s(%s)\n", name, traceArgs);
-    }
-
-    static MemorySegment findOrThrow(String symbol) {
-        return SYMBOL_LOOKUP.findOrThrow(symbol);
-    }
-
-    static MethodHandle upcallHandle(Class<?> fi, String name, FunctionDescriptor fdesc) {
-        try {
-            return MethodHandles.lookup().findVirtual(fi, name, fdesc.toMethodType());
-        } catch (ReflectiveOperationException ex) {
-            throw new AssertionError(ex);
-        }
-    }
-
-    static MemoryLayout align(MemoryLayout layout, long align) {
-        return switch (layout) {
-            case PaddingLayout p -> p;
-            case ValueLayout v -> v.withByteAlignment(align);
-            case GroupLayout g -> {
-                MemoryLayout[] alignedMembers = g.memberLayouts().stream()
-                        .map(m -> align(m, align)).toArray(MemoryLayout[]::new);
-                yield g instanceof StructLayout ?
-                        MemoryLayout.structLayout(alignedMembers) : MemoryLayout.unionLayout(alignedMembers);
-            }
-            case SequenceLayout s -> MemoryLayout.sequenceLayout(s.elementCount(), align(s.elementLayout(), align));
-        };
-    }
 
     static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.loaderLookup()
             .or(Linker.nativeLinker().defaultLookup());
 
-    public static final ValueLayout.OfBoolean C_BOOL = (ValueLayout.OfBoolean) Linker.nativeLinker().canonicalLayouts().get("bool");
-    public static final ValueLayout.OfByte C_CHAR =(ValueLayout.OfByte)Linker.nativeLinker().canonicalLayouts().get("char");
-    public static final ValueLayout.OfShort C_SHORT = (ValueLayout.OfShort) Linker.nativeLinker().canonicalLayouts().get("short");
-    public static final ValueLayout.OfInt C_INT = (ValueLayout.OfInt) Linker.nativeLinker().canonicalLayouts().get("int");
-    public static final ValueLayout.OfLong C_LONG_LONG = (ValueLayout.OfLong) Linker.nativeLinker().canonicalLayouts().get("long long");
-    public static final ValueLayout.OfFloat C_FLOAT = (ValueLayout.OfFloat) Linker.nativeLinker().canonicalLayouts().get("float");
-    public static final ValueLayout.OfDouble C_DOUBLE = (ValueLayout.OfDouble) Linker.nativeLinker().canonicalLayouts().get("double");
-    public static final AddressLayout C_POINTER = ((AddressLayout) Linker.nativeLinker().canonicalLayouts().get("void*"))
-            .withTargetLayout(MemoryLayout.sequenceLayout(java.lang.Long.MAX_VALUE, C_CHAR));
-    public static final ValueLayout.OfLong C_LONG = (ValueLayout.OfLong) Linker.nativeLinker().canonicalLayouts().get("long");
     private static final int O_RDWR = (int)2L;
     /**
      * {@snippet lang=c :
@@ -169,177 +125,6 @@ public class Linux {
      */
     public static int IXOFF() {
         return IXOFF;
-    }
-    private static final int B0 = (int)0L;
-    /**
-     * {@snippet lang=c :
-     * #define B0 0
-     * }
-     */
-    public static int B0() {
-        return B0;
-    }
-    private static final int B50 = (int)1L;
-    /**
-     * {@snippet lang=c :
-     * #define B50 1
-     * }
-     */
-    public static int B50() {
-        return B50;
-    }
-    private static final int B75 = (int)2L;
-    /**
-     * {@snippet lang=c :
-     * #define B75 2
-     * }
-     */
-    public static int B75() {
-        return B75;
-    }
-    private static final int B110 = (int)3L;
-    /**
-     * {@snippet lang=c :
-     * #define B110 3
-     * }
-     */
-    public static int B110() {
-        return B110;
-    }
-    private static final int B134 = (int)4L;
-    /**
-     * {@snippet lang=c :
-     * #define B134 4
-     * }
-     */
-    public static int B134() {
-        return B134;
-    }
-    private static final int B150 = (int)5L;
-    /**
-     * {@snippet lang=c :
-     * #define B150 5
-     * }
-     */
-    public static int B150() {
-        return B150;
-    }
-    private static final int B200 = (int)6L;
-    /**
-     * {@snippet lang=c :
-     * #define B200 6
-     * }
-     */
-    public static int B200() {
-        return B200;
-    }
-    private static final int B300 = (int)7L;
-    /**
-     * {@snippet lang=c :
-     * #define B300 7
-     * }
-     */
-    public static int B300() {
-        return B300;
-    }
-    private static final int B600 = (int)8L;
-    /**
-     * {@snippet lang=c :
-     * #define B600 8
-     * }
-     */
-    public static int B600() {
-        return B600;
-    }
-    private static final int B1200 = (int)9L;
-    /**
-     * {@snippet lang=c :
-     * #define B1200 9
-     * }
-     */
-    public static int B1200() {
-        return B1200;
-    }
-    private static final int B1800 = (int)10L;
-    /**
-     * {@snippet lang=c :
-     * #define B1800 10
-     * }
-     */
-    public static int B1800() {
-        return B1800;
-    }
-    private static final int B2400 = (int)11L;
-    /**
-     * {@snippet lang=c :
-     * #define B2400 11
-     * }
-     */
-    public static int B2400() {
-        return B2400;
-    }
-    private static final int B4800 = (int)12L;
-    /**
-     * {@snippet lang=c :
-     * #define B4800 12
-     * }
-     */
-    public static int B4800() {
-        return B4800;
-    }
-    private static final int B9600 = (int)13L;
-    /**
-     * {@snippet lang=c :
-     * #define B9600 13
-     * }
-     */
-    public static int B9600() {
-        return B9600;
-    }
-    private static final int B19200 = (int)14L;
-    /**
-     * {@snippet lang=c :
-     * #define B19200 14
-     * }
-     */
-    public static int B19200() {
-        return B19200;
-    }
-    private static final int B38400 = (int)15L;
-    /**
-     * {@snippet lang=c :
-     * #define B38400 15
-     * }
-     */
-    public static int B38400() {
-        return B38400;
-    }
-    private static final int B57600 = (int)4097L;
-    /**
-     * {@snippet lang=c :
-     * #define B57600 4097
-     * }
-     */
-    public static int B57600() {
-        return B57600;
-    }
-    private static final int B115200 = (int)4098L;
-    /**
-     * {@snippet lang=c :
-     * #define B115200 4098
-     * }
-     */
-    public static int B115200() {
-        return B115200;
-    }
-    private static final int B230400 = (int)4099L;
-    /**
-     * {@snippet lang=c :
-     * #define B230400 4099
-     * }
-     */
-    public static int B230400() {
-        return B230400;
     }
     private static final int CSIZE = (int)48L;
     /**
@@ -609,7 +394,7 @@ public class Linux {
             Linux.C_INT
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("close");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("close");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -656,6 +441,8 @@ public class Linux {
                 traceDowncall("close", __fd);
             }
             return (int)mh$.invokeExact(__fd);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -669,7 +456,7 @@ public class Linux {
             Linux.C_LONG
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("read");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("read");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -716,6 +503,8 @@ public class Linux {
                 traceDowncall("read", __fd, __buf, __nbytes);
             }
             return (long)mh$.invokeExact(__fd, __buf, __nbytes);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -729,7 +518,7 @@ public class Linux {
             Linux.C_LONG
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("write");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("write");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -776,6 +565,8 @@ public class Linux {
                 traceDowncall("write", __fd, __buf, __n);
             }
             return (long)mh$.invokeExact(__fd, __buf, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -785,7 +576,7 @@ public class Linux {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             Linux.C_INT    );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("getpid");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getpid");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -832,6 +623,8 @@ public class Linux {
                 traceDowncall("getpid");
             }
             return (int)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -844,7 +637,7 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("link");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("link");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -891,6 +684,8 @@ public class Linux {
                 traceDowncall("link", __from, __to);
             }
             return (int)mh$.invokeExact(__from, __to);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -902,7 +697,7 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("unlink");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("unlink");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -949,6 +744,8 @@ public class Linux {
                 traceDowncall("unlink", __name);
             }
             return (int)mh$.invokeExact(__name);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -961,7 +758,7 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("stat");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("stat");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1008,6 +805,8 @@ public class Linux {
                 traceDowncall("stat", __file, __buf);
             }
             return (int)mh$.invokeExact(__file, __buf);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1025,7 +824,7 @@ public class Linux {
                 Linux.C_INT,
                 Linux.C_INT
             );
-        private static final MemorySegment ADDR = Linux.findOrThrow("fcntl");
+        private static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("fcntl");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -1098,7 +897,7 @@ public class Linux {
                 Linux.C_POINTER,
                 Linux.C_INT
             );
-        private static final MemorySegment ADDR = Linux.findOrThrow("open");
+        private static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("open");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -1165,7 +964,7 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("cfgetispeed");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cfgetispeed");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1212,6 +1011,8 @@ public class Linux {
                 traceDowncall("cfgetispeed", __termios_p);
             }
             return (int)mh$.invokeExact(__termios_p);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1224,7 +1025,7 @@ public class Linux {
             Linux.C_INT
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("cfsetospeed");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cfsetospeed");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1271,6 +1072,8 @@ public class Linux {
                 traceDowncall("cfsetospeed", __termios_p, __speed);
             }
             return (int)mh$.invokeExact(__termios_p, __speed);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1283,7 +1086,7 @@ public class Linux {
             Linux.C_INT
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("cfsetispeed");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cfsetispeed");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1330,6 +1133,8 @@ public class Linux {
                 traceDowncall("cfsetispeed", __termios_p, __speed);
             }
             return (int)mh$.invokeExact(__termios_p, __speed);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1342,7 +1147,7 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("tcgetattr");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("tcgetattr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1389,6 +1194,8 @@ public class Linux {
                 traceDowncall("tcgetattr", __fd, __termios_p);
             }
             return (int)mh$.invokeExact(__fd, __termios_p);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1402,7 +1209,7 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("tcsetattr");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("tcsetattr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1449,6 +1256,8 @@ public class Linux {
                 traceDowncall("tcsetattr", __fd, __optional_actions, __termios_p);
             }
             return (int)mh$.invokeExact(__fd, __optional_actions, __termios_p);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1460,7 +1269,7 @@ public class Linux {
             Linux.C_INT
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("tcdrain");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("tcdrain");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1507,6 +1316,8 @@ public class Linux {
                 traceDowncall("tcdrain", __fd);
             }
             return (int)mh$.invokeExact(__fd);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1524,7 +1335,7 @@ public class Linux {
                 Linux.C_INT,
                 Linux.C_LONG
             );
-        private static final MemorySegment ADDR = Linux.findOrThrow("ioctl");
+        private static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ioctl");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -1591,7 +1402,7 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("strlen");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strlen");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1638,6 +1449,8 @@ public class Linux {
                 traceDowncall("strlen", __s);
             }
             return (long)mh$.invokeExact(__s);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1649,7 +1462,7 @@ public class Linux {
             Linux.C_INT
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("strerror");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strerror");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1696,6 +1509,8 @@ public class Linux {
                 traceDowncall("strerror", __errnum);
             }
             return (MemorySegment)mh$.invokeExact(__errnum);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1705,7 +1520,7 @@ public class Linux {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             Linux.C_POINTER    );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("__errno_location");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("__errno_location");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1752,6 +1567,8 @@ public class Linux {
                 traceDowncall("__errno_location");
             }
             return (MemorySegment)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1767,7 +1584,7 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("select");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("select");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1814,6 +1631,8 @@ public class Linux {
                 traceDowncall("select", __nfds, __readfds, __writefds, __exceptfds, __timeout);
             }
             return (int)mh$.invokeExact(__nfds, __readfds, __writefds, __exceptfds, __timeout);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1826,7 +1645,7 @@ public class Linux {
             Linux.C_INT
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("kill");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("kill");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1873,6 +1692,8 @@ public class Linux {
                 traceDowncall("kill", __pid, __sig);
             }
             return (int)mh$.invokeExact(__pid, __sig);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1884,7 +1705,7 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("closedir");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("closedir");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1931,6 +1752,8 @@ public class Linux {
                 traceDowncall("closedir", __dirp);
             }
             return (int)mh$.invokeExact(__dirp);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1942,7 +1765,7 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("opendir");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("opendir");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1989,6 +1812,8 @@ public class Linux {
                 traceDowncall("opendir", __name);
             }
             return (MemorySegment)mh$.invokeExact(__name);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2000,7 +1825,7 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("readdir");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("readdir");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2047,6 +1872,8 @@ public class Linux {
                 traceDowncall("readdir", __dirp);
             }
             return (MemorySegment)mh$.invokeExact(__dirp);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2059,7 +1886,7 @@ public class Linux {
             Linux.C_POINTER
         );
 
-        public static final MemorySegment ADDR = Linux.findOrThrow("realpath");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("realpath");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2106,6 +1933,8 @@ public class Linux {
                 traceDowncall("realpath", __name, __resolved);
             }
             return (MemorySegment)mh$.invokeExact(__name, __resolved);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2136,6 +1965,177 @@ public class Linux {
      */
     public static int CRTSCTS() {
         return CRTSCTS;
+    }
+    private static final int B0 = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * #define B0 0
+     * }
+     */
+    public static int B0() {
+        return B0;
+    }
+    private static final int B50 = (int)50L;
+    /**
+     * {@snippet lang=c :
+     * #define B50 50
+     * }
+     */
+    public static int B50() {
+        return B50;
+    }
+    private static final int B75 = (int)75L;
+    /**
+     * {@snippet lang=c :
+     * #define B75 75
+     * }
+     */
+    public static int B75() {
+        return B75;
+    }
+    private static final int B110 = (int)110L;
+    /**
+     * {@snippet lang=c :
+     * #define B110 110
+     * }
+     */
+    public static int B110() {
+        return B110;
+    }
+    private static final int B134 = (int)134L;
+    /**
+     * {@snippet lang=c :
+     * #define B134 134
+     * }
+     */
+    public static int B134() {
+        return B134;
+    }
+    private static final int B150 = (int)150L;
+    /**
+     * {@snippet lang=c :
+     * #define B150 150
+     * }
+     */
+    public static int B150() {
+        return B150;
+    }
+    private static final int B200 = (int)200L;
+    /**
+     * {@snippet lang=c :
+     * #define B200 200
+     * }
+     */
+    public static int B200() {
+        return B200;
+    }
+    private static final int B300 = (int)300L;
+    /**
+     * {@snippet lang=c :
+     * #define B300 300
+     * }
+     */
+    public static int B300() {
+        return B300;
+    }
+    private static final int B600 = (int)600L;
+    /**
+     * {@snippet lang=c :
+     * #define B600 600
+     * }
+     */
+    public static int B600() {
+        return B600;
+    }
+    private static final int B1200 = (int)1200L;
+    /**
+     * {@snippet lang=c :
+     * #define B1200 1200
+     * }
+     */
+    public static int B1200() {
+        return B1200;
+    }
+    private static final int B1800 = (int)1800L;
+    /**
+     * {@snippet lang=c :
+     * #define B1800 1800
+     * }
+     */
+    public static int B1800() {
+        return B1800;
+    }
+    private static final int B2400 = (int)2400L;
+    /**
+     * {@snippet lang=c :
+     * #define B2400 2400
+     * }
+     */
+    public static int B2400() {
+        return B2400;
+    }
+    private static final int B4800 = (int)4800L;
+    /**
+     * {@snippet lang=c :
+     * #define B4800 4800
+     * }
+     */
+    public static int B4800() {
+        return B4800;
+    }
+    private static final int B9600 = (int)9600L;
+    /**
+     * {@snippet lang=c :
+     * #define B9600 9600
+     * }
+     */
+    public static int B9600() {
+        return B9600;
+    }
+    private static final int B19200 = (int)19200L;
+    /**
+     * {@snippet lang=c :
+     * #define B19200 19200
+     * }
+     */
+    public static int B19200() {
+        return B19200;
+    }
+    private static final int B38400 = (int)38400L;
+    /**
+     * {@snippet lang=c :
+     * #define B38400 38400
+     * }
+     */
+    public static int B38400() {
+        return B38400;
+    }
+    private static final int B57600 = (int)57600L;
+    /**
+     * {@snippet lang=c :
+     * #define B57600 57600
+     * }
+     */
+    public static int B57600() {
+        return B57600;
+    }
+    private static final int B115200 = (int)115200L;
+    /**
+     * {@snippet lang=c :
+     * #define B115200 115200
+     * }
+     */
+    public static int B115200() {
+        return B115200;
+    }
+    private static final int B230400 = (int)230400L;
+    /**
+     * {@snippet lang=c :
+     * #define B230400 230400
+     * }
+     */
+    public static int B230400() {
+        return B230400;
     }
     private static final int EWOULDBLOCK = (int)11L;
     /**

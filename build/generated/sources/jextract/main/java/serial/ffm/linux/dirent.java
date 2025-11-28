@@ -281,7 +281,7 @@ public class dirent {
      * }
      */
     public static byte d_name(MemorySegment struct, long index0) {
-        return (byte)d_name$ELEM_HANDLE.get(struct, 0L, index0);
+        return (byte)d_name$ELEM_HANDLE.get(struct, d_name$OFFSET, index0);
     }
 
     /**
@@ -291,7 +291,7 @@ public class dirent {
      * }
      */
     public static void d_name(MemorySegment struct, long index0, byte fieldValue) {
-        d_name$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+        d_name$ELEM_HANDLE.set(struct, d_name$OFFSET, index0, fieldValue);
     }
 
     /**

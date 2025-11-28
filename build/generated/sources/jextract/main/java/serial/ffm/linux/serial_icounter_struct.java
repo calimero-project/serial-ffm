@@ -602,7 +602,7 @@ public class serial_icounter_struct {
      * }
      */
     public static int reserved(MemorySegment struct, long index0) {
-        return (int)reserved$ELEM_HANDLE.get(struct, 0L, index0);
+        return (int)reserved$ELEM_HANDLE.get(struct, reserved$OFFSET, index0);
     }
 
     /**
@@ -612,7 +612,7 @@ public class serial_icounter_struct {
      * }
      */
     public static void reserved(MemorySegment struct, long index0, int fieldValue) {
-        reserved$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+        reserved$ELEM_HANDLE.set(struct, reserved$OFFSET, index0, fieldValue);
     }
 
     /**
