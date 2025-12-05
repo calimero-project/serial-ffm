@@ -30,7 +30,7 @@ import java.util.Locale;
 public enum OS {
 	Linux, Windows, Mac, Other;
 
-	private static final OS os = switch (osName().toLowerCase(Locale.ENGLISH)) {
+	private static final OS os = switch (osName().toLowerCase(Locale.ROOT)) {
 		case final String s when s.contains("windows") -> Windows;
 		case final String s when s.contains("linux") -> Linux;
 		case final String s when s.contains("mac") -> Mac;

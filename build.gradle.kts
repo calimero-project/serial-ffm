@@ -103,7 +103,7 @@ tasks.jextract {
     val runJextract = project.hasProperty("runJextract")
     onlyIf { runJextract }
 
-    val os = System.getProperty("os.name").lowercase(Locale.ENGLISH)
+    val os = System.getProperty("os.name").lowercase(Locale.ROOT)
 
 	var headersDir: String   // directory of our headers.h file
 	val paths: List<String>  // system directories containing header files
