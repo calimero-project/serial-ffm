@@ -72,7 +72,8 @@ class SerialPortTests {
 
 	@AfterEach
 	void cleanup() {
-		port.close();
+		if (port != null)
+			port.close();
 	}
 
 	@Test
