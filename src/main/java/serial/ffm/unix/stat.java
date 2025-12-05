@@ -38,14 +38,18 @@ public final class stat {
 	private static final MethodHandle st_nlink;
 
 	static {
+		final String arch = System.getProperty("os.arch");
+		final boolean aarch64 = "aarch64".equals(arch);
+
 		final var mh = new MH(MethodHandles.lookup(), switch (OS.current()) {
-			case Linux -> serial.ffm.linux.stat.class;
+			case Linux -> aarch64 ? serial.ffm.linux.aarch64.stat.class : serial.ffm.linux.stat.class;
 			case Mac -> serial.ffm.mac.stat.class;
 			default -> throw new IllegalStateException();
 		});
 		allocate = mh.allocate();
 		layout   = mh.layout();
-		st_nlink = mh.findStatic("st_nlink", methodType(OS.current() == OS.Linux ? long.class : short.class, MemorySegment.class));
+		final Class<?> rtype = OS.current() == OS.Linux ? aarch64 ? int.class : long.class : short.class;
+		st_nlink = mh.findStatic("st_nlink", methodType(rtype, MemorySegment.class));
 	}
 
 	/**
