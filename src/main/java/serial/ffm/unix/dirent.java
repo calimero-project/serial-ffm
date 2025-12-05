@@ -57,7 +57,7 @@ public final class dirent {
 	 */
 	public static MemorySegment allocate(final SegmentAllocator allocator) {
 		try {
-			return (MemorySegment) allocate.invoke(allocator);
+			return (MemorySegment) allocate.invokeExact(allocator);
 		} catch (final Throwable ex$) {
 			throw new AssertionError("should not reach here", ex$);
 		}
@@ -69,7 +69,7 @@ public final class dirent {
 	 */
 	public static MemorySegment reinterpret(final MemorySegment addr, final Arena arena, final Consumer<MemorySegment> cleanup) {
 		try {
-			return (MemorySegment) reinterpret.invoke(addr, arena, cleanup);
+			return (MemorySegment) reinterpret.invokeExact(addr, arena, cleanup);
 		} catch (final Throwable ex$) {
 			throw new AssertionError("should not reach here", ex$);
 		}
@@ -80,7 +80,7 @@ public final class dirent {
 	 */
 	public static GroupLayout layout() {
 		try {
-			return (GroupLayout) layout.invoke();
+			return (GroupLayout) layout.invokeExact();
 		} catch (final Throwable ex$) {
 			throw new AssertionError("should not reach here", ex$);
 		}
@@ -94,7 +94,7 @@ public final class dirent {
 	 */
 	public static MemorySegment d_name(final MemorySegment struct) {
 		try {
-			return (MemorySegment) d_name.invoke(struct);
+			return (MemorySegment) d_name.invokeExact(struct);
 		} catch (final Throwable ex$) {
 			throw new AssertionError("should not reach here", ex$);
 		}

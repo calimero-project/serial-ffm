@@ -68,7 +68,7 @@ public final class termios {
 	 */
 	public static MemorySegment allocate(final SegmentAllocator allocator) {
 		try {
-			return (MemorySegment) allocate.invoke(allocator);
+			return (MemorySegment) allocate.invokeExact(allocator);
 		} catch (final Throwable ex$) {
 			throw new AssertionError("should not reach here", ex$);
 		}
@@ -168,7 +168,7 @@ public final class termios {
 	 */
 	public static MemorySegment c_cc(final MemorySegment struct) {
 		try {
-			return (MemorySegment) c_cc.invoke(struct);
+			return (MemorySegment) c_cc.invokeExact(struct);
 		} catch (final Throwable ex$) {
 			throw new AssertionError("should not reach here", ex$);
 		}

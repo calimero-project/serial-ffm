@@ -55,7 +55,7 @@ public final class timeval {
 	 */
 	public static MemorySegment allocate(final SegmentAllocator allocator) {
 		try {
-			return (MemorySegment) allocate.invoke(allocator);
+			return (MemorySegment) allocate.invokeExact(allocator);
 		} catch (final Throwable ex$) {
 			throw new AssertionError("should not reach here", ex$);
 		}
@@ -69,7 +69,7 @@ public final class timeval {
 	 */
 	public static void tv_sec(final MemorySegment struct, final long fieldValue) {
 		try {
-			tv_sec.invoke(struct, fieldValue);
+			tv_sec.invokeExact(struct, fieldValue);
 		} catch (final Throwable ex$) {
 			throw new AssertionError("should not reach here", ex$);
 		}

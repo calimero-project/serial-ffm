@@ -49,7 +49,7 @@ public final class fd_set {
 	 */
 	public static MemorySegment allocate(final SegmentAllocator allocator) {
 		try {
-			return (MemorySegment) allocate.invoke(allocator);
+			return (MemorySegment) allocate.invokeExact(allocator);
 		} catch (final Throwable ex$) {
 			throw new AssertionError("should not reach here", ex$);
 		}
@@ -60,7 +60,7 @@ public final class fd_set {
 	 */
 	public static GroupLayout layout() {
 		try {
-			return (GroupLayout) layout.invoke();
+			return (GroupLayout) layout.invokeExact();
 		} catch (final Throwable ex$) {
 			throw new AssertionError("should not reach here", ex$);
 		}
