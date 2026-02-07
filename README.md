@@ -1,9 +1,8 @@
 Serial port communication using the Foreign Function and Memory API [![](https://jitpack.io/v/calimero-project/serial-ffm.svg)](https://jitpack.io/#calimero-project/serial-ffm) [![](https://img.shields.io/badge/jitpack-master-brightgreen?label=JitPack)](https://jitpack.io/#calimero-project/serial-ffm/master)
 =====
 
-This Java library provides serial port access for Linux, macOS, and Windows using Java's [Foreign Function and Memory (FFM) API](https://openjdk.org/jeps/442).
-
-[Project Panama](https://openjdk.org/projects/panama/) aims at improving interoperability between Java and native libraries. It provides the new Foreign Function & Memory API, and enables access to native code in pure Java.
+This Java library provides serial port access for Linux, macOS, and Windows using Java's [Foreign Function & Memory (FFM) API](https://openjdk.org/jeps/454)
+([`java.lang.foreign`](https://docs.oracle.com/en/java/javase/23/docs/api/java.base/java/lang/foreign/package-summary.html)).
 
 `serial-ffm` requires Java 23 (_java.base_) or newer. 
 (Older versions exist for [JDK 19](https://github.com/calimero-project/serial-ffm/tree/jdk19), [JDK 21](https://github.com/calimero-project/serial-ffm/tree/jdk21), and [JDK 22](https://github.com/calimero-project/serial-ffm/releases/tag/jdk22)). 
