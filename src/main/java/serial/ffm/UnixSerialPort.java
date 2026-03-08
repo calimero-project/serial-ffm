@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2025 B. Malinowsky
+// Copyright (c) 2022, 2026 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -1319,13 +1319,7 @@ final class UnixSerialPort extends ReadWritePort {
 					}
 				}
 
-//				try {
-//					Thread.sleep(eventPollInterval);
-//				}
-//				catch (final InterruptedException e) {
-//					Thread.currentThread().interrupt();
-//					throw new InterruptedIOException();
-//				}
+//				Thread.sleep(eventPollInterval);
 			}
 		}
 	}
