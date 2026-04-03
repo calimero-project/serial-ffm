@@ -13,7 +13,7 @@ plugins {
     id("io.github.krakowski.jextract") version "0.5.0"
     id("maven-publish")
     signing
-    id("org.graalvm.buildtools.native") version "0.11.5"
+    id("org.graalvm.buildtools.native") version "1.0.0"
 }
 
 repositories {
