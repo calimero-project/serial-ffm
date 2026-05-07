@@ -1436,17 +1436,16 @@ final class UnixSerialPort extends ReadWritePort {
 		else if (readIntervalTimeout > 0) {
 			// setting: enforce an inter-character timeout after reading the first char
 			vmin = 255;
-			vtime = (readIntervalTimeout / 100);
-			logger.log(TRACE, "set timeouts: enforce an inter-character timeout after reading the first char");
+			vtime = Math.max(1, readIntervalTimeout / 100);
+			logger.log(TRACE, "set timeouts: enforce an inter-character timeout of {0} ms after reading the first char",
+					vtime * 100);
 		}
 		else if (readTotalTimeoutConstant > 0 && readTotalTimeoutMultiplier == 0 && readIntervalTimeout == 0) {
 			// setting: set a maximum timeout to wait for next character
 			vmin = 0;
-			vtime = (readTotalTimeoutConstant / 100);
-			if (vtime == 0)
-				vtime = 1;
+			vtime = Math.max(1, readTotalTimeoutConstant / 100);
 			receiveTimeout = readTotalTimeoutConstant;
-			logger.log(TRACE, "set timeouts: set a maximum timeout to wait for next character: {0} ms", receiveTimeout);
+			logger.log(TRACE, "set timeouts: set a maximum timeout of {0} ms to wait for next character", receiveTimeout);
 		}
 		else {
 			// XXX hmm
