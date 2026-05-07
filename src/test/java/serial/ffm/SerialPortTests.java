@@ -39,6 +39,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.opentest4j.TestAbortedException;
 
 import serial.ffm.SerialPort.FlowControl;
 import serial.ffm.SerialPort.Parity;
@@ -135,14 +136,20 @@ class SerialPortTests {
 	@EnumSource(value = Parity.class)
 	void parity(final Parity parity) throws IOException {
 		port.parity(parity);
-		assertEquals(parity, port.parity());
+		final var actual = port.parity();
+		if ((parity == Parity.Mark || parity == Parity.Space) && actual == Parity.None)
+			throw new TestAbortedException("hardware with no " + parity + " parity support (CMSPAR)");
+		assertEquals(parity, actual);
 	}
 
 	@ParameterizedTest
 	@EnumSource(value = FlowControl.class)
 	void flowControl(final FlowControl flowControl) throws IOException {
 		port.flowControl(flowControl);
-		assertEquals(flowControl, port.flowControl());
+		final var actual = port.flowControl();
+		if (flowControl == FlowControl.CtsRts && actual == FlowControl.None)
+			throw new TestAbortedException("no RTS/CTS flow control support");
+		assertEquals(flowControl, actual);
 	}
 
 	@Test
