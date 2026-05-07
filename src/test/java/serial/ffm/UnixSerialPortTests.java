@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2023 B. Malinowsky
+// Copyright (c) 2022, 2026 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,14 +22,18 @@
 
 package serial.ffm;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,5 +94,35 @@ class UnixSerialPortTests {
 		assertNotNull(ports);
 		assertFalse(ports.isEmpty());
 		System.out.println("found serial ports = " + ports);
+	}
+
+	@Test
+	@EnabledOnOs(OS.LINUX)
+	void glibcVersionSupportsArbitraryBaudrates() throws InterruptedException, IOException {
+		final var process = new ProcessBuilder("getconf", "GNU_LIBC_VERSION").start();
+		final var reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		final String line = reader.readLine();
+		if (line == null || !line.startsWith("glibc"))
+			return;
+
+		final var matcher = Pattern.compile("(\\d+)\\.(\\d+)").matcher(line);
+		if (matcher.find()) {
+			final int major = Integer.parseUnsignedInt(matcher.group(1));
+			final int minor = Integer.parseUnsignedInt(matcher.group(2));
+			final boolean arbitraryBaudrates = major > 2 || (major == 2 && minor >= 42);
+			assertEquals(arbitraryBaudrates, UnixSerialPort.supportsArbitraryBaudRates);
+		}
+		process.waitFor();
+	}
+
+	@Test
+	void arbitraryBaudrate() throws IOException {
+		if (!UnixSerialPort.supportsArbitraryBaudRates)
+			return;
+		try (var p = new UnixSerialPort(SerialPortTests.osPort())) {
+			final int baudrate = 12345;
+			p.baudRate(baudrate);
+			assertEquals(baudrate, p.baudRate());
+		}
 	}
 }

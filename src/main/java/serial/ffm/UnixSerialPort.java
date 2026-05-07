@@ -30,6 +30,8 @@ import static serial.ffm.Unix.errno;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
 import java.lang.foreign.MemoryLayout.PathElement;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
@@ -93,6 +95,35 @@ final class UnixSerialPort extends ReadWritePort {
 			if (fd == -1) return Invalid;
 			return new fd_t(fd);
 		}
+	}
+
+	static final boolean supportsArbitraryBaudRates;
+	static {
+		supportsArbitraryBaudRates = switch (OS.current()) {
+			case Linux -> {
+				try {
+					final var linker = Linker.nativeLinker();
+					final var dh = linker.defaultLookup().find("gnu_get_libc_version")
+							.map(sym -> linker.downcallHandle(sym, FunctionDescriptor.of(ValueLayout.ADDRESS)));
+					if (dh.isEmpty())
+						yield false;
+					final var version = ((MemorySegment) dh.get().invoke()).reinterpret(10).getString(0);
+					final var parts = version.split("\\.");
+					if (parts.length > 1) {
+						final int major = Integer.parseUnsignedInt(parts[0]);
+						final int minor = Integer.parseUnsignedInt(parts[1]);
+						// the GNU C library v2.42 switched to supporting arbitrary Baud rates
+						if (major > 2 || (major == 2 && minor >= 42))
+							yield true;
+					}
+				}
+				catch (final Throwable t) {
+					t.printStackTrace();
+				}
+				yield false;
+			}
+			case Mac, Windows, Other -> false;
+		};
 	}
 
 	private volatile fd_t fd = fd_t.Invalid;
@@ -726,6 +757,8 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private static int termiosBaudrate(final /*uint*/ int baudrate) {
+		if (supportsArbitraryBaudRates)
+			return baudrate;
 		return switch (baudrate) {
 			case 0 -> Unix.B0;
 			case 50 -> Unix.B50;
@@ -815,6 +848,8 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private static int genericBaudrate(final long baudrate) {
+		if (supportsArbitraryBaudRates)
+			return (int) baudrate;
 		if (baudrate == Unix.B0)
 			return 0;
 		else if (baudrate == Unix.B50)
