@@ -526,7 +526,7 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private fd_t openPort(final Arena arena, final String portId, final boolean configurePort,
-		final AtomicInteger lastError) throws IOException {
+			final AtomicInteger lastError) throws IOException {
 		fd_t fd;
 //		errno(0);
 		int error = 0;
