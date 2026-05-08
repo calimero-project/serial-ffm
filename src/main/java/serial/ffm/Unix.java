@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2025 B. Malinowsky
+// Copyright (c) 2022, 2026 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -69,6 +69,10 @@ final class Unix {
 	static final int F_SETOWN  = OS.current() == OS.Linux ? Linux.F_SETOWN() : Mac.F_SETOWN();
 	static final int F_SETFL   = OS.current() == OS.Linux ? Linux.F_SETFL() : Mac.F_SETFL();
 	static final long FIONREAD = OS.current() == OS.Linux ? Linux.FIONREAD() : Mac.FIONREAD();
+
+	static final short SEEK_SET = (short) (OS.current() == OS.Linux ? Linux.SEEK_SET() : Mac.SEEK_SET());
+	static final short F_WRLCK = (short) (OS.current() == OS.Linux ? Linux.F_WRLCK() : Mac.F_WRLCK());
+	static final int F_SETLK = OS.current() == OS.Linux ? Linux.F_SETLK() : Mac.F_SETLK();
 
 	static final int CRTSCTS = OS.current() == OS.Linux ? Linux.CRTSCTS() : Mac.CRTSCTS();
 

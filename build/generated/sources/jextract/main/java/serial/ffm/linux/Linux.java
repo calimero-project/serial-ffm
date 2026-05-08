@@ -18,6 +18,15 @@ public class Linux extends Linux$shared {
     static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.loaderLookup()
             .or(Linker.nativeLinker().defaultLookup());
 
+    private static final int SEEK_SET = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * #define SEEK_SET 0
+     * }
+     */
+    public static int SEEK_SET() {
+        return SEEK_SET;
+    }
     private static final int O_RDWR = (int)2L;
     /**
      * {@snippet lang=c :
@@ -71,6 +80,15 @@ public class Linux extends Linux$shared {
      */
     public static int F_SETFL() {
         return F_SETFL;
+    }
+    private static final int F_WRLCK = (int)1L;
+    /**
+     * {@snippet lang=c :
+     * #define F_WRLCK 1
+     * }
+     */
+    public static int F_WRLCK() {
+        return F_WRLCK;
     }
     private static final int VTIME = (int)5L;
     /**
@@ -1948,6 +1966,15 @@ public class Linux extends Linux$shared {
     public static MemorySegment NULL() {
         return NULL;
     }
+    private static final int F_SETLK = (int)6L;
+    /**
+     * {@snippet lang=c :
+     * #define F_SETLK 6
+     * }
+     */
+    public static int F_SETLK() {
+        return F_SETLK;
+    }
     private static final int F_SETOWN = (int)8L;
     /**
      * {@snippet lang=c :
@@ -2147,4 +2174,3 @@ public class Linux extends Linux$shared {
         return EWOULDBLOCK;
     }
 }
-

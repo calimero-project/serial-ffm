@@ -50,6 +50,7 @@ import serial.ffm.linux.serial_icounter_struct;
 import serial.ffm.linux.serial_struct;
 import serial.ffm.unix.dirent;
 import serial.ffm.unix.fd_set;
+import serial.ffm.unix.flock;
 import serial.ffm.unix.stat;
 import serial.ffm.unix.termios;
 import serial.ffm.unix.timeval;
@@ -562,7 +563,17 @@ final class UnixSerialPort extends ReadWritePort {
 			perror("set exclusive");
 		}
 
-		if (configurePort) {
+		logger.log(TRACE, "acquire fcntl lock");
+		var lock = flock.allocate(arena);
+		flock.l_type(lock, Unix.F_WRLCK);
+		flock.l_whence(lock, Unix.SEEK_SET);
+		if (Linux.fcntl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.F_SETLK, lock) == -1) {
+			error = errno();
+			perror("fcntl lock");
+			closePort(fd.value());
+			fd = fd_t.Invalid;
+		}
+		else if (configurePort) {
 			// we continue if we are not able to save old port settings
 			// TODO actually restore them on close
 			final var saved = termios.allocate(arena);

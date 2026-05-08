@@ -16,6 +16,15 @@ public class Mac extends Mac$shared {
     static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.loaderLookup()
             .or(Linker.nativeLinker().defaultLookup());
 
+    private static final int SEEK_SET = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * #define SEEK_SET 0
+     * }
+     */
+    public static int SEEK_SET() {
+        return SEEK_SET;
+    }
     private static final int O_RDWR = (int)2L;
     /**
      * {@snippet lang=c :
@@ -78,6 +87,24 @@ public class Mac extends Mac$shared {
      */
     public static int F_SETOWN() {
         return F_SETOWN;
+    }
+    private static final int F_SETLK = (int)8L;
+    /**
+     * {@snippet lang=c :
+     * #define F_SETLK 8
+     * }
+     */
+    public static int F_SETLK() {
+        return F_SETLK;
+    }
+    private static final int F_WRLCK = (int)3L;
+    /**
+     * {@snippet lang=c :
+     * #define F_WRLCK 3
+     * }
+     */
+    public static int F_WRLCK() {
+        return F_WRLCK;
     }
     private static final int VMIN = (int)16L;
     /**
@@ -2145,4 +2172,3 @@ public class Mac extends Mac$shared {
         return EWOULDBLOCK;
     }
 }
-
