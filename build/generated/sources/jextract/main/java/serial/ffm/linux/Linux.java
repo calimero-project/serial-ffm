@@ -2002,163 +2002,163 @@ public class Linux extends Linux$shared {
     public static int B0() {
         return B0;
     }
-    private static final int B50 = (int)50L;
+    private static final int B50 = (int)1L;
     /**
      * {@snippet lang=c :
-     * #define B50 50
+     * #define B50 1
      * }
      */
     public static int B50() {
         return B50;
     }
-    private static final int B75 = (int)75L;
+    private static final int B75 = (int)2L;
     /**
      * {@snippet lang=c :
-     * #define B75 75
+     * #define B75 2
      * }
      */
     public static int B75() {
         return B75;
     }
-    private static final int B110 = (int)110L;
+    private static final int B110 = (int)3L;
     /**
      * {@snippet lang=c :
-     * #define B110 110
+     * #define B110 3
      * }
      */
     public static int B110() {
         return B110;
     }
-    private static final int B134 = (int)134L;
+    private static final int B134 = (int)4L;
     /**
      * {@snippet lang=c :
-     * #define B134 134
+     * #define B134 4
      * }
      */
     public static int B134() {
         return B134;
     }
-    private static final int B150 = (int)150L;
+    private static final int B150 = (int)5L;
     /**
      * {@snippet lang=c :
-     * #define B150 150
+     * #define B150 5
      * }
      */
     public static int B150() {
         return B150;
     }
-    private static final int B200 = (int)200L;
+    private static final int B200 = (int)6L;
     /**
      * {@snippet lang=c :
-     * #define B200 200
+     * #define B200 6
      * }
      */
     public static int B200() {
         return B200;
     }
-    private static final int B300 = (int)300L;
+    private static final int B300 = (int)7L;
     /**
      * {@snippet lang=c :
-     * #define B300 300
+     * #define B300 7
      * }
      */
     public static int B300() {
         return B300;
     }
-    private static final int B600 = (int)600L;
+    private static final int B600 = (int)8L;
     /**
      * {@snippet lang=c :
-     * #define B600 600
+     * #define B600 8
      * }
      */
     public static int B600() {
         return B600;
     }
-    private static final int B1200 = (int)1200L;
+    private static final int B1200 = (int)9L;
     /**
      * {@snippet lang=c :
-     * #define B1200 1200
+     * #define B1200 9
      * }
      */
     public static int B1200() {
         return B1200;
     }
-    private static final int B1800 = (int)1800L;
+    private static final int B1800 = (int)10L;
     /**
      * {@snippet lang=c :
-     * #define B1800 1800
+     * #define B1800 10
      * }
      */
     public static int B1800() {
         return B1800;
     }
-    private static final int B2400 = (int)2400L;
+    private static final int B2400 = (int)11L;
     /**
      * {@snippet lang=c :
-     * #define B2400 2400
+     * #define B2400 11
      * }
      */
     public static int B2400() {
         return B2400;
     }
-    private static final int B4800 = (int)4800L;
+    private static final int B4800 = (int)12L;
     /**
      * {@snippet lang=c :
-     * #define B4800 4800
+     * #define B4800 12
      * }
      */
     public static int B4800() {
         return B4800;
     }
-    private static final int B9600 = (int)9600L;
+    private static final int B9600 = (int)13L;
     /**
      * {@snippet lang=c :
-     * #define B9600 9600
+     * #define B9600 13
      * }
      */
     public static int B9600() {
         return B9600;
     }
-    private static final int B19200 = (int)19200L;
+    private static final int B19200 = (int)14L;
     /**
      * {@snippet lang=c :
-     * #define B19200 19200
+     * #define B19200 14
      * }
      */
     public static int B19200() {
         return B19200;
     }
-    private static final int B38400 = (int)38400L;
+    private static final int B38400 = (int)15L;
     /**
      * {@snippet lang=c :
-     * #define B38400 38400
+     * #define B38400 15
      * }
      */
     public static int B38400() {
         return B38400;
     }
-    private static final int B57600 = (int)57600L;
+    private static final int B57600 = (int)4097L;
     /**
      * {@snippet lang=c :
-     * #define B57600 57600
+     * #define B57600 4097
      * }
      */
     public static int B57600() {
         return B57600;
     }
-    private static final int B115200 = (int)115200L;
+    private static final int B115200 = (int)4098L;
     /**
      * {@snippet lang=c :
-     * #define B115200 115200
+     * #define B115200 4098
      * }
      */
     public static int B115200() {
         return B115200;
     }
-    private static final int B230400 = (int)230400L;
+    private static final int B230400 = (int)4099L;
     /**
      * {@snippet lang=c :
-     * #define B230400 230400
+     * #define B230400 4099
      * }
      */
     public static int B230400() {
