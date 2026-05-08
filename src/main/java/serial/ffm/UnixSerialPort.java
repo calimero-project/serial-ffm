@@ -1125,13 +1125,17 @@ final class UnixSerialPort extends ReadWritePort {
 			final long written = Linux.write(fd.value(), bytes, bytes.byteSize());
 			if (written < 0)
 				throw newException(errno());
-			else if (!drain(fd))
-				throw newException(errno());
 			return (int) written;
 		}
 		finally {
 			lock.unlock();
 		}
+	}
+
+	@Override
+	void doDrain() throws IOException {
+		if (!drain(fd))
+			throw newException(errno());
 	}
 
 	private static /*uint*/ long isInputWaiting(final Arena arena, final fd_t fd) throws IOException {

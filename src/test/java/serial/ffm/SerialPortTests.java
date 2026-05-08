@@ -221,6 +221,14 @@ class SerialPortTests {
 	}
 
 	@Test
+	void flush() throws IOException {
+		port.outputStream().flush();
+
+		port.outputStream().write(new byte[]{ 1, 2, 3 });
+		port.outputStream().flush();
+	}
+
+	@Test
 	void chain() throws IOException {
 		try (var __ = port
 				.baudRate(19_200)

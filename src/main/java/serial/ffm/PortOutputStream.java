@@ -50,4 +50,7 @@ final class PortOutputStream extends OutputStream {
 		Objects.checkFromIndexSize(offset, length, bytes.length);
 		port.writeBytes(bytes, offset, length);
 	}
+
+	@Override
+	public void flush() throws IOException { port.drain(); }
 }

@@ -464,7 +464,6 @@ final class WinSerialPort extends ReadWritePort {
 
 			if (Windows.WriteFile(h.handle(), bytes, (int) bytes.byteSize(), written, o) == 0)
 				waitPendingIO(h, o, written);
-			Windows.FlushFileBuffers(h.handle());
 		}
 		finally {
 			Windows.CloseHandle(event);
@@ -503,6 +502,12 @@ final class WinSerialPort extends ReadWritePort {
 	@Override
 	int readBytes(final Arena arena, final MemorySegment bytes) throws IOException {
 		return read(arena, h, bytes);
+	}
+
+	@Override
+	void doDrain() throws IOException {
+		if (Windows.FlushFileBuffers(h.handle()) == 0)
+			throw newIoException();
 	}
 
 	@Override

@@ -329,6 +329,19 @@ abstract class ReadWritePort implements SerialPort {
 
 	abstract int writeBytes(Arena arena, MemorySegment bytes) throws IOException;
 
+	final void drain() throws IOException {
+		logger.log(TRACE, "drain");
+		lock.lock();
+		try {
+			doDrain();
+		}
+		finally {
+			lock.unlock();
+		}
+	}
+
+	abstract void doDrain() throws IOException;
+
 	abstract boolean isClosed();
 
 	void waitEventLoop() {
