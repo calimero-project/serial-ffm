@@ -32,11 +32,9 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
-import java.lang.foreign.MemoryLayout.PathElement;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -49,11 +47,10 @@ import serial.ffm.linux.Linux;
 import serial.ffm.linux.serial_icounter_struct;
 import serial.ffm.linux.serial_struct;
 import serial.ffm.unix.dirent;
-import serial.ffm.unix.fd_set;
 import serial.ffm.unix.flock;
+import serial.ffm.unix.pollfd;
 import serial.ffm.unix.stat;
 import serial.ffm.unix.termios;
-import serial.ffm.unix.timeval;
 
 
 /**
@@ -1042,28 +1039,25 @@ final class UnixSerialPort extends ReadWritePort {
 	private long read(final Arena arena, final fd_t fd, final MemorySegment buffer) {
 		final long start = System.nanoTime();
 
-		final int maxFd = fd.value() + 1;
 		long offset = 0;
 		long remaining = buffer.byteSize();
 
-		final var input = fd_set.allocate(arena);
-		while (remaining > 0) {
-			input.fill((byte) 0);
-			FD_SET(fd, input);
+		final var pfd = pollfd.allocate(arena);
+		pollfd.fd(pfd, fd.value());
+		pollfd.events(pfd, (short) Unix.POLLIN);
 
-			final var timeout = timeval.allocate(arena);
-			timeval.tv_sec(timeout, 0);
-			timeval.tv_usec(timeout, receiveTimeout * 1000);
+		while (remaining > 0) {
+			final int timeout = receiveTimeout;
 			lock.unlock();
 			final int n;
 			try {
-				n = Linux.select(maxFd, input, MemorySegment.NULL, MemorySegment.NULL, timeout);
+				n = Unix.poll(pfd, 1, timeout);
 			}
 			finally {
 				lock.lock();
 			}
 			if (n == -1) {
-				perror("select failed");
+				perror("poll failed");
 				// EINTR: simply continue with the byte counting loop, since we have to calculate
 				// a new timeout
 				if (errno() == Unix.EINTR)
@@ -1072,7 +1066,7 @@ final class UnixSerialPort extends ReadWritePort {
 					// e.g., EBADF
 					break;
 			}
-			else if (n == 0) { // read timeout
+			else if (n == 0) { // poll timeout
 				// don't flood the log, so trace only every second if rcv timeout is quite short
 				++timeouts;
 				if (receiveTimeout >= 200) {
@@ -1085,13 +1079,31 @@ final class UnixSerialPort extends ReadWritePort {
 				}
 				break;
 			}
-			else {
-				// read received bytes from stream into buffer
-				if (FD_ISSET(fd, input)) {
+			else { // n > 0
+				final int events = pollfd.revents(pfd);
+				final boolean pollin = (events & Unix.POLLIN) != 0;
+				final boolean pollhup = (events & Unix.POLLHUP) != 0;
+				final boolean pollerr = (events & Unix.POLLERR) != 0;
+				final boolean pollnval = (events & Unix.POLLNVAL) != 0;
+				if (events != 0) {
+					logger.log(TRACE, "poll returned events: {0}{1}{2}{3}",
+							pollin ? "POLLIN "  : "",
+							pollhup ? "POLLHUP " : "",
+							pollerr ? "POLLERR " : "",
+							pollnval ? "POLLNVAL" : "");
+				}
+
+				if (pollnval) { // fd not open
+					logger.log(WARNING, "poll failed: fd not open");
+					break;
+				}
+				else if (pollin || pollhup || pollerr) {
+					// read received bytes from stream into buffer
+					// on hang up or error, try to read remaining data (if any)
 
 					// get number of bytes that are immediately available for reading:
 					// if 0, this indicates other errors, e.g., disconnected usb adapter
-					final /*size_t*/ var nread = arena.allocateFrom(ValueLayout.JAVA_LONG, 0);
+					final var nread = arena.allocateFrom(ValueLayout.JAVA_LONG, 0);
 					Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.FIONREAD, nread);
 					if (nread.get(ValueLayout.JAVA_LONG, 0) == 0)
 						return -1;
@@ -1315,17 +1327,14 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private int polledWaitEvent() throws IOException {
 		try (var arena = Arena.ofConfined()) {
-			final int maxFd = fd().value() + 1;
-			final var fdset = fd_set.allocate(arena);
-			final var timeout = timeval.allocate(arena);
+			final var pfd = pollfd.allocate(arena);
+			pollfd.fd(pfd, fd.value());
+			pollfd.events(pfd, (short) 0);
 
 			while (true) {
-				fdset.fill((byte) 0);
-				timeval.tv_sec(timeout, (int) (eventPollInterval.toSeconds()));
-				timeval.tv_usec(timeout, eventPollInterval.toNanosPart() / 1000);
 				int ret;
 				do {
-					ret = Linux.select(maxFd, fdset, Linux.NULL(), Linux.NULL(), timeout);
+					ret = Unix.poll(pfd, 1, (int) eventPollInterval.toMillis());
 				} while (ret == -1 && errno() == Unix.EINTR);
 
 				if ((currentEventMask & (EVENT_CTS | EVENT_DSR | EVENT_RING | EVENT_RLSD)) != 0) {
@@ -1536,46 +1545,6 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private static IOException newException(final int error) {
 		return new IOException(errnoMsg(error) + " (" + error + ")");
-	}
-
-
-	private static final int __DARWIN_NBBY = 8;                               /* bits in a byte */
-	private static final int __DARWIN_NFDBITS = /*sizeof(__int32_t)*/ 4 * __DARWIN_NBBY; /* bits per mask */
-
-	private static final VarHandle fds_bits;
-	static {
-		final String name = OS.current() == OS.Mac ? "fds_bits" : "__fds_bits";
-		final var valueLayout = (ValueLayout) fd_set.layout()
-				.select(PathElement.groupElement(name)).select(PathElement.sequenceElement());
-		fds_bits = valueLayout.arrayElementVarHandle();
-	}
-
-	private static boolean FD_ISSET(final fd_t fd, final MemorySegment fdset) {
-		// it's a inline header function, therefore panama doesn't find it at runtime
-//		return Linux.__darwin_fd_isset(fd.value(), fdset) != 0;
-
-//		__darwin_fd_isset(int _fd, const struct fd_set *_p)
-//		{
-//			return _p->fds_bits[(unsigned long)_fd / __DARWIN_NFDBITS] & ((__int32_t)(((unsigned long)1) << ((unsigned long)_fd % __DARWIN_NFDBITS)));
-//		}
-
-		final long rawfd = fd.value & 0xffff_ffffL;
-		final long element = (long) fds_bits.get(fdset, 0, rawfd / __DARWIN_NFDBITS);
-		final long bit = element & (1 << (rawfd % __DARWIN_NFDBITS));
-		return bit != 0;
-	}
-
-	private static void FD_SET(final fd_t fd, final MemorySegment fdset) {
-		// it's a inline header function, therefore panama doesn't find it at runtime
-//		Linux.__darwin_fd_set(fd.value(), fdset);
-
-//		__darwin_fd_set(int _fd, struct fd_set *const _p)
-//		{
-//			(_p->fds_bits[(unsigned long)_fd / __DARWIN_NFDBITS] |= ((__int32_t)(((unsigned long)1) << ((unsigned long)_fd % __DARWIN_NFDBITS))));
-//		}
-
-		final long rawfd = fd.value & 0xffff_ffffL;
-		fds_bits.getAndBitwiseOr(fdset, 0, rawfd / __DARWIN_NFDBITS, 1 << (rawfd % __DARWIN_NFDBITS));
 	}
 
 	private void perror(final String msg) {

@@ -113,8 +113,8 @@ tasks.jextract {
     var funcFilter = listOf("opendir", "readdir", "realpath", "stat", "closedir",
         "cfgetispeed", "cfsetispeed", "cfsetospeed", "cfget", "ioctl",
         "link", "unlink", "open", "read", "write", "close", "strlen", "getpid",
-        "tcgetattr", "tcsetattr", "tcdrain", "fcntl", "select", "strerror", "kill")
-    var structFilter = listOf("dirent", "fd_set", "stat", "termios", "flock", "timeval", "timespec")
+        "tcgetattr", "tcsetattr", "tcdrain", "fcntl", "poll", "strerror", "kill")
+    var structFilter = listOf("dirent", "stat", "termios", "flock", "pollfd", "timespec")
     var constantFilter = listOf("NULL", "IXON", "IXOFF", "IXANY",
         "EBUSY", "EBADF", "EWOULDBLOCK", "EAGAIN", "EPERM", "EACCES", "ENOENT", "EINTR", "PATH_MAX", "C_INT",
         "O_RDWR", "O_EXCL", "O_CREAT", "O_NOCTTY", "O_NONBLOCK",
@@ -122,6 +122,7 @@ tasks.jextract {
         "CREAD", "CLOCAL", "CSIZE", "CS5", "CS6", "CS7", "CS8", "F_SETOWN", "F_SETFL", "FIONREAD",
         "TIOCEXCL", "TIOCM_CTS", "TIOCM_DSR", "TIOCM_CAR", "TIOCM_DTR", "TIOCM_RTS", "TIOCM_CTS", "TIOCM_RNG", "TIOCMGET", "TIOCMSET",
         "TCSANOW", "CSTOPB", "PARENB", "PARODD", "CRTSCTS", "INPCK", "VMIN", "VTIME",
+        "POLLIN", "POLLERR", "POLLHUP", "POLLNVAL",
         "B0", "B50", "B75", "B110", "B134", "B150", "B200", "B300", "B600", "B1200", "B1800", "B2400", "B4800", "B9600", "B19200", "B38400", "B57600", "B115200", "B230400")
     var typedefFilter = listOf<String>()
 
@@ -160,7 +161,6 @@ tasks.jextract {
             paths = listOf("/usr/include")
             funcFilter = funcFilter + listOf("__errno_location")
             structFilter = structFilter + listOf("serial_icounter_struct", "serial_struct")
-            typedefFilter = listOf("fd_set")
         }
         os.contains("mac") -> {
             headersDir = "unix"

@@ -107,6 +107,14 @@ final class Unix {
 	static final int B115200 = OS.current() == OS.Linux ? Linux.B115200() : Mac.B115200();
 	static final int B230400 = OS.current() == OS.Linux ? Linux.B230400() : Mac.B230400();
 
+	public static int poll(final MemorySegment fds, final long nfds, final int timeout) {
+		return OS.current() == OS.Linux ? Linux.poll(fds, nfds, timeout) : Mac.poll(fds, (int) nfds, timeout);
+	}
+
+	static final int POLLIN   = OS.current() == OS.Linux ? Linux.POLLIN() : Mac.POLLIN();
+	static final int POLLERR  = OS.current() == OS.Linux ? Linux.POLLERR() : Mac.POLLERR();
+	static final int POLLHUP  = OS.current() == OS.Linux ? Linux.POLLHUP() : Mac.POLLHUP();
+	static final int POLLNVAL = OS.current() == OS.Linux ? Linux.POLLNVAL() : Mac.POLLNVAL();
 
 	private static final MemorySegment errno = OS.current() == OS.Linux ? Linux.__errno_location() : Mac.__error();
 

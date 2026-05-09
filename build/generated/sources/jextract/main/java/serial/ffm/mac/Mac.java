@@ -547,6 +547,42 @@ public class Mac extends Mac$shared {
     public static int EAGAIN() {
         return EAGAIN;
     }
+    private static final int POLLIN = (int)1L;
+    /**
+     * {@snippet lang=c :
+     * #define POLLIN 1
+     * }
+     */
+    public static int POLLIN() {
+        return POLLIN;
+    }
+    private static final int POLLERR = (int)8L;
+    /**
+     * {@snippet lang=c :
+     * #define POLLERR 8
+     * }
+     */
+    public static int POLLERR() {
+        return POLLERR;
+    }
+    private static final int POLLHUP = (int)16L;
+    /**
+     * {@snippet lang=c :
+     * #define POLLHUP 16
+     * }
+     */
+    public static int POLLHUP() {
+        return POLLHUP;
+    }
+    private static final int POLLNVAL = (int)32L;
+    /**
+     * {@snippet lang=c :
+     * #define POLLNVAL 32
+     * }
+     */
+    public static int POLLNVAL() {
+        return POLLNVAL;
+    }
     private static final int PATH_MAX = (int)1024L;
     /**
      * {@snippet lang=c :
@@ -913,70 +949,6 @@ public class Mac extends Mac$shared {
                 traceDowncall("write", __fd, __buf, __nbyte);
             }
             return (long)mh$.invokeExact(__fd, __buf, __nbyte);
-        } catch (Error | RuntimeException ex) {
-           throw ex;
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class select {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Mac.C_INT,
-            Mac.C_INT,
-            Mac.C_POINTER,
-            Mac.C_POINTER,
-            Mac.C_POINTER,
-            Mac.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("select");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * int select(int, fd_set *restrict, fd_set *restrict, fd_set *restrict, struct timeval *restrict) asm("_select")
-     * }
-     */
-    public static FunctionDescriptor select$descriptor() {
-        return select.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * int select(int, fd_set *restrict, fd_set *restrict, fd_set *restrict, struct timeval *restrict) asm("_select")
-     * }
-     */
-    public static MethodHandle select$handle() {
-        return select.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * int select(int, fd_set *restrict, fd_set *restrict, fd_set *restrict, struct timeval *restrict) asm("_select")
-     * }
-     */
-    public static MemorySegment select$address() {
-        return select.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * int select(int, fd_set *restrict, fd_set *restrict, fd_set *restrict, struct timeval *restrict) asm("_select")
-     * }
-     */
-    public static int select(int x0, MemorySegment x1, MemorySegment x2, MemorySegment x3, MemorySegment x4) {
-        var mh$ = select.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("select", x0, x1, x2, x3, x4);
-            }
-            return (int)mh$.invokeExact(x0, x1, x2, x3, x4);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {
@@ -1800,6 +1772,68 @@ public class Mac extends Mac$shared {
                 traceDowncall("__error");
             }
             return (MemorySegment)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class poll {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_INT,
+            Mac.C_POINTER,
+            Mac.C_INT,
+            Mac.C_INT
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("poll");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * extern int poll(struct pollfd *, nfds_t, int) asm("_poll")
+     * }
+     */
+    public static FunctionDescriptor poll$descriptor() {
+        return poll.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * extern int poll(struct pollfd *, nfds_t, int) asm("_poll")
+     * }
+     */
+    public static MethodHandle poll$handle() {
+        return poll.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int poll(struct pollfd *, nfds_t, int) asm("_poll")
+     * }
+     */
+    public static MemorySegment poll$address() {
+        return poll.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern int poll(struct pollfd *, nfds_t, int) asm("_poll")
+     * }
+     */
+    public static int poll(MemorySegment x0, int x1, int x2) {
+        var mh$ = poll.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("poll", x0, x1, x2);
+            }
+            return (int)mh$.invokeExact(x0, x1, x2);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {

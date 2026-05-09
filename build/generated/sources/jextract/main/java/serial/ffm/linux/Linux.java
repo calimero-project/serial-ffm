@@ -396,6 +396,42 @@ public class Linux extends Linux$shared {
     public static int EBUSY() {
         return EBUSY;
     }
+    private static final int POLLIN = (int)1L;
+    /**
+     * {@snippet lang=c :
+     * #define POLLIN 1
+     * }
+     */
+    public static int POLLIN() {
+        return POLLIN;
+    }
+    private static final int POLLERR = (int)8L;
+    /**
+     * {@snippet lang=c :
+     * #define POLLERR 8
+     * }
+     */
+    public static int POLLERR() {
+        return POLLERR;
+    }
+    private static final int POLLHUP = (int)16L;
+    /**
+     * {@snippet lang=c :
+     * #define POLLHUP 16
+     * }
+     */
+    public static int POLLHUP() {
+        return POLLHUP;
+    }
+    private static final int POLLNVAL = (int)32L;
+    /**
+     * {@snippet lang=c :
+     * #define POLLNVAL 32
+     * }
+     */
+    public static int POLLNVAL() {
+        return POLLNVAL;
+    }
     private static final int PATH_MAX = (int)4096L;
     /**
      * {@snippet lang=c :
@@ -1592,17 +1628,15 @@ public class Linux extends Linux$shared {
         }
     }
 
-    private static class select {
+    private static class poll {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             Linux.C_INT,
-            Linux.C_INT,
             Linux.C_POINTER,
-            Linux.C_POINTER,
-            Linux.C_POINTER,
-            Linux.C_POINTER
+            Linux.C_LONG,
+            Linux.C_INT
         );
 
-        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("select");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("poll");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1610,45 +1644,45 @@ public class Linux extends Linux$shared {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * extern int select(int __nfds, fd_set *restrict __readfds, fd_set *restrict __writefds, fd_set *restrict __exceptfds, struct timeval *restrict __timeout)
+     * extern int poll(struct pollfd *__fds, nfds_t __nfds, int __timeout)
      * }
      */
-    public static FunctionDescriptor select$descriptor() {
-        return select.DESC;
+    public static FunctionDescriptor poll$descriptor() {
+        return poll.DESC;
     }
 
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * extern int select(int __nfds, fd_set *restrict __readfds, fd_set *restrict __writefds, fd_set *restrict __exceptfds, struct timeval *restrict __timeout)
+     * extern int poll(struct pollfd *__fds, nfds_t __nfds, int __timeout)
      * }
      */
-    public static MethodHandle select$handle() {
-        return select.HANDLE;
+    public static MethodHandle poll$handle() {
+        return poll.HANDLE;
     }
 
     /**
      * Address for:
      * {@snippet lang=c :
-     * extern int select(int __nfds, fd_set *restrict __readfds, fd_set *restrict __writefds, fd_set *restrict __exceptfds, struct timeval *restrict __timeout)
+     * extern int poll(struct pollfd *__fds, nfds_t __nfds, int __timeout)
      * }
      */
-    public static MemorySegment select$address() {
-        return select.ADDR;
+    public static MemorySegment poll$address() {
+        return poll.ADDR;
     }
 
     /**
      * {@snippet lang=c :
-     * extern int select(int __nfds, fd_set *restrict __readfds, fd_set *restrict __writefds, fd_set *restrict __exceptfds, struct timeval *restrict __timeout)
+     * extern int poll(struct pollfd *__fds, nfds_t __nfds, int __timeout)
      * }
      */
-    public static int select(int __nfds, MemorySegment __readfds, MemorySegment __writefds, MemorySegment __exceptfds, MemorySegment __timeout) {
-        var mh$ = select.HANDLE;
+    public static int poll(MemorySegment __fds, long __nfds, int __timeout) {
+        var mh$ = poll.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
-                traceDowncall("select", __nfds, __readfds, __writefds, __exceptfds, __timeout);
+                traceDowncall("poll", __fds, __nfds, __timeout);
             }
-            return (int)mh$.invokeExact(__nfds, __readfds, __writefds, __exceptfds, __timeout);
+            return (int)mh$.invokeExact(__fds, __nfds, __timeout);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {
