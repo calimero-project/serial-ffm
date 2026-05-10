@@ -22,13 +22,10 @@
 
 package serial.ffm.unix;
 
-import java.lang.foreign.Arena;
-import java.lang.foreign.GroupLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.util.function.Consumer;
 
 import serial.ffm.OS;
 
