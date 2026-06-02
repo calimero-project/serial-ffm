@@ -538,6 +538,15 @@ public class Mac extends Mac$shared {
     public static int EBUSY() {
         return EBUSY;
     }
+    private static final int EEXIST = (int)17L;
+    /**
+     * {@snippet lang=c :
+     * #define EEXIST 17
+     * }
+     */
+    public static int EEXIST() {
+        return EEXIST;
+    }
     private static final int EAGAIN = (int)35L;
     /**
      * {@snippet lang=c :

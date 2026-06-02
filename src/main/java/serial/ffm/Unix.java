@@ -40,6 +40,7 @@ final class Unix {
 	static final int EBUSY       = OS.current() == OS.Linux ? Linux.EBUSY() : Mac.EBUSY();
 	static final int EAGAIN      = OS.current() == OS.Linux ? Linux.EAGAIN() : Mac.EAGAIN();
 	static final int EWOULDBLOCK = OS.current() == OS.Linux ? Linux.EWOULDBLOCK() : Mac.EWOULDBLOCK();
+	static final int EEXIST      = OS.current() == OS.Linux ? Linux.EEXIST() : Mac.EEXIST();
 
 	static final int CREAD   = OS.current() == OS.Linux ? Linux.CREAD() : Mac.CREAD();
 	static final int CLOCAL  = OS.current() == OS.Linux ? Linux.CLOCAL() : Mac.CLOCAL();

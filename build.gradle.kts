@@ -116,7 +116,7 @@ tasks.jextract {
         "tcgetattr", "tcsetattr", "tcdrain", "fcntl", "poll", "strerror", "kill")
     var structFilter = listOf("dirent", "stat", "termios", "flock", "pollfd", "timespec")
     var constantFilter = listOf("NULL", "IXON", "IXOFF", "IXANY",
-        "EBUSY", "EBADF", "EWOULDBLOCK", "EAGAIN", "EPERM", "EACCES", "ENOENT", "EINTR", "PATH_MAX", "C_INT",
+        "EBUSY", "EBADF", "EWOULDBLOCK", "EAGAIN", "EPERM", "EACCES", "ENOENT", "EINTR", "EEXIST", "PATH_MAX", "C_INT",
         "O_RDWR", "O_EXCL", "O_CREAT", "O_NOCTTY", "O_NONBLOCK",
         "F_WRLCK", "SEEK_SET", "F_SETLK",
         "CREAD", "CLOCAL", "CSIZE", "CS5", "CS6", "CS7", "CS8", "F_SETOWN", "F_SETFL", "FIONREAD",

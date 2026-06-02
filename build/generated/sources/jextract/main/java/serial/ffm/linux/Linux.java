@@ -396,6 +396,15 @@ public class Linux extends Linux$shared {
     public static int EBUSY() {
         return EBUSY;
     }
+    private static final int EEXIST = (int)17L;
+    /**
+     * {@snippet lang=c :
+     * #define EEXIST 17
+     * }
+     */
+    public static int EEXIST() {
+        return EEXIST;
+    }
     private static final int POLLIN = (int)1L;
     /**
      * {@snippet lang=c :

@@ -426,7 +426,7 @@ final class UnixSerialPort extends ReadWritePort {
 	// try to create PID..pid and write our pid into it
 	// create LCK..name as link to pid file
 	// all files are located in /var/lock/
-	boolean ensureLock(final String port) {
+	void ensureLock(final String port) throws IOException {
 		String p = port;
 		if (p.startsWith("/dev/") && p.length() > 5)
 			p = p.substring(5);
@@ -436,8 +436,9 @@ final class UnixSerialPort extends ReadWritePort {
 			final var mpidFile = arena.allocateFrom(pidFile);
 			final fd_t fd = fd_t.of(Linux.open.makeInvoker(Linux.C_INT).apply(mpidFile, Unix.O_RDWR | Unix.O_EXCL | Unix.O_CREAT, 0644));
 			if (fd.equals(fd_t.Invalid)) {
-				logger.log(WARNING, "open {0}", pidFile);
-				return false;
+				if (errno() == Unix.EEXIST)
+					throw new IOException("port '" + port + "' is already locked");
+				throw new IOException("cannot create lock file '" + pidFile + "': " + errnoMsg());
 			}
 
 			final var mstrPid = arena.allocateFrom(Long.toString(myPid));
@@ -450,32 +451,34 @@ final class UnixSerialPort extends ReadWritePort {
 			final var mlckFile = arena.allocateFrom(lckFile);
 			if (tryLink(mpidFile, mlckFile)) {
 				lockedPort = port;
-				return true;
+				return;
 			}
-			boolean locked = false;
+			final int pid;
 			try {
 				// lock file exists, read its pid
 				// if we cannot read in the pid, we cannot lock
-				final int pid = readPid(Path.of(lckFile));
+				pid = readPid(Path.of(lckFile));
+				// we might already have locked the port
 				if (pid == myPid) {
 					lockedPort = port;
-					locked = true;
+					return;
 				}
 				// check the read pid, if stale, try to remove lock file
 				else if (Linux.kill(pid, 0) == -1 && errno() != Unix.EPERM) {
 					Linux.unlink(mlckFile);
 					if (tryLink(mpidFile, mlckFile)) {
 						lockedPort = port;
-						return true;
+						return;
 					}
 				}
 			}
 			catch (final IOException e) {
-				logger.log(WARNING, "error reading pid from {0}: {1}", lckFile, e.toString());
+				throw new IOException("cannot acquire lock for port '" + port + "': " + e.getMessage());
 			}
-			// we might already have locked the port
-			Linux.unlink(mpidFile);
-			return locked;
+			finally {
+				Linux.unlink(mpidFile);
+			}
+			throw new IOException("cannot acquire lock for port '" + port + "': lock held by process " + pid);
 		}
 	}
 
@@ -528,19 +531,16 @@ final class UnixSerialPort extends ReadWritePort {
 //		errno(0);
 		int error = 0;
 
-		if (ensureLock(portId)) {
-			final var port = arena.allocateFrom(portId);
-
-			do {
-				// we set the port exclusive below, not here
-				fd = fd_t.of(Linux.open.makeInvoker().apply(port, /*O_EXCL |*/Unix.O_RDWR | Unix.O_NOCTTY | Unix.O_NONBLOCK));
-				if (!fd.equals(fd_t.Invalid))
-					break;
-			}
-			while (errno() == Unix.EINTR);
+		ensureLock(portId);
+		final var port = arena.allocateFrom(portId);
+		do {
+			// we set the port exclusive below, not here
+			fd = fd_t.of(Linux.open.makeInvoker().apply(port, /*O_EXCL |*/Unix.O_RDWR | Unix.O_NOCTTY | Unix.O_NONBLOCK));
+			if (!fd.equals(fd_t.Invalid))
+				break;
 		}
-		else
-			throw new IOException("obtaining port lock for " + portId + ": " + errnoMsg());
+		while (errno() == Unix.EINTR);
+
 		// check if someone else has opened the port
 		if (fd.equals(fd_t.Invalid)) {
 			lastError.set(errno());
