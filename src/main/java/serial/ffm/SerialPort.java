@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2023 B. Malinowsky
+// Copyright (c) 2022, 2026 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@ package serial.ffm;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.Duration;
 import java.util.Set;
 
 public interface SerialPort extends AutoCloseable {
@@ -50,8 +51,33 @@ public interface SerialPort extends AutoCloseable {
 		Error, AvailableInput, Line
 	}
 
-	record Timeouts(int readInterval, int readTotalMultiplier, int readTotalConstant, int writeTotalMultiplier,
-			int writeTotalConstant) {}
+	record Timeouts(Duration readInterval, Duration readTotalConstant, Duration readTotalMultiplier,
+			Duration writeTotalConstant, Duration writeTotalMultiplier) {
+
+		public Timeouts {
+			if (readInterval.isNegative()) throw new IllegalArgumentException("readInterval < 0");
+			if (readTotalMultiplier.isNegative()) throw new IllegalArgumentException("readTotalMultiplier < 0");
+			if (readTotalConstant.isNegative()) throw new IllegalArgumentException("readTotalConstant < 0");
+			if (writeTotalMultiplier.isNegative()) throw new IllegalArgumentException("writeTotalMultiplier < 0");
+			if (writeTotalConstant.isNegative()) throw new IllegalArgumentException("writeTotalConstant < 0");
+		}
+
+		@Deprecated(forRemoval = true)
+		public Timeouts(final int readInterval, final int readTotalMultiplier, final int readTotalConstant,
+				final int writeTotalMultiplier, final int writeTotalConstant) {
+			this(Duration.ofMillis(readInterval), Duration.ofMillis(readTotalConstant), Duration.ofMillis(readTotalMultiplier),
+					Duration.ofMillis(writeTotalConstant), Duration.ofMillis(writeTotalMultiplier));
+		}
+
+		public static Timeouts readInterval(final Duration interval) {
+			return new Timeouts(interval, Duration.ZERO, Duration.ZERO, Duration.ZERO, Duration.ZERO);
+		}
+
+		public static Timeouts readTotal(final Duration constant, final Duration perByte) {
+			return new Timeouts(Duration.ZERO, constant, perByte, Duration.ZERO, Duration.ZERO);
+		}
+	}
+
 
 	static Set<String> portIdentifiers() {
 		return switch (OS.current()) {

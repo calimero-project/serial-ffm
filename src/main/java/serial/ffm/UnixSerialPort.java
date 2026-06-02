@@ -1417,9 +1417,9 @@ final class UnixSerialPort extends ReadWritePort {
 
 	@Override
 	void timeouts(final Arena arena, final Timeouts timeouts) throws IOException {
-		final int readIntervalTimeout = timeouts.readInterval();
-		final int readTotalTimeoutMultiplier = timeouts.readTotalMultiplier();
-		final int readTotalTimeoutConstant = timeouts.readTotalConstant();
+		final int readIntervalTimeout = (int) timeouts.readInterval().toMillis();
+		final int readTotalTimeoutMultiplier = (int) timeouts.readTotalMultiplier().toMillis();
+		final int readTotalTimeoutConstant = (int) timeouts.readTotalConstant().toMillis();
 //		final int writeTotalTimeoutMultiplier = timeouts.writeTotalMultiplier();
 //		final int writeTotalTimeoutConstant = timeouts.writeTotalConstant();
 

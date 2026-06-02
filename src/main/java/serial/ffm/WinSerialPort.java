@@ -585,11 +585,11 @@ final class WinSerialPort extends ReadWritePort {
 	@Override
 	void timeouts(final Arena arena, final Timeouts timeouts) throws IOException {
 		final var to = _COMMTIMEOUTS.allocate(arena);
-		_COMMTIMEOUTS.ReadIntervalTimeout(to, timeouts.readInterval());
-		_COMMTIMEOUTS.ReadTotalTimeoutMultiplier(to, timeouts.readTotalMultiplier());
-		_COMMTIMEOUTS.ReadTotalTimeoutConstant(to, timeouts.readTotalConstant());
-		_COMMTIMEOUTS.WriteTotalTimeoutMultiplier(to, timeouts.writeTotalMultiplier());
-		_COMMTIMEOUTS.WriteTotalTimeoutConstant(to, timeouts.writeTotalConstant());
+		_COMMTIMEOUTS.ReadIntervalTimeout(to, (int) timeouts.readInterval().toMillis());
+		_COMMTIMEOUTS.ReadTotalTimeoutMultiplier(to, (int) timeouts.readTotalMultiplier().toMillis());
+		_COMMTIMEOUTS.ReadTotalTimeoutConstant(to, (int) timeouts.readTotalConstant().toMillis());
+		_COMMTIMEOUTS.WriteTotalTimeoutMultiplier(to, (int) timeouts.writeTotalMultiplier().toMillis());
+		_COMMTIMEOUTS.WriteTotalTimeoutConstant(to, (int) timeouts.writeTotalConstant().toMillis());
 		if (Windows.SetCommTimeouts(h.handle(), to) == 0)
 			throw newIoException();
 	}
