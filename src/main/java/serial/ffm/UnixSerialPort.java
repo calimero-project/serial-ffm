@@ -22,6 +22,7 @@
 
 package serial.ffm;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.INFO;
 import static java.lang.System.Logger.Level.TRACE;
@@ -152,14 +153,14 @@ final class UnixSerialPort extends ReadWritePort {
 	private static Set<String> checkPortsDir(final String dir) {
 		try (var arena = Arena.ofConfined()) {
 			final var logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
-			final var ports = new TreeSet<String>();
 
 			var /*DIR*/ addr = Linux.opendir(arena.allocateFrom(dir));
 			if (addr.equals(Linux.NULL())) {
-				logger.log(WARNING, "cannot open {0}: ", dir, errnoMsg());
-				return ports;
+				logger.log(WARNING, "cannot open ''{0}'': ", dir, errnoMsg());
+				return Set.of();
 			}
 
+			final var ports = new TreeSet<String>();
 			final var dirp = addr;
 			while (!(addr = Linux.readdir(dirp)).equals(Linux.NULL())) {
 				final MemorySegment entry = dirent.reinterpret(addr, arena, null);
@@ -176,7 +177,7 @@ final class UnixSerialPort extends ReadWritePort {
 				final var cfilename = arena.allocateFrom(filename);
 				final var stbuf = stat.allocate(arena);
 				if (Linux.stat(cfilename, stbuf) == -1) {
-					logger.log(WARNING, "stat failed for {0}: {1}", filename, errnoMsg());
+					logger.log(WARNING, "stat failed for ''{0}'': {1}", filename, errnoMsg());
 					continue;
 				}
 				if (SerialPort.portExists(filename))
@@ -418,7 +419,7 @@ final class UnixSerialPort extends ReadWritePort {
 			return Integer.parseInt(s);
 		}
 		catch (final NumberFormatException e) {
-			throw new IOException(e);
+			throw new IOException("invalid pid in lock file '" + filename + "'", e);
 		}
 	}
 
@@ -543,7 +544,7 @@ final class UnixSerialPort extends ReadWritePort {
 		if (fd.equals(fd_t.Invalid)) {
 			lastError.set(errno());
 			releaseLock();
-			throw new IOException("opening " + portId + ": " + errnoMsg());
+			throw new IOException("failed to open port '" + portId + "': " + errnoMsg());
 		}
 		if (errno() == Unix.EBUSY) {
 			logger.log(TRACE, "busy {0}", fd);
@@ -588,7 +589,7 @@ final class UnixSerialPort extends ReadWritePort {
 		final String dir = "/dev/serial/by-id";
 		var /*DIR*/ addr = Linux.opendir(arena.allocateFrom(dir));
 		if (addr.equals(Linux.NULL())) {
-			logger.log(WARNING, "cannot open {0}: ", dir, errnoMsg());
+			logger.log(WARNING, "failed to enumerate ''{0}'': ", dir, errnoMsg());
 			return false;
 		}
 
@@ -639,7 +640,7 @@ final class UnixSerialPort extends ReadWritePort {
 	private boolean closePort(final int fd) throws IOException {
 		if (fd == fd_t.Invalid.value())
 			return true;
-		logger.log(TRACE, "close handle {0}", fd);
+		logger.log(TRACE, "close fd {0}", fd);
 		boolean closed;
 		do {
 			closed = Linux.close(fd) == 0;
@@ -1296,7 +1297,7 @@ final class UnixSerialPort extends ReadWritePort {
 		logger.log(TRACE, "enter wait event");
 		try {
 			if (OS.current() == OS.Mac || OS.current() == OS.Linux) {
-				logger.log(INFO, "use polledWaitEvent, waitEvent not working yet");
+				logger.log(DEBUG, "use polledWaitEvent, waitEvent not working yet");
 				return polledWaitEvent();
 			}
 

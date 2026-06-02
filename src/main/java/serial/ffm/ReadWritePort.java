@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2025 B. Malinowsky
+// Copyright (c) 2022, 2026 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -60,7 +60,7 @@ abstract class ReadWritePort implements SerialPort {
 
 	@Override
 	public final SerialPort baudRate(final int baudrate) throws IOException {
-		logger.log(TRACE, "set baudrate {0}", baudrate);
+		logger.log(TRACE, "set baud rate {0}", baudrate);
 		lock.lock();
 		try (var arena = Arena.ofConfined()) {
 			baudRate(arena, baudrate);
@@ -75,7 +75,7 @@ abstract class ReadWritePort implements SerialPort {
 
 	@Override
 	public final int baudRate() throws IOException {
-		logger.log(TRACE, "get baudrate");
+		logger.log(TRACE, "get baud rate");
 		lock.lock();
 		try (var arena = Arena.ofConfined()) {
 			return baudRate(arena);
@@ -147,7 +147,7 @@ abstract class ReadWritePort implements SerialPort {
 
 	@Override
 	public final SerialPort stopBits(final StopBits stopbits) throws IOException {
-		logger.log(TRACE, "set stopbits {0}", stopbits);
+		logger.log(TRACE, "set stop bits {0}", stopbits);
 		lock.lock();
 		try (var arena = Arena.ofConfined()) {
 			stopBits(arena, stopbits);
@@ -162,7 +162,7 @@ abstract class ReadWritePort implements SerialPort {
 
 	@Override
 	public final StopBits stopBits() throws IOException {
-		logger.log(TRACE, "get stopbits");
+		logger.log(TRACE, "get stop bits");
 		lock.lock();
 		try (var arena = Arena.ofConfined()) {
 			return stopBits(arena);
