@@ -629,12 +629,9 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private boolean closePort() throws IOException {
-		try {
-			return closePort(fd.value());
-		}
-		finally {
-			fd = fd_t.Invalid;
-		}
+		final int closeFd = fd.value();
+		fd = fd_t.Invalid;
+		return closePort(closeFd);
 	}
 
 	private boolean closePort(final int fd) throws IOException {
