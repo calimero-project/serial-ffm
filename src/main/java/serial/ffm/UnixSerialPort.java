@@ -485,12 +485,13 @@ final class UnixSerialPort extends ReadWritePort {
 		final int idx = lockedPort.lastIndexOf('/');
 		final String name = idx == -1 ? lockedPort : lockedPort.substring(idx + 1);
 		final var lockFile = createLockName(lockDir, lckPrefix, name);
-//		logger.log(TRACE, "release lock {0}", lockFile);
 		lockedPort = "";
 		final var path = Path.of(lockFile);
 		final int pid = readPid(path);
-		if (pid != -1 && pid == Linux.getpid())
+		if (pid != -1 && pid == Linux.getpid()) {
+			logger.log(TRACE, "release lock ''{0}''", lockFile);
 			Files.deleteIfExists(path);
+		}
 	}
 
 	private boolean setPortDefaults(final int fd) {
