@@ -1331,7 +1331,7 @@ final class UnixSerialPort extends ReadWritePort {
 				} while (ret == -1 && errno() == Unix.EINTR);
 
 				if ((currentEventMask & (EVENT_CTS | EVENT_DSR | EVENT_RING | EVENT_RLSD)) != 0) {
-					final int lineStatus = status(Status.Line);
+					final int lineStatus = status(arena, Status.Line);
 					if ((polledLineStatus != lineStatus)) {
 						int events = 0;
 						if ((polledLineStatus & LINE_CTS) != (lineStatus & LINE_CTS))
@@ -1353,7 +1353,7 @@ final class UnixSerialPort extends ReadWritePort {
 				}
 
 				if ((currentEventMask & EVENT_ERR) != 0) {
-					final int errorStatus = status(Status.Error);
+					final int errorStatus = status(arena, Status.Error);
 					if (polledErrorStatus != errorStatus) {
 						final int events = 0;
 
@@ -1363,7 +1363,7 @@ final class UnixSerialPort extends ReadWritePort {
 				}
 
 				if ((currentEventMask & EVENT_RXCHAR) != 0) {
-					final int availStatus = status(Status.AvailableInput);
+					final int availStatus = status(arena, Status.AvailableInput);
 					if (polledAvailableStatus != availStatus) {
 						polledAvailableStatus = availStatus;
 						return EVENT_RXCHAR;
