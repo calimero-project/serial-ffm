@@ -61,8 +61,6 @@ final class UnixSerialPort extends ReadWritePort {
 
 	// Any Character received
 	static final int EVENT_RXCHAR = 0x0001;
-	// Received certain character
-	static final int EVENT_RXFLAG = 0x0002;
 	// Transmit Queue Empty
 	static final int EVENT_TXEMPTY = 0x0004;
 	// CTS changed state
@@ -203,7 +201,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 		final int eventMask = UnixSerialPort.EVENT_CTS | UnixSerialPort.EVENT_TXEMPTY | UnixSerialPort.EVENT_RING
 				| UnixSerialPort.EVENT_BREAK | UnixSerialPort.EVENT_CTS | UnixSerialPort.EVENT_DSR
-				| UnixSerialPort.EVENT_RLSD | UnixSerialPort.EVENT_RXCHAR | UnixSerialPort.EVENT_RXFLAG;
+				| UnixSerialPort.EVENT_RLSD | UnixSerialPort.EVENT_RXCHAR;
 
 		setEvents(eventMask, true);
 	}
@@ -1190,8 +1188,6 @@ final class UnixSerialPort extends ReadWritePort {
 		// XXX assign those
 		if ((eventMask & EVENT_RXCHAR) != 0)
 			events |= 0;
-		if ((eventMask & EVENT_RXFLAG) != 0)
-			events |= 0;
 		if ((eventMask & EVENT_TXEMPTY) != 0)
 			events |= 0;
 
@@ -1231,7 +1227,6 @@ final class UnixSerialPort extends ReadWritePort {
 		if (serial_icounter_struct.rx(icount) != rx) {
 			rx = serial_icounter_struct.rx(icount);
 			events |= EVENT_RXCHAR;
-			events |= EVENT_RXFLAG;
 		}
 		if (serial_icounter_struct.cts(icount) != cts) {
 			cts = serial_icounter_struct.cts(icount);
@@ -1369,12 +1364,11 @@ final class UnixSerialPort extends ReadWritePort {
 					}
 				}
 
-				if ((currentEventMask & (EVENT_RXCHAR | EVENT_RXFLAG)) != 0) {
+				if ((currentEventMask & EVENT_RXCHAR) != 0) {
 					final int availStatus = status(Status.AvailableInput);
 					if (polledAvailableStatus != availStatus) {
-						final int events = currentEventMask & (EVENT_RXCHAR | EVENT_RXFLAG);
 						polledAvailableStatus = availStatus;
-						return events;
+						return EVENT_RXCHAR;
 					}
 				}
 
@@ -1533,8 +1527,6 @@ final class UnixSerialPort extends ReadWritePort {
 			logger.log(TRACE, "EVENT_RLSD");
 		if (isSet(eventMask, EVENT_RXCHAR))
 			logger.log(TRACE, "EVENT_RXCHAR");
-		if (isSet(eventMask, EVENT_RXFLAG))
-			logger.log(TRACE, "EVENT_RXFLAG");
 		if (isSet(eventMask, EVENT_BREAK))
 			logger.log(TRACE, "EVENT_BREAK");
 		if (isSet(eventMask, EVENT_DTR))

@@ -189,14 +189,14 @@ public class Windows extends Windows$shared {
     public static int EV_RXCHAR() {
         return EV_RXCHAR;
     }
-    private static final int EV_RXFLAG = (int)2L;
+    private static final int EV_TXEMPTY = (int)4L;
     /**
      * {@snippet lang=c :
-     * #define EV_RXFLAG 2
+     * #define EV_TXEMPTY 4
      * }
      */
-    public static int EV_RXFLAG() {
-        return EV_RXFLAG;
+    public static int EV_TXEMPTY() {
+        return EV_TXEMPTY;
     }
     private static final int EV_CTS = (int)8L;
     /**
@@ -2026,4 +2026,3 @@ public class Windows extends Windows$shared {
         return HKEY_LOCAL_MACHINE;
     }
 }
-

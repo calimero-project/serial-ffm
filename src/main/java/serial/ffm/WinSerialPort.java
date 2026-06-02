@@ -609,8 +609,6 @@ final class WinSerialPort extends ReadWritePort {
 		// data events
 		if (isSet(eventMask, Windows.EV_RXCHAR()))
 			logger.log(TRACE, "EV_RXCHAR");
-		if (isSet(eventMask, Windows.EV_RXFLAG()))
-			logger.log(TRACE, "EV_RXFLAG");
 
 		// pin events
 		if (isSet(eventMask, Windows.EV_CTS()))
