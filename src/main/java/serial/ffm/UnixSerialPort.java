@@ -483,7 +483,7 @@ final class UnixSerialPort extends ReadWritePort {
 		}
 	}
 
-	void releaseLock() throws IOException {
+	void releaseLock() {
 		if (lockedPort.isEmpty())
 			return;
 		final int idx = lockedPort.lastIndexOf('/');
@@ -491,10 +491,17 @@ final class UnixSerialPort extends ReadWritePort {
 		final var lockFile = createLockName(lockDir, lckPrefix, name);
 		lockedPort = "";
 		final var path = Path.of(lockFile);
-		final int pid = readPid(path);
-		if (pid != -1 && pid == Linux.getpid()) {
-			logger.log(TRACE, "release lock ''{0}''", lockFile);
-			Files.deleteIfExists(path);
+		if (Files.notExists(path))
+			return;
+		try {
+			final int pid = readPid(path);
+			if (pid == Linux.getpid()) {
+				logger.log(TRACE, "release lock ''{0}''", lockFile);
+				Files.delete(path);
+			}
+		}
+		catch (final IOException e) {
+			logger.log(DEBUG, "cannot release lock ''{0}'': {1}", lockFile, e.getMessage());
 		}
 	}
 
