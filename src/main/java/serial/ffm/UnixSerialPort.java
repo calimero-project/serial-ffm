@@ -1022,6 +1022,8 @@ final class UnixSerialPort extends ReadWritePort {
 		lock.lock();
 		try {
 			final long r = read(arena, fd(), bytes);
+			if (r == -2)
+				throw new IOException("interrupted");
 			if (r == -1)
 				throw newException(errno());
 			return (int) r;
@@ -1039,6 +1041,9 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private long read(final Arena arena, final fd_t fd, final MemorySegment buffer) {
+		if (Thread.currentThread().isInterrupted())
+			return -2;
+
 		long offset = 0;
 		long remaining = buffer.byteSize();
 
@@ -1083,6 +1088,10 @@ final class UnixSerialPort extends ReadWritePort {
 				finally {
 					lock.lock();
 				}
+
+				if (Thread.currentThread().isInterrupted())
+					return -2;
+
 				if (n == -1) {
 					perror("poll failed");
 					if (errno() == Unix.EINTR)

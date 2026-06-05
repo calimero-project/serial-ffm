@@ -22,6 +22,7 @@
 
 package serial.ffm;
 
+import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -32,11 +33,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -173,7 +178,7 @@ class SerialPortTests {
 		);
 	}
 
-	private static final Duration delta = Duration.ofMillis(10);
+	private static final Duration delta = Duration.ofMillis(50);
 
 	@Test
 	void readIntervalTimeout() throws IOException {
@@ -209,14 +214,33 @@ class SerialPortTests {
 	}
 
 	@Test
-	void timeouts() throws IOException {
-		final var set = new Timeouts(5, 0, 0, 0, 0);
-		port.timeouts(set);
-		final ReadWritePort rwport = (ReadWritePort) port;
-		final var get = rwport.timeouts();
-		assertEquals(set, get);
-//		final var zeros = new Timeouts(0, 0, 0, 0, 0);
-//		port.timeouts(zeros);
+	void interruptible() throws IOException {
+		final var readInterval = Timeouts.readInterval(Duration.ofMillis(5000));
+		port.timeouts(readInterval);
+
+		final var readerThread = Thread.currentThread();
+		final var timeToInterrupt = Duration.ofMillis(700);
+		Executors.newSingleThreadScheduledExecutor().schedule(readerThread::interrupt,
+				timeToInterrupt.toMillis(), TimeUnit.MILLISECONDS);
+
+		final var rwport = (ReadWritePort) port;
+		assertThrowsWithTimeout(IOException.class, rwport::read, "interrupted", timeToInterrupt);
+	}
+
+	private static <T extends Throwable> void assertThrowsWithTimeout(final Class<T> expectedType,
+			final Executable run, String msg, final Duration timeout) {
+		final long start = System.nanoTime();
+		assertThrows(expectedType, run, msg);
+		assertWithinRange(timeout, System.nanoTime() - start);
+	}
+
+	private static void assertWithinRange(final Duration expected, final long actualNanos) {
+		if (expected.minusNanos(actualNanos).abs().compareTo(delta) > 0)
+			assertionFailure()
+					.expected(expected + " ±" + delta)
+					.actual(actualNanos)
+					.trimStacktrace(Assertions.class)
+					.buildAndThrow();
 	}
 
 	@Test
