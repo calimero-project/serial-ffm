@@ -415,7 +415,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private static int readPid(final Path filename) throws IOException {
 		try {
-			final String s = Files.readString(filename);
+			final String s = Files.readString(filename).trim();
 			return Integer.parseInt(s);
 		}
 		catch (final NumberFormatException e) {
