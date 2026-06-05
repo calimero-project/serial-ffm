@@ -96,11 +96,14 @@ class SerialPortTests {
 	}
 
 	@Test
-	void openPort() throws IOException {
+	void openPort() throws IOException, InterruptedException {
 		port.close();
-		try (var __ = SerialPort.open(portId)) {}
-		try (var __ = SerialPort.open(portId)) {}
-		try (var __ = SerialPort.open(portId)) {}
+		Thread.sleep(Duration.ofMillis(50));
+		try (var _ = SerialPort.open(portId)) {}
+		Thread.sleep(Duration.ofMillis(50));
+		try (var _ = SerialPort.open(portId)) {}
+		Thread.sleep(Duration.ofMillis(50));
+		try (var _ = SerialPort.open(portId)) {}
 	}
 
 	@Test
