@@ -26,11 +26,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.opentest4j.TestAbortedException;
 
@@ -150,6 +153,59 @@ class SerialPortTests {
 		if (flowControl == FlowControl.CtsRts && actual == FlowControl.None)
 			throw new TestAbortedException("no RTS/CTS flow control support");
 		assertEquals(flowControl, actual);
+	}
+
+	@ParameterizedTest
+	@MethodSource("timeoutsSource")
+	void timeouts(final Timeouts timeouts) throws IOException {
+		port.timeouts(timeouts);
+		assertEquals(timeouts, ((ReadWritePort) port).timeouts());
+	}
+
+	private static Stream<Timeouts> timeoutsSource() {
+		return Stream.of(
+				new Timeouts(Duration.ZERO, Duration.ZERO, Duration.ZERO, Duration.ZERO, Duration.ZERO),
+				new Timeouts(Duration.ofMillis(5), Duration.ZERO, Duration.ZERO, Duration.ZERO, Duration.ZERO),
+				new Timeouts(Duration.ZERO, Duration.ofMillis(200), Duration.ofMillis(30), Duration.ZERO, Duration.ZERO),
+				new Timeouts(Duration.ZERO, Duration.ZERO, Duration.ZERO, Duration.ofMillis(50), Duration.ofMillis(5)),
+				Timeouts.readInterval(Duration.ofSeconds(1)),
+				Timeouts.readTotal(Duration.ofSeconds(2), Duration.ofMillis(100))
+		);
+	}
+
+	private static final Duration delta = Duration.ofMillis(10);
+
+	@Test
+	void readIntervalTimeout() throws IOException {
+		final var timeouts = Timeouts.readInterval(Duration.ofMillis(2000));
+		port.timeouts(timeouts);
+		final var rwport = (ReadWritePort) port;
+		assertTimeoutPreemptively(timeouts.readInterval().plus(delta), rwport::read);
+	}
+
+	@Test
+	void readTotalTimeout() throws IOException {
+		final var timeouts = Timeouts.readTotal(Duration.ofMillis(1000), Duration.ofMillis(300));
+		port.timeouts(timeouts);
+
+		final var rwport = (ReadWritePort) port;
+		final int bytes = 1;
+		final var total = timeouts.readTotalConstant().plus(timeouts.readTotalMultiplier().multipliedBy(bytes));
+		assertTimeoutPreemptively(total.plus(delta), rwport::read);
+	}
+
+	@Test
+	void readIntervalAndTotalTimeout() throws IOException {
+		final var timeouts = new Timeouts(Duration.ofMillis(200), Duration.ofMillis(70), Duration.ofMillis(20),
+				Duration.ZERO, Duration.ZERO);
+		port.timeouts(timeouts);
+
+		final var data = new byte[10];
+		final var interval = timeouts.readInterval();
+		final var total = timeouts.readTotalConstant().plus(timeouts.readTotalMultiplier().multipliedBy(data.length));
+		final var min = interval.compareTo(total) <= 0 ? interval : total;
+		final var rwport = (ReadWritePort) port;
+		assertTimeoutPreemptively(min.plus(delta), () -> rwport.readBytes(data, 0, data.length));
 	}
 
 	@Test

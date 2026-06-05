@@ -136,7 +136,8 @@ final class UnixSerialPort extends ReadWritePort {
 	private volatile int polledErrorStatus;
 	private volatile int polledAvailableStatus;
 
-	private int receiveTimeout = 100; // ms
+	private static final int interruptTimeout = 50; // ms
+	private Timeouts timeouts = Timeouts.readInterval(Duration.ZERO);
 
 
 //	private static final List<String> defaultPortPrefixes = List.of("/dev/ttyS", "/dev/ttyACM", "/dev/ttyUSB", "/dev/ttyAMA");
@@ -514,6 +515,7 @@ final class UnixSerialPort extends ReadWritePort {
 			termios.c_iflag(options, Unix.INPCK);
 			termios.c_lflag(options, 0);
 			termios.c_oflag(options, 0);
+			// configure polling read
 			termios.c_cc(options).set(Linux.C_CHAR, Unix.VMIN, (byte) 0);
 			termios.c_cc(options).set(Linux.C_CHAR, Unix.VTIME, (byte) 0);
 			if (Linux.tcsetattr(fd, Unix.TCSANOW, options) == -1) {
@@ -1031,109 +1033,121 @@ final class UnixSerialPort extends ReadWritePort {
 		return lfd;
 	}
 
-	private long timeouts;
-
 	private long read(final Arena arena, final fd_t fd, final MemorySegment buffer) {
-		final long start = System.nanoTime();
-
 		long offset = 0;
 		long remaining = buffer.byteSize();
+
+		final long readInterval = timeouts.readInterval().toMillis();
+		final long totalTimeout = timeouts.readTotalConstant().toMillis()
+				+ timeouts.readTotalMultiplier().toMillis() * remaining;
 
 		final var pfd = pollfd.allocate(arena);
 		pollfd.fd(pfd, fd.value());
 		pollfd.events(pfd, (short) Unix.POLLIN);
 
+		long pollTimeoutCount = 0;
+		final long start = System.nanoTime();
 		while (remaining > 0) {
-			final int timeout = receiveTimeout;
-			lock.unlock();
-			final int n;
-			try {
-				n = Unix.poll(pfd, 1, timeout);
-			}
-			finally {
-				lock.lock();
-			}
-			if (n == -1) {
-				perror("poll failed");
-				// EINTR: simply continue with the byte counting loop, since we have to calculate
-				// a new timeout
-				if (errno() == Unix.EINTR)
-					;
-				else
-					// e.g., EBADF
+			final long elapsed = (System.nanoTime() - start) / 1_000_000;
+			long pollTimeout = 0;
+
+			if (readInterval > 0) {
+				// check whether we reached interval timeout for next byte
+				final long remainingInterval = readInterval - elapsed;
+				if (remainingInterval < 0)
 					break;
+				pollTimeout = remainingInterval;
 			}
-			else if (n == 0) { // poll timeout
-				// don't flood the log, so trace only every second if rcv timeout is quite short
-				++timeouts;
-				if (receiveTimeout >= 200) {
-					logger.log(TRACE, "read timeout ({0} ms)", receiveTimeout);
-					timeouts = 0;
+			if (totalTimeout > 0) {
+				// check whether we reached total timeout for the requested bytes
+				final long remainingTotal = totalTimeout - elapsed;
+				if (remainingTotal <= 0)
+					break;
+				// if both interval and total timeout are configured, we use whatever times out first
+				pollTimeout = pollTimeout > 0 ? Math.min(pollTimeout, remainingTotal) : remainingTotal;
+			}
+
+			pollTimeout = pollTimeout > 0 ? Math.min(pollTimeout, interruptTimeout) : interruptTimeout;
+			final boolean nonblocking = false;
+			if (!nonblocking) {
+				final int n;
+				lock.unlock();
+				try {
+					n = Unix.poll(pfd, 1, Math.toIntExact(pollTimeout));
 				}
-				else if (timeouts * receiveTimeout >= 1000) {
-					logger.log(TRACE, "read timeout ({0}/s)", timeouts);
-					timeouts = 0;
+				finally {
+					lock.lock();
 				}
+				if (n == -1) {
+					perror("poll failed");
+					if (errno() == Unix.EINTR)
+						continue;
+					break; // e.g., EBADF
+				}
+				else if (n == 0) { // poll timeout
+					if (debug()) {
+						++pollTimeoutCount;
+						// don't flood the log, so apply rate-limited trace logging of poll timeouts
+						final int pollTimeoutLogThrottle = 100; // ms
+						if (pollTimeoutCount * pollTimeout >= pollTimeoutLogThrottle) {
+							logger.log(TRACE, "read poll timeout ({0} timeouts)", pollTimeoutCount);
+							pollTimeoutCount = 0;
+						}
+					}
+					continue;
+				}
+			}
+
+			final int events = pollfd.revents(pfd);
+			final boolean pollin = (events & Unix.POLLIN) != 0;
+			final boolean pollhup = (events & Unix.POLLHUP) != 0;
+			final boolean pollerr = (events & Unix.POLLERR) != 0;
+			final boolean pollnval = (events & Unix.POLLNVAL) != 0;
+			if (events != 0) {
+				logger.log(TRACE, "poll returned events: {0}{1}{2}{3}",
+						pollin ? "POLLIN "  : "",
+						pollhup ? "POLLHUP " : "",
+						pollerr ? "POLLERR " : "",
+						pollnval ? "POLLNVAL" : "");
+			}
+
+			if (pollnval) { // fd not open
+				logger.log(WARNING, "poll failed: fd not open");
 				break;
 			}
-			else { // n > 0
-				final int events = pollfd.revents(pfd);
-				final boolean pollin = (events & Unix.POLLIN) != 0;
-				final boolean pollhup = (events & Unix.POLLHUP) != 0;
-				final boolean pollerr = (events & Unix.POLLERR) != 0;
-				final boolean pollnval = (events & Unix.POLLNVAL) != 0;
-				if (events != 0) {
-					logger.log(TRACE, "poll returned events: {0}{1}{2}{3}",
-							pollin ? "POLLIN "  : "",
-							pollhup ? "POLLHUP " : "",
-							pollerr ? "POLLERR " : "",
-							pollnval ? "POLLNVAL" : "");
-				}
+			else if (pollin || pollhup || pollerr) {
+				// read received bytes from stream into buffer
+				// on hang up or error, try to read remaining data (if any)
 
-				if (pollnval) { // fd not open
-					logger.log(WARNING, "poll failed: fd not open");
+				// get number of bytes that are immediately available for reading:
+				// if 0, this indicates other errors, e.g., disconnected usb adapter
+				final var nread = arena.allocateFrom(ValueLayout.JAVA_LONG, 0);
+				Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.FIONREAD, nread);
+				if (nread.get(ValueLayout.JAVA_LONG, 0) == 0)
+					return -1;
+
+				final long ret = Linux.read(fd.value(), MemorySegment.ofAddress(buffer.address() + offset), remaining);
+				if (ret == -1) {
+					// retry if error is EAGAIN/EWOULDBLOCK or EINTR, otherwise bail out
+					final int errno = errno();
+					if (errno == Unix.EWOULDBLOCK || errno == Unix.EAGAIN || errno == Unix.EINTR)
+						continue;
+					perror("read");
 					break;
 				}
-				else if (pollin || pollhup || pollerr) {
-					// read received bytes from stream into buffer
-					// on hang up or error, try to read remaining data (if any)
-
-					// get number of bytes that are immediately available for reading:
-					// if 0, this indicates other errors, e.g., disconnected usb adapter
-					final var nread = arena.allocateFrom(ValueLayout.JAVA_LONG, 0);
-					Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.FIONREAD, nread);
-					if (nread.get(ValueLayout.JAVA_LONG, 0) == 0)
-						return -1;
-
-					final long ret = Linux.read(fd.value(), MemorySegment.ofAddress(buffer.address() + offset), remaining);
-					if (ret == -1) {
-						perror("read");
-						// retry if error is EAGAIN or Unix.EINTR, otherwise bail out
-						//#ifdef EWOULDBLOCK
-						if (errno() == Unix.EWOULDBLOCK) // alias for EAGAIN
-							;
-						else
-							//#endif // EWOULDBLOCK
-							if (errno() == Unix.EAGAIN || errno() == Unix.EINTR)
-								;
-							else
-								break;
-					}
-					else {
-						offset += ret;
-						remaining -= ret;
-					}
+				else {
+					offset += ret;
+					remaining -= ret;
 				}
 			}
 		}
-		if (debug()) {
-			if (offset > 0) {
-				final long end = System.nanoTime();
-				final long diff = end - start;
-				final byte[] data = buffer.asSlice(0, offset).toArray(ValueLayout.JAVA_BYTE);
-				final String hex = HexFormat.ofDelimiter(" ").formatHex(data);
-				logger.log(TRACE, "read data [{0} us] (length {1}): {2}", diff / 1000, offset, hex);
-			}
+
+		if (debug() && offset > 0) {
+			final long end = System.nanoTime();
+			final long diff = end - start;
+			final byte[] data = buffer.asSlice(0, offset).toArray(ValueLayout.JAVA_BYTE);
+			final String hex = HexFormat.ofDelimiter(" ").formatHex(data);
+			logger.log(TRACE, "read data [{0} us] (length {1}): {2}", diff / 1000, offset, hex);
 		}
 		return offset;
 	}
@@ -1416,101 +1430,13 @@ final class UnixSerialPort extends ReadWritePort {
 	private static final /*uint*/ int MAXDWORD = 0xffff_ffff;
 
 	@Override
-	void timeouts(final Arena arena, final Timeouts timeouts) throws IOException {
-		final int readIntervalTimeout = (int) timeouts.readInterval().toMillis();
-		final int readTotalTimeoutMultiplier = (int) timeouts.readTotalMultiplier().toMillis();
-		final int readTotalTimeoutConstant = (int) timeouts.readTotalConstant().toMillis();
-//		final int writeTotalTimeoutMultiplier = timeouts.writeTotalMultiplier();
-//		final int writeTotalTimeoutConstant = timeouts.writeTotalConstant();
-
-		// VMIN specifies the minimum number of characters to read. If set to 0, then the VTIME
-		// value specifies the time to wait for every character read. If VMIN is non-zero, VTIME
-		// specifies the time to wait for the first character read. If a character is read within
-		// the time given, read will block until all VMIN characters are read. That is, once the first
-		// character is read, the serial interface driver expects to receive an entire packet of
-		// characters (VMIN bytes total). If no character is read within the time allowed, then the
-		// call to read returns 0. VTIME specifies the amount of time to wait for incoming characters
-		// in tenths of seconds. If VTIME is 0, read waits indefinitely unless the NDELAY option is set.
-
-		final var options = termios.allocate(arena);
-		if (Linux.tcgetattr(fd.value(), options) == -1)
-			throw newException(errno());
-
-		int vmin = 0;
-		int vtime = 0;
-		if (readTotalTimeoutMultiplier == 0 && readTotalTimeoutConstant == 0 && readIntervalTimeout == MAXDWORD) {
-			// setting: return immediately from read, even if no characters read
-			vmin = 0;
-			vtime = 0;
-			logger.log(TRACE, "set timeouts: return immediately from read, even if no characters read");
-		}
-		else if (readTotalTimeoutMultiplier == 0 && readTotalTimeoutConstant == 0) {
-			// setting: no total timeouts used for read operations, block for next char
-			vmin = 1;
-			vtime = 0;
-			logger.log(TRACE, "set timeouts: no total timeouts used for read operations, block for next char");
-		}
-		else if (readIntervalTimeout > 0) {
-			// setting: enforce an inter-character timeout after reading the first char
-			vmin = 255;
-			vtime = Math.max(1, readIntervalTimeout / 100);
-			logger.log(TRACE, "set timeouts: enforce an inter-character timeout of {0} ms after reading the first char",
-					vtime * 100);
-		}
-		else if (readTotalTimeoutConstant > 0 && readTotalTimeoutMultiplier == 0 && readIntervalTimeout == 0) {
-			// setting: set a maximum timeout to wait for next character
-			vmin = 0;
-			vtime = Math.max(1, readTotalTimeoutConstant / 100);
-			receiveTimeout = readTotalTimeoutConstant;
-			logger.log(TRACE, "set timeouts: set a maximum timeout of {0} ms to wait for next character", receiveTimeout);
-		}
-		else {
-			// XXX hmm
-			// if we're here we have: multiplier > 0 or totalConstant > 0 or interval = 0
-		}
-
-		termios.c_cc(options).set(ValueLayout.JAVA_BYTE, Unix.VMIN, (byte) vmin);
-		termios.c_cc(options).set(ValueLayout.JAVA_BYTE, Unix.VTIME, (byte) vtime);
-
-		if (Linux.tcsetattr(fd.value(), Unix.TCSANOW, options) == -1) {
-			logger.log(WARNING, "set timeouts, tcsetattr: {0}", errnoMsg());
-			throw newException(errno());
-		}
+	void timeouts(final Arena arena, final Timeouts timeouts) {
+		this.timeouts = timeouts;
 	}
 
 	@Override
-	Timeouts timeouts(final Arena arena) throws IOException {
-		final var options = termios.allocate(arena);
-		if (Linux.tcgetattr(fd.value(), options) == -1) {
-			logger.log(WARNING, "get timeouts, tcgetattr {0}", errnoMsg());
-			throw newException(errno());
-		}
-
-		final byte vmin = termios.c_cc(options).get(ValueLayout.JAVA_BYTE, Unix.VMIN);
-		final byte vtime = termios.c_cc(options).get(ValueLayout.JAVA_BYTE, Unix.VTIME);
-
-		/*uint*/ int readIntervalTimeout = 0;
-		/*uint*/ int readTotalTimeoutMultiplier = 0;
-		/*uint*/ int readTotalTimeoutConstant = 0;
-		/*uint*/ final int writeTotalTimeoutMultiplier = 0;
-		/*uint*/ final int writeTotalTimeoutConstant = 0;
-
-		if (vmin > 0 && vtime == 0) {
-			readIntervalTimeout = readTotalTimeoutMultiplier = readTotalTimeoutConstant = 0;
-		}
-		else if (vmin == 0 && vtime > 0) {
-			readTotalTimeoutConstant = vtime * 100;
-			readIntervalTimeout = readTotalTimeoutMultiplier = 0;
-		}
-		else if (vmin > 0 && vtime > 0) {
-			readIntervalTimeout = vtime * 100;
-		}
-		else if (vmin == 0 && vtime == 0) {
-			readIntervalTimeout = MAXDWORD;
-			readTotalTimeoutConstant = readTotalTimeoutMultiplier = 0;
-		}
-		return new Timeouts(readIntervalTimeout, readTotalTimeoutMultiplier, readTotalTimeoutConstant,
-				writeTotalTimeoutMultiplier, writeTotalTimeoutConstant);
+	Timeouts timeouts(final Arena arena) {
+		return timeouts;
 	}
 
 	@Override
