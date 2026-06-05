@@ -284,7 +284,8 @@ class SerialPortTests {
 	@Test
 	void read() throws IOException {
 		try {
-			final var timeouts = new Timeouts(5, 0, 1000, 0, 0);
+			final var timeouts = new Timeouts(Duration.ofMillis(5), Duration.ofSeconds(1), Duration.ZERO,
+					Duration.ZERO, Duration.ZERO);
 			port.timeouts(timeouts);
 			port.inputStream().read();
 		}
@@ -313,7 +314,7 @@ class SerialPortTests {
 
 	@Test
 	void chain() throws IOException {
-		try (var __ = port
+		try (var _ = port
 				.baudRate(19_200)
 				.dataBits(8)
 				.parity(Parity.Even)

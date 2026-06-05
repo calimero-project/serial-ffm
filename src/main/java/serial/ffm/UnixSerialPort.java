@@ -24,7 +24,6 @@ package serial.ffm;
 
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.ERROR;
-import static java.lang.System.Logger.Level.INFO;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.lang.System.Logger.Level.WARNING;
 import static serial.ffm.Unix.errno;
@@ -129,7 +128,6 @@ final class UnixSerialPort extends ReadWritePort {
 	private volatile int currentEventMask;
 	private volatile int ioctlEventMask;
 
-
 	// only necessary on platforms like macOS which don't support waiting for events
 	private final Duration eventPollInterval = Duration.ofMillis(50);
 	private volatile int polledLineStatus;
@@ -140,14 +138,7 @@ final class UnixSerialPort extends ReadWritePort {
 	private Timeouts timeouts = Timeouts.readInterval(Duration.ZERO);
 
 
-//	private static final List<String> defaultPortPrefixes = List.of("/dev/ttyS", "/dev/ttyACM", "/dev/ttyUSB", "/dev/ttyAMA");
-
 	static Set<String> portIdentifiers() {
-//		final var ports = new HashSet<String>();
-//		defaultPortPrefixes.forEach(
-//				p -> IntStream.range(0, 20).mapToObj(i -> p + i).filter(SerialPort::portExists).forEach(ports::add));
-//		ports.addAll(checkPortsDir("/dev"));
-//		return ports;
 		return checkPortsDir("/dev");
 	}
 
@@ -189,7 +180,6 @@ final class UnixSerialPort extends ReadWritePort {
 			return ports;
 		}
 	}
-
 
 
 	// TODO only for port exists function
@@ -325,7 +315,6 @@ final class UnixSerialPort extends ReadWritePort {
 		}
 	}
 
-	// any open input/output stream accessing this port becomes unusable
 	@Override
 	public void close() {
 		lock.lock();
@@ -570,7 +559,7 @@ final class UnixSerialPort extends ReadWritePort {
 		}
 
 		logger.log(TRACE, "acquire fcntl lock");
-		var lock = flock.allocate(arena);
+		final var lock = flock.allocate(arena);
 		flock.l_type(lock, Unix.F_WRLCK);
 		flock.l_whence(lock, Unix.SEEK_SET);
 		if (Linux.fcntl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.F_SETLK, lock) == -1) {
@@ -1286,7 +1275,7 @@ final class UnixSerialPort extends ReadWritePort {
 		return events;
 	}
 
-	// not defined on macOS X
+	// not defined on macOS
 	private static final int TIOCMIWAIT = 0x545C;
 	private static final int TIOCGICOUNT = 0x545D;
 
@@ -1398,8 +1387,6 @@ final class UnixSerialPort extends ReadWritePort {
 						return EVENT_RXCHAR;
 					}
 				}
-
-//				Thread.sleep(eventPollInterval);
 			}
 		}
 	}
