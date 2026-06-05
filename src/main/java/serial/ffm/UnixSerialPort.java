@@ -294,9 +294,9 @@ final class UnixSerialPort extends ReadWritePort {
 			final var size = arena.allocate(Linux.C_INT, 200);
 			// ??? how to set buffers
 			if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TXSETIHOG, size) == -1)
-				perror("TXSETIHOG");
+				warnErrno("TXSETIHOG");
 			if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TXSETOHOG, size) == -1)
-				perror("TXSETOHOG");
+				warnErrno("TXSETOHOG");
 
 			final String out = "set queue tx %d rx %d".formatted(0, 0);
 			logger.log(TRACE, out);
@@ -555,7 +555,7 @@ final class UnixSerialPort extends ReadWritePort {
 		// we continue if we are not able to set exclusive mode
 		if (Linux.ioctl.makeInvoker().apply(fd.value(), Unix.TIOCEXCL) == -1) {
 			error = errno();
-			perror("set exclusive");
+			warnErrno("set exclusive");
 		}
 
 		logger.log(TRACE, "acquire fcntl lock");
@@ -564,7 +564,7 @@ final class UnixSerialPort extends ReadWritePort {
 		flock.l_whence(lock, Unix.SEEK_SET);
 		if (Linux.fcntl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.F_SETLK, lock) == -1) {
 			error = errno();
-			perror("fcntl lock");
+			warnErrno("fcntl lock");
 			closePort(fd.value());
 			fd = fd_t.Invalid;
 		}
@@ -574,7 +574,7 @@ final class UnixSerialPort extends ReadWritePort {
 			final var saved = termios.allocate(arena);
 			if (Linux.tcgetattr(fd.value(), saved) == -1) {
 				error = errno();
-				perror("save old port settings");
+				warnErrno("save old port settings");
 			}
 
 			setPortDefaults(fd.value);
@@ -1082,7 +1082,7 @@ final class UnixSerialPort extends ReadWritePort {
 					return -2;
 
 				if (n == -1) {
-					perror("poll failed");
+					warnErrno("poll failed");
 					if (errno() == Unix.EINTR)
 						continue;
 					break; // e.g., EBADF
@@ -1135,7 +1135,7 @@ final class UnixSerialPort extends ReadWritePort {
 					final int errno = errno();
 					if (errno == Unix.EWOULDBLOCK || errno == Unix.EAGAIN || errno == Unix.EINTR)
 						continue;
-					perror("read");
+					warnErrno("read");
 					break;
 				}
 				else {
@@ -1469,7 +1469,7 @@ final class UnixSerialPort extends ReadWritePort {
 		throw new IOException(msg + ": " + errnoMsg(errno) + " (" + errno + ")");
 	}
 
-	private void perror(final String msg) {
+	private void warnErrno(final String msg) {
 		final String err = errnoMsg();
 		logger.log(WARNING, "{0}: {1}", msg, err);
 	}
