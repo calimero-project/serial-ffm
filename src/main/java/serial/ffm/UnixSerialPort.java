@@ -662,16 +662,14 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private void tcsetattr(final MemorySegment options) throws IOException {
-		if (Linux.tcsetattr(fd.value(), Unix.TCSANOW, options) == -1) {
-			logger.log(WARNING, "tcsetattr: {0}", errnoMsg());
-			throw newException(errno());
-		}
+		if (Linux.tcsetattr(fd.value(), Unix.TCSANOW, options) == -1)
+			throwIOException("tcsetattr", errno());
 	}
 
 	private MemorySegment tcgetattr(final Arena arena) throws IOException {
 		final var options = termios.allocate(arena);
 		if (Linux.tcgetattr(fd.value(), options) == -1)
-			throw newException(errno());
+			throwIOException("tcgetattr", errno());
 		return options;
 	}
 
@@ -1469,6 +1467,10 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private static IOException newException(final int error) {
 		return new IOException(errnoMsg(error) + " (" + error + ")");
+	}
+
+	private static void throwIOException(final String msg, final int errno) throws IOException {
+		throw new IOException(msg + ": " + errnoMsg(errno) + " (" + errno + ")");
 	}
 
 	private void perror(final String msg) {
