@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2023 B. Malinowsky
+// Copyright (c) 2022, 2026 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -42,8 +42,7 @@ final class PortInputStream extends InputStream {
 
 	@Override
 	public int read(final byte[] bytes) throws IOException {
-		if (bytes == null)
-			throw new NullPointerException();
+		Objects.requireNonNull(bytes);
 		return port.readBytes(bytes, 0, bytes.length);
 	}
 
