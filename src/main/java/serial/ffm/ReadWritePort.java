@@ -37,7 +37,7 @@ import java.util.HexFormat;
 import java.util.concurrent.locks.ReentrantLock;
 
 abstract class ReadWritePort implements SerialPort {
-	private static final boolean debug = false;
+	private static final boolean debug = System.getProperty("serial.ffm.debug") != null;
 	static boolean debug() {
 		return debug;
 	}
