@@ -42,6 +42,8 @@ abstract class ReadWritePort implements SerialPort {
 		return debug;
 	}
 
+	static final int interruptTimeout = 50; // ms
+
 	final Logger logger;
 	final ReentrantLock lock = new ReentrantLock();
 

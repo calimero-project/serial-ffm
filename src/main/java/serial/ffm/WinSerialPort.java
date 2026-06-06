@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2025 B. Malinowsky
+// Copyright (c) 2022, 2026 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -442,14 +442,19 @@ final class WinSerialPort extends ReadWritePort {
 			throw newIoException();
 
 		// wait for operation completion, and check result
-		/*DWORD*/ final int res = Windows.WaitForSingleObject(_OVERLAPPED.hEvent(overlapped), Windows.INFINITE());
-		if (res == Windows.WAIT_OBJECT_0()
-				&& Windows.GetOverlappedResult(h.handle(), overlapped, transferred, Windows.FALSE()) != 0) {
-			// completed successfully
-			return;
+		while (true) {
+			if (Thread.currentThread().isInterrupted())
+				throw new IOException("interrupted");
+
+			final int res = Windows.WaitForSingleObject(_OVERLAPPED.hEvent(overlapped), interruptTimeout);
+			if (res == Windows.WAIT_TIMEOUT())
+				continue;
+			if (res == Windows.WAIT_OBJECT_0()
+					&& Windows.GetOverlappedResult(h.handle(), overlapped, transferred, Windows.FALSE()) != 0)
+				return; // completed successfully
+			// res == WAIT_FAILED: communication or wait error
+			throw newIoException();
 		}
-		// communication or wait error
-		throw newIoException();
 	}
 
 	private static int write(final Arena arena, final HANDLE h, final MemorySegment bytes) throws IOException {

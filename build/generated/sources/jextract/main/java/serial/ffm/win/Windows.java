@@ -1998,6 +1998,15 @@ public class Windows extends Windows$shared {
     public static int ERROR_PATH_NOT_FOUND() {
         return ERROR_PATH_NOT_FOUND;
     }
+    private static final int WAIT_TIMEOUT = (int)258L;
+    /**
+     * {@snippet lang=c :
+     * #define WAIT_TIMEOUT 258
+     * }
+     */
+    public static int WAIT_TIMEOUT() {
+        return WAIT_TIMEOUT;
+    }
     private static final int ERROR_NO_MORE_ITEMS = (int)259L;
     /**
      * {@snippet lang=c :

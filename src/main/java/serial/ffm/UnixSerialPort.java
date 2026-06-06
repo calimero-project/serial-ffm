@@ -134,7 +134,6 @@ final class UnixSerialPort extends ReadWritePort {
 	private volatile int polledErrorStatus;
 	private volatile int polledAvailableStatus;
 
-	private static final int interruptTimeout = 50; // ms
 	private Timeouts timeouts = Timeouts.readInterval(Duration.ZERO);
 
 
