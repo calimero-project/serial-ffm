@@ -446,7 +446,7 @@ final class WinSerialPort extends ReadWritePort {
 			if (Thread.currentThread().isInterrupted())
 				throw new IOException("interrupted");
 
-			final int res = Windows.WaitForSingleObject(_OVERLAPPED.hEvent(overlapped), interruptTimeout);
+			final int res = Windows.WaitForSingleObject(_OVERLAPPED.hEvent(overlapped), wakeupInterval);
 			if (res == Windows.WAIT_TIMEOUT())
 				continue;
 			if (res == Windows.WAIT_OBJECT_0()

@@ -22,7 +22,9 @@
 
 package serial.ffm;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.TRACE;
+import static java.lang.System.Logger.Level.WARNING;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,7 +44,27 @@ abstract class ReadWritePort implements SerialPort {
 		return debug;
 	}
 
-	static final int interruptTimeout = 50; // ms
+	// special cases for wakeup interval:
+	// 0: WaitForSingleObject (Windows) and poll (Unix) always return immediately
+	// 4294967295, i.e., -1: infinite timeout; WaitForSingleObject and poll return only when the object/fd is signaled/ready
+	static final int wakeupInterval = wakeupInterval();
+	static final int defaultWakeupInterval = 20; // ms
+	static final String wakeupIntervalKey = "serial.ffm.wakeupInterval";
+	static int wakeupInterval() {
+		final String val = System.getProperty(wakeupIntervalKey);
+		if (val != null && !val.isEmpty()) {
+			try {
+				final int i = Integer.parseUnsignedInt(val);
+				System.getLogger("serial.ffm").log(DEBUG, "set wakeup interval to {0} ms", i);
+				return i;
+			}
+			catch (final NumberFormatException e) {
+				System.getLogger("serial.ffm").log(WARNING, "error reading property ''{0}'' (default to {1} ms): {2}",
+						wakeupIntervalKey, defaultWakeupInterval, e.getMessage());
+			}
+		}
+		return defaultWakeupInterval;
+	}
 
 	final Logger logger;
 	final ReentrantLock lock = new ReentrantLock();

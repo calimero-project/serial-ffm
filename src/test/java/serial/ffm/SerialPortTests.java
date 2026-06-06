@@ -43,6 +43,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.util.RestoreSystemProperties;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -323,5 +324,23 @@ class SerialPortTests {
 			/*final var in =*/ port.inputStream();
 			/*final var out =*/ port.outputStream();
 		}
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "0", "10", "2147483647", "2147483648", "4294967295" })
+	@RestoreSystemProperties
+	void validWakeupInterval(final String value) {
+		System.setProperty(ReadWritePort.wakeupIntervalKey, value);
+		int timeout = ReadWritePort.wakeupInterval();
+		assertEquals(value, Long.toUnsignedString(timeout & 0xffffffffL));
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "-1", "0xff", "x", "4294967296" })
+	@RestoreSystemProperties
+	void invalidWakeupInterval(final String value) {
+		System.setProperty(ReadWritePort.wakeupIntervalKey, value);
+		int timeout = ReadWritePort.wakeupInterval();
+		assertEquals(ReadWritePort.defaultWakeupInterval, timeout);
 	}
 }

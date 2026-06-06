@@ -1065,7 +1065,7 @@ final class UnixSerialPort extends ReadWritePort {
 				pollTimeout = pollTimeout > 0 ? Math.min(pollTimeout, remainingTotal) : remainingTotal;
 			}
 
-			pollTimeout = pollTimeout > 0 ? Math.min(pollTimeout, interruptTimeout) : interruptTimeout;
+			pollTimeout = pollTimeout > 0 ? Math.min(pollTimeout, wakeupInterval) : wakeupInterval;
 			final boolean nonblocking = false;
 			if (!nonblocking) {
 				final int n;
