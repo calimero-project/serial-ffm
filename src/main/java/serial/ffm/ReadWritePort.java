@@ -279,6 +279,8 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 
 	abstract int status(Arena arena, Status type) throws IOException;
 
+	final String portName() { return portId; }
+
 	void open(final String portId) throws IOException {
 		logger.log(TRACE, "open {0}", portId);
 		lock.lock();

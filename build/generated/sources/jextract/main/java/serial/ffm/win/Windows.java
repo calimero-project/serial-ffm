@@ -1998,6 +1998,15 @@ public class Windows extends Windows$shared {
     public static int ERROR_PATH_NOT_FOUND() {
         return ERROR_PATH_NOT_FOUND;
     }
+    private static final int ERROR_INVALID_HANDLE = (int)6L;
+    /**
+     * {@snippet lang=c :
+     * #define ERROR_INVALID_HANDLE 6
+     * }
+     */
+    public static int ERROR_INVALID_HANDLE() {
+        return ERROR_INVALID_HANDLE;
+    }
     private static final int WAIT_TIMEOUT = (int)258L;
     /**
      * {@snippet lang=c :

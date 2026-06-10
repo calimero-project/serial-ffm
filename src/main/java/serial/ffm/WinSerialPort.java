@@ -433,8 +433,8 @@ final class WinSerialPort extends ReadWritePort {
 	}
 
 	//call *immediately* after read/write
-	private static void waitPendingIO(final HANDLE h, /*OVERLAPPED* */ final MemorySegment overlapped,
-			final MemorySegment transferred) throws IOException {
+	private void waitPendingIO(/*OVERLAPPED* */ final MemorySegment overlapped, final MemorySegment transferred)
+			throws IOException {
 //		logger.log(TRACE, "wait pending I/O");
 		// the only error status tolerated is I/O pending
 		if (Windows.GetLastError() != Windows.NO_ERROR() && Windows.GetLastError() != Windows.ERROR_IO_PENDING())
@@ -457,7 +457,7 @@ final class WinSerialPort extends ReadWritePort {
 		}
 	}
 
-	private static int write(final Arena arena, final HANDLE h, final MemorySegment bytes) throws IOException {
+	private int write(final Arena arena, final MemorySegment bytes) throws IOException {
 		final var event = Windows.CreateEventA(Windows.NULL(), Windows.TRUE(), Windows.FALSE(), Windows.NULL());
 		if (event.equals(Windows.NULL()))
 			throw newIoException();
@@ -468,7 +468,7 @@ final class WinSerialPort extends ReadWritePort {
 			_OVERLAPPED.hEvent(o, event);
 
 			if (Windows.WriteFile(h.handle(), bytes, (int) bytes.byteSize(), written, o) == 0)
-				waitPendingIO(h, o, written);
+				waitPendingIO(o, written);
 		}
 		finally {
 			Windows.CloseHandle(event);
@@ -480,10 +480,10 @@ final class WinSerialPort extends ReadWritePort {
 
 	@Override
 	int writeBytes(final Arena arena, final MemorySegment bytes) throws IOException {
-		return write(arena, h, bytes);
+		return write(arena, bytes);
 	}
 
-	private static int read(final Arena arena, final HANDLE h, final MemorySegment bytes) throws IOException {
+	private int read(final Arena arena, final MemorySegment bytes) throws IOException {
 		final var event = Windows.CreateEventA(Windows.NULL(), Windows.TRUE(), Windows.FALSE(), Windows.NULL());
 		if (event.equals(Windows.NULL()))
 			throw newIoException();
@@ -494,7 +494,7 @@ final class WinSerialPort extends ReadWritePort {
 		final /*DWORD*/ var read = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
 		try {
 			if (Windows.ReadFile(h.handle(), bytes, (int) bytes.byteSize(), read, o) == 0)
-				waitPendingIO(h, o, read);
+				waitPendingIO(o, read);
 		}
 		finally {
 			Windows.CloseHandle(event);
@@ -506,7 +506,7 @@ final class WinSerialPort extends ReadWritePort {
 
 	@Override
 	int readBytes(final Arena arena, final MemorySegment bytes) throws IOException {
-		return read(arena, h, bytes);
+		return read(arena, bytes);
 	}
 
 	@Override
@@ -545,7 +545,7 @@ final class WinSerialPort extends ReadWritePort {
 				eventMask = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
 				if (Windows.WaitCommEvent(h.handle(), eventMask, o) == 0) {
 					final /*DWORD*/ var unused = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
-					waitPendingIO(h, o, unused);
+					waitPendingIO(o, unused);
 				}
 			}
 			finally {
@@ -665,16 +665,19 @@ final class WinSerialPort extends ReadWritePort {
 		}
 	}
 
-	private static IOException newIoException() throws IOException {
+	private IOException newIoException() throws IOException {
 		return newIoException(null, QUERY_GETLASTERROR);
 	}
 
-	private static IOException newIoException(final String s) {
+	private IOException newIoException(final String s) {
 		return newIoException(s, QUERY_GETLASTERROR);
 	}
 
-	private static IOException newIoException(final String s, /*DWORD*/ final int error) {
-		final String errmsg = formatWinError(error);
+	private IOException newIoException(final String s, /*DWORD*/ final int error) {
+		final int err = error == QUERY_GETLASTERROR ? Windows.GetLastError() : error;
+		if (err == Windows.ERROR_INVALID_HANDLE())
+			return s != null ? new PortClosedException(portName(), s) : new PortClosedException(portName());
+		final String errmsg = formatWinError(err);
 		return new IOException(s != null ? s + ": " + errmsg : errmsg);
 	}
 }

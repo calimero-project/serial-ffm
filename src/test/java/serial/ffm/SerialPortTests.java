@@ -113,6 +113,32 @@ class SerialPortTests {
 	}
 
 	@Test
+	void useAfterClose() throws IOException, InterruptedException {
+		port.close();
+		port.close(); // idempotent, shouldn't throw
+		assertThrows(PortClosedException.class, () -> port.baudRate());
+		assertThrows(PortClosedException.class, () -> port.baudRate(19_200));
+		assertThrows(PortClosedException.class, () -> port.dataBits());
+		assertThrows(PortClosedException.class, () -> port.dataBits(8));
+		assertThrows(PortClosedException.class, () -> port.flowControl());
+		assertThrows(PortClosedException.class, () -> port.flowControl(FlowControl.None));
+		assertThrows(PortClosedException.class, () -> port.parity());
+		assertThrows(PortClosedException.class, () -> port.parity(Parity.None));
+		assertThrows(PortClosedException.class, () -> port.status(Status.AvailableInput));
+		assertThrows(PortClosedException.class, () -> port.status(Status.Error));
+		assertThrows(PortClosedException.class, () -> port.status(Status.Line));
+		assertThrows(PortClosedException.class, () -> port.stopBits());
+		assertThrows(PortClosedException.class, () -> port.stopBits(StopBits.One));
+		assertThrows(PortClosedException.class, () -> port.waitEvent());
+		assertThrows(PortClosedException.class, () -> port.inputStream().available());
+		assertThrows(PortClosedException.class, () -> port.inputStream().read());
+		assertThrows(PortClosedException.class, () -> port.inputStream().read(new byte[4]));
+		assertThrows(PortClosedException.class, () -> port.outputStream().flush());
+		assertThrows(PortClosedException.class, () -> port.outputStream().write(1));
+		assertThrows(PortClosedException.class, () -> port.outputStream().write(new byte[4]));
+	}
+
+	@Test
 	void openPortWithInvalidName() {
 		try {
 			assertThrows(IOException.class, () -> SerialPort.open("\\dev/ttys0"));

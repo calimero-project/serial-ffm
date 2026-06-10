@@ -1166,7 +1166,7 @@ final class UnixSerialPort extends ReadWritePort {
 			throwIOException(errno());
 	}
 
-	private static /*uint*/ long isInputWaiting(final Arena arena, final fd_t fd) throws IOException {
+	private /*uint*/ long isInputWaiting(final Arena arena) throws IOException {
 		Linux.fcntl.makeInvoker(Linux.C_INT).apply(fd.value(), Unix.F_SETFL, Unix.O_NONBLOCK);
 		/*uint*/ final var bytes = arena.allocate(ValueLayout.JAVA_INT);
 		if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.FIONREAD, bytes) == -1) {
@@ -1339,6 +1339,9 @@ final class UnixSerialPort extends ReadWritePort {
 					ret = Unix.poll(pfd, 1, (int) eventPollInterval.toMillis());
 				} while (ret == -1 && errno() == Unix.EINTR);
 
+				if (isClosed())
+					throwIOException(Unix.EBADF);
+
 				if ((currentEventMask & (EVENT_CTS | EVENT_DSR | EVENT_RING | EVENT_RLSD)) != 0) {
 					final int lineStatus = status(arena, Status.Line);
 					if ((polledLineStatus != lineStatus)) {
@@ -1408,13 +1411,18 @@ final class UnixSerialPort extends ReadWritePort {
 					v |= LINE_DCD;
 				yield v;
 			}
-			case AvailableInput -> isInputWaiting(arena, fd);
-			case Error -> 0; // XXX implement error status
-			// 0x0010 : detected a break condition
-			// 0x0008 : detected a framing error
-			// 0x0002 : character-buffer overrun
-			// 0x0001 : input buffer overflow (no room in the input buffer, or character received after EOF)
-			// 0x0004 : detected a parity error
+			case AvailableInput -> isInputWaiting(arena);
+			case Error -> {
+				if (isClosed())
+					throwIOException(Unix.EBADF);
+				// XXX implement error status
+				yield 0;
+				// 0x0010 : detected a break condition
+				// 0x0008 : detected a framing error
+				// 0x0002 : character-buffer overrun
+				// 0x0001 : input buffer overflow (no room in the input buffer, or character received after EOF)
+				// 0x0004 : detected a parity error
+			}
 		};
 	}
 
@@ -1452,11 +1460,15 @@ final class UnixSerialPort extends ReadWritePort {
 			logger.log(TRACE, "EVENT_RTS");
 	}
 
-	private static void throwIOException(final int errno) throws IOException {
+	private void throwIOException(final int errno) throws IOException {
+		if (errno == Unix.EBADF)
+			throw new PortClosedException(portName());
 		throw new IOException(errnoMsg(errno) + " (" + errno + ")");
 	}
 
-	private static void throwIOException(final String msg, final int errno) throws IOException {
+	private void throwIOException(final String msg, final int errno) throws IOException {
+		if (errno == Unix.EBADF)
+			throw new PortClosedException(portName(), msg);
 		throw new IOException(msg + ": " + errnoMsg(errno) + " (" + errno + ")");
 	}
 
