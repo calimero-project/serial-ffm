@@ -33,6 +33,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.charset.StandardCharsets;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -529,6 +530,29 @@ final class WinSerialPort extends ReadWritePort {
 	}
 
 	@Override
+	public void events(final EnumSet<SerialEvent> events, final boolean enable) throws IOException {
+		if (isClosed())
+			throwIoException(Windows.ERROR_INVALID_HANDLE());
+		logger.log(TRACE, "{0} events: {1}", enable ? "enable" : "disable", events);
+		int mask = 0;
+		for (final var event : events) {
+			mask |= switch (event) {
+				case DataAvailable -> Windows.EV_RXCHAR();
+				case OutputEmpty -> Windows.EV_TXEMPTY();
+
+				case ClearToSend -> Windows.EV_CTS();
+				case DataSetReady -> Windows.EV_DSR();
+				case CarrierDetect -> Windows.EV_RLSD();
+
+				case Break -> Windows.EV_BREAK();
+				case Error -> Windows.EV_ERR();
+				case Ring -> Windows.EV_RING();
+			};
+		}
+		setEvents(mask, enable);
+	}
+
+	@Override
 	public int waitEvent() throws IOException {
 		logger.log(TRACE, "wait comm event");
 		try (var arena = Arena.ofConfined()) {
@@ -669,6 +693,13 @@ final class WinSerialPort extends ReadWritePort {
 
 	private IOException newIoException(final String s) {
 		return newIoException(s, QUERY_GETLASTERROR);
+	}
+
+	private void throwIoException(final int error) throws IOException {
+		final int err = error;
+		if (err == Windows.ERROR_INVALID_HANDLE())
+			throw new PortClosedException(portName());
+		throw new IOException(formatWinError(err));
 	}
 
 	private IOException newIoException(final String s, /*DWORD*/ final int error) {

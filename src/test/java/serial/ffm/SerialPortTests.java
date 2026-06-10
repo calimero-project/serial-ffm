@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.EnumSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -129,6 +130,7 @@ class SerialPortTests {
 		assertThrows(PortClosedException.class, () -> port.status(Status.Line));
 		assertThrows(PortClosedException.class, () -> port.stopBits());
 		assertThrows(PortClosedException.class, () -> port.stopBits(StopBits.One));
+		assertThrows(PortClosedException.class, () -> port.events(EnumSet.of(SerialPort.SerialEvent.Break), true));
 		assertThrows(PortClosedException.class, () -> port.waitEvent());
 		assertThrows(PortClosedException.class, () -> port.inputStream().available());
 		assertThrows(PortClosedException.class, () -> port.inputStream().read());

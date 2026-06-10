@@ -38,6 +38,8 @@ import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -124,7 +126,7 @@ final class UnixSerialPort extends ReadWritePort {
 	private volatile fd_t fd = fd_t.Invalid;
 	private String lockedPort = "";
 
-	private volatile int currentEventMask;
+	private final Set<SerialEvent> enabledEvents = Collections.synchronizedSet(EnumSet.noneOf(SerialEvent.class));
 	private volatile int ioctlEventMask;
 
 	// only necessary on platforms like macOS which don't support waiting for events
@@ -1213,15 +1215,41 @@ final class UnixSerialPort extends ReadWritePort {
 			events |= Unix.TIOCM_RNG;
 
 		if (enable) {
-			currentEventMask |= eventMask;
 			ioctlEventMask |= events;
 		}
 		else {
-			currentEventMask &= ~eventMask;
 			ioctlEventMask &= ~events;
 		}
+	}
 
-		logger.log(TRACE, "set events {0}", Integer.toUnsignedString(currentEventMask, 16));
+	@Override
+	public void events(final EnumSet<SerialEvent> events, final boolean enable) throws IOException {
+		if (isClosed())
+			throwIOException(Unix.EBADF);
+		logger.log(TRACE, "{0} events: {1}", enable ? "enable" : "disable", events);
+		int mask = 0;
+		for (final var event : events) {
+			mask |= switch (event) {
+				case DataAvailable -> 0;
+				case OutputEmpty -> 0; // TODO use ioctl(TIOCOUTQ)
+
+				case ClearToSend -> Unix.TIOCM_CTS;
+				case DataSetReady -> Unix.TIOCM_DSR;
+				case CarrierDetect -> Unix.TIOCM_CAR;
+
+				case Break -> 0; // BRKINT, IGNBRK, PARMRK
+				case Error -> 0; // TODO  line-status error
+				case Ring -> Unix.TIOCM_RNG;
+			};
+		}
+		if (enable) {
+			ioctlEventMask |= mask;
+			enabledEvents.addAll(events);
+		}
+		else {
+			ioctlEventMask &= ~mask;
+			enabledEvents.removeAll(events);
+		}
 	}
 
 	private int cts, dsr, rng, dcd;
@@ -1342,7 +1370,14 @@ final class UnixSerialPort extends ReadWritePort {
 				if (isClosed())
 					throwIOException(Unix.EBADF);
 
-				if ((currentEventMask & (EVENT_CTS | EVENT_DSR | EVENT_RING | EVENT_RLSD)) != 0) {
+				if (ret > 0 && enabledEvents.contains(SerialEvent.DataAvailable)) {
+					final int retEvents = pollfd.revents(pfd);
+					if (isSet(Unix.POLLIN, retEvents))
+						return EVENT_RXCHAR;
+				}
+
+				if (!Collections.disjoint(enabledEvents, EnumSet.of(SerialEvent.ClearToSend,
+						SerialEvent.DataSetReady, SerialEvent.CarrierDetect, SerialEvent.Ring))) {
 					final int lineStatus = status(arena, Status.Line);
 					if ((polledLineStatus != lineStatus)) {
 						int events = 0;
@@ -1364,7 +1399,7 @@ final class UnixSerialPort extends ReadWritePort {
 					}
 				}
 
-				if ((currentEventMask & EVENT_ERR) != 0) {
+				if (enabledEvents.contains(SerialEvent.Error)) {
 					final int errorStatus = status(arena, Status.Error);
 					if (polledErrorStatus != errorStatus) {
 						final int events = 0;
@@ -1374,7 +1409,7 @@ final class UnixSerialPort extends ReadWritePort {
 					}
 				}
 
-				if ((currentEventMask & EVENT_RXCHAR) != 0) {
+				if (enabledEvents.contains(SerialEvent.DataAvailable)) {
 					final int availStatus = status(arena, Status.AvailableInput);
 					if (polledAvailableStatus != availStatus) {
 						polledAvailableStatus = availStatus;

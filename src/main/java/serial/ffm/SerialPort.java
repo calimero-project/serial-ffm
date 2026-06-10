@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Duration;
+import java.util.EnumSet;
 import java.util.Set;
 
 public interface SerialPort extends AutoCloseable {
@@ -49,6 +50,10 @@ public interface SerialPort extends AutoCloseable {
 
 	enum Status {
 		Error, AvailableInput, Line
+	}
+
+	enum SerialEvent {
+		DataAvailable, OutputEmpty, ClearToSend, DataSetReady, CarrierDetect, Ring, Error, Break
 	}
 
 	record Timeouts(Duration readInterval, Duration readTotalConstant, Duration readTotalMultiplier,
@@ -129,6 +134,9 @@ public interface SerialPort extends AutoCloseable {
 
 	OutputStream outputStream();
 
+	void events(EnumSet<SerialEvent> events, boolean enable) throws IOException;
+
+	@Deprecated(forRemoval = true)
 	void setEvents(int eventMask, boolean enable) throws IOException;
 
 	int waitEvent() throws IOException;
