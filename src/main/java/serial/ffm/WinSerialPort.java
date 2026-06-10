@@ -462,20 +462,19 @@ final class WinSerialPort extends ReadWritePort {
 		if (event.equals(Windows.NULL()))
 			throw newIoException();
 
-		final var written = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
 		try {
 			final var o = _OVERLAPPED.allocate(arena);
 			_OVERLAPPED.hEvent(o, event);
 
-			if (Windows.WriteFile(h.handle(), bytes, (int) bytes.byteSize(), written, o) == 0)
-				waitPendingIO(o, written);
+			if (Windows.WriteFile(h.handle(), bytes, (int) bytes.byteSize(), Windows.NULL(), o) != 0)
+				return (int) bytes.byteSize();
+			final var written = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
+			waitPendingIO(o, written);
+			return written.get(ValueLayout.JAVA_INT, 0);
 		}
 		finally {
 			Windows.CloseHandle(event);
 		}
-		return (int) bytes.byteSize();
-		// in overlapped mode, the param for number of bytes written is useless
-		// return written.get(ValueLayout.JAVA_INT, 0);
 	}
 
 	@Override
@@ -491,17 +490,16 @@ final class WinSerialPort extends ReadWritePort {
 		final var o = _OVERLAPPED.allocate(arena);
 		_OVERLAPPED.hEvent(o, event);
 
-		final /*DWORD*/ var read = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
 		try {
-			if (Windows.ReadFile(h.handle(), bytes, (int) bytes.byteSize(), read, o) == 0)
-				waitPendingIO(o, read);
+			if (Windows.ReadFile(h.handle(), bytes, (int) bytes.byteSize(), Windows.NULL(), o) != 0)
+				return (int) bytes.byteSize();
+			final var read = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
+			waitPendingIO(o, read);
+			return read.get(ValueLayout.JAVA_INT, 0);
 		}
 		finally {
 			Windows.CloseHandle(event);
 		}
-		return (int) bytes.byteSize();
-		// in overlapped mode, the param for number of bytes read is useless
-		// return read.get(ValueLayout.JAVA_INT, 0);
 	}
 
 	@Override
