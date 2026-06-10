@@ -1080,9 +1080,9 @@ final class UnixSerialPort extends ReadWritePort {
 					return -2;
 
 				if (n == -1) {
-					warnErrno("poll failed");
 					if (errno() == Unix.EINTR)
 						continue;
+					warnErrno("poll failed");
 					break; // e.g., EBADF
 				}
 				else if (n == 0) { // poll timeout
