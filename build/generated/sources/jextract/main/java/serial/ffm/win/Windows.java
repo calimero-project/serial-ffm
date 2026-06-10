@@ -663,64 +663,6 @@ public class Windows extends Windows$shared {
         }
     }
 
-    private static class GetLastError {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_LONG    );
-
-        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetLastError");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * DWORD GetLastError(void)
-     * }
-     */
-    public static FunctionDescriptor GetLastError$descriptor() {
-        return GetLastError.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * DWORD GetLastError(void)
-     * }
-     */
-    public static MethodHandle GetLastError$handle() {
-        return GetLastError.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * DWORD GetLastError(void)
-     * }
-     */
-    public static MemorySegment GetLastError$address() {
-        return GetLastError.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * DWORD GetLastError(void)
-     * }
-     */
-    public static int GetLastError() {
-        var mh$ = GetLastError.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("GetLastError");
-            }
-            return (int)mh$.invokeExact();
-        } catch (Error | RuntimeException ex) {
-           throw ex;
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
     private static class GetOverlappedResult {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             Windows.C_INT,

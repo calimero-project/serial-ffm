@@ -137,7 +137,7 @@ tasks.jextract {
 
             // adjust filters for Windows
             funcFilter = listOf("RegOpenKeyExA", "RegEnumValueA", "RegCloseKey",
-                "GetFileType", "CloseHandle", "CreateFileA", "ReadFile", "WriteFile", "FlushFileBuffers", "GetLastError",
+                "GetFileType", "CloseHandle", "CreateFileA", "ReadFile", "WriteFile", "FlushFileBuffers",
                 "SetupComm", "GetCommProperties", "EscapeCommFunction", "GetCommState", "SetCommState", "ClearCommError",
                 "GetCommMask", "GetCommModemStatus", "SetCommMask", "WaitCommEvent", "GetCommTimeouts", "SetCommTimeouts",
                 "FormatMessageA", "GetOverlappedResult", "CreateEventA", "WaitForSingleObject")

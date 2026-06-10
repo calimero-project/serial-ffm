@@ -37,7 +37,6 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import serial.ffm.win.HKEY__;
 import serial.ffm.win.Windows;
@@ -152,31 +151,32 @@ final class WinSerialPort extends ReadWritePort {
 
 	@Override
 	void open(final Arena arena, final String portId) throws IOException {
+		final var lastError = arena.allocate(Win.captureStateLayout);
 		final String name = portId.toUpperCase().startsWith("COM") ? "\\\\.\\" + portId : portId;
-		final HANDLE h = open(name, true, null);
+		final HANDLE h = open(arena, name, true, lastError);
 		if (h.invalid())
-			throw newIoException(name);
+			throwIoException(name, lastError);
 
 		this.h = h;
 		try {
-			final int fileType = Windows.GetFileType(h.handle());
+			final int fileType = Win.GetFileType(lastError, h.handle());
 			if (fileType != Windows.FILE_TYPE_CHAR() && fileType != Windows.FILE_TYPE_UNKNOWN())
-				throw newIoException(name);
+				throwIoException(name, lastError);
 
 			final var cp = _COMMPROP.allocate(arena);
-			if (Windows.GetCommProperties(h.handle(), cp) == 0)
-				throw newIoException(name);
+			if (Win.GetCommProperties(lastError, h.handle(), cp) == 0)
+				throwIoException(name, lastError);
 			if (debug()) {
 				// set rx and tx queues (rx will usually keep some default buffer, 4K or similar...)
-				Windows.SetupComm(h.handle(), 200, 200);
-				if (Windows.GetCommProperties(h.handle(), cp) == 0)
-					throw newIoException(name);
+				Win.SetupComm(lastError, h.handle(), 200, 200);
+				if (Win.GetCommProperties(lastError, h.handle(), cp) == 0)
+					throwIoException(name, lastError);
 				final int tx = _COMMPROP.dwCurrentTxQueue(cp);
 				final int rx = _COMMPROP.dwCurrentRxQueue(cp);
 				logger.log(TRACE, "set queue tx {0} rx {1}", tx, rx);
 			}
-			if (Windows.EscapeCommFunction(h.handle(), Windows.SETDTR()) == 0)
-				throw newIoException();
+			if (Win.EscapeCommFunction(lastError, h.handle(), Windows.SETDTR()) == 0)
+				throwIoException(lastError);
 
 			maxBaudRate = _COMMPROP.dwMaxBaud(cp);
 			logger.log(TRACE, "max baud rate = " + maxBaudRate);
@@ -191,11 +191,12 @@ final class WinSerialPort extends ReadWritePort {
 		if (maxBaudRate > 0 && baudrate > maxBaudRate)
 			throw new IOException("baud rate %d > max. allowed baud rate %d".formatted(baudrate, maxBaudRate));
 
+		final var lastError = arena.allocate(Win.captureStateLayout);
 		final var dcb = commState(arena);
 		_DCB.BaudRate(dcb, baudrate);
 		setDcbBits(dcb, "fAbortOnError", Windows.FALSE());
-		if (Windows.SetCommState(h.handle(), dcb) == 0)
-			throw newIoException();
+		if (Win.SetCommState(lastError, h.handle(), dcb) == 0)
+			throwIoException(lastError);
 	}
 
 	@Override
@@ -221,8 +222,9 @@ final class WinSerialPort extends ReadWritePort {
 			_DCB.ErrorChar(dcb, (byte) parityReplace);
 		}
 
-		if (Windows.SetCommState(h.handle(), dcb) == 0)
-			throw newIoException();
+		final var lastError = arena.allocate(Win.captureStateLayout);
+		if (Win.SetCommState(lastError, h.handle(), dcb) == 0)
+			throwIoException(lastError);
 	}
 
 	@Override
@@ -236,8 +238,9 @@ final class WinSerialPort extends ReadWritePort {
 		final var dcb = commState(arena);
 		_DCB.ByteSize(dcb, (byte) databits);
 		setDcbBits(dcb, "fAbortOnError", Windows.FALSE());
-		if (Windows.SetCommState(h.handle(), dcb) == 0)
-			throw newIoException();
+		final var lastError = arena.allocate(Win.captureStateLayout);
+		if (Win.SetCommState(lastError, h.handle(), dcb) == 0)
+			throwIoException(lastError);
 	}
 
 	@Override
@@ -251,8 +254,9 @@ final class WinSerialPort extends ReadWritePort {
 		final var dcb = commState(arena);
 		_DCB.StopBits(dcb, (byte) platformStopBits(stopbits));
 		setDcbBits(dcb, "fAbortOnError", Windows.FALSE());
-		if (Windows.SetCommState(h.handle(), dcb) == 0)
-			throw newIoException();
+		final var lastError = arena.allocate(Win.captureStateLayout);
+		if (Win.SetCommState(lastError, h.handle(), dcb) == 0)
+			throwIoException(lastError);
 	}
 
 	@Override
@@ -263,6 +267,7 @@ final class WinSerialPort extends ReadWritePort {
 
 	@Override
 	void flowControl(final Arena arena, final FlowControl flowControl) throws IOException {
+		final var lastError = arena.allocate(Win.captureStateLayout);
 		final var dcb = commState(arena);
 		setDcbBits(dcb, "fOutxDsrFlow", Windows.FALSE());
 		setDcbBits(dcb, "fDtrControl", Windows.DTR_CONTROL_DISABLE());
@@ -284,8 +289,8 @@ final class WinSerialPort extends ReadWritePort {
 		}
 
 		setDcbBits(dcb, "fAbortOnError", Windows.FALSE());
-		if (Windows.SetCommState(h.handle(), dcb) == 0)
-			throw newIoException();
+		if (Win.SetCommState(lastError, h.handle(), dcb) == 0)
+			throwIoException(lastError);
 	}
 
 	@Override
@@ -296,10 +301,11 @@ final class WinSerialPort extends ReadWritePort {
 	}
 
 	private MemorySegment commState(final Arena arena) throws IOException {
+		final var lastError = arena.allocate(Win.captureStateLayout);
 		final var dcb = _DCB.allocate(arena);
 		_DCB.DCBlength(dcb, (int) _DCB.sizeof());
-		if (Windows.GetCommState(h.handle(), dcb) == 0)
-			throw newIoException();
+		if (Win.GetCommState(lastError, h.handle(), dcb) == 0)
+			throwIoException(lastError);
 		return dcb;
 	}
 
@@ -310,9 +316,12 @@ final class WinSerialPort extends ReadWritePort {
 			logger.log(TRACE, "close handle {0}", h);
 			final var handle = h.handle();
 			h = HANDLE.Invalid;
-			final boolean closed = Windows.CloseHandle(handle) == Windows.TRUE();
-			if (!closed)
-				logger.log(ERROR, "closing serial port: {0}", formatWinError(QUERY_GETLASTERROR));
+			try (var arena = Arena.ofConfined()) {
+				final var lastError = arena.allocate(Win.captureStateLayout);
+				final boolean closed = Win.CloseHandle(lastError, handle) == Windows.TRUE();
+				if (!closed)
+					logger.log(ERROR, "closing serial port: {0}", formatWinError(Win.getLastError(lastError)));
+			}
 		}
 	}
 
@@ -321,33 +330,30 @@ final class WinSerialPort extends ReadWritePort {
 		return h.invalid();
 	}
 
-	private HANDLE open(final String portId, final boolean overlapped, /*DWORD*/ final AtomicInteger lastError) {
+	private HANDLE open(final Arena arena, final String portId, final boolean overlapped, final MemorySegment lastError) {
 		logger.log(TRACE, "open {0}", portId);
-		try (var arena = Arena.ofConfined()) {
-			// clearing last error not necessary, but jvm/debugger sometimes have set some error code
-//			Windows.SetLastError(0);
-			final var h = Windows.CreateFileA(arena.allocateFrom(portId),
-					Windows.GENERIC_READ() | Windows.GENERIC_WRITE(), 0, Windows.NULL(), Windows.OPEN_EXISTING(),
-					Windows.FILE_ATTRIBUTE_NORMAL() | (overlapped ? Windows.FILE_FLAG_OVERLAPPED() : 0),
-					Windows.NULL());
-			if (lastError != null)
-				lastError.set(Windows.GetLastError());
-			return HANDLE.of(h);
-		}
+		final var h = Win.CreateFileA(lastError, arena.allocateFrom(portId),
+				Windows.GENERIC_READ() | Windows.GENERIC_WRITE(), 0, Windows.NULL(), Windows.OPEN_EXISTING(),
+				Windows.FILE_ATTRIBUTE_NORMAL() | (overlapped ? Windows.FILE_FLAG_OVERLAPPED() : 0),
+				Windows.NULL());
+		return HANDLE.of(h);
 	}
 
 	boolean portExists(final String portId) {
-		/*DWORD*/ final var error = new AtomicInteger();
-		final HANDLE h = open(portId, false, error);
-		// if handle is valid, port exists, otherwise it depends on last error: on existing, but
-		// used port, we would get ERROR_ACCESS_DENIED or ERROR_SHARING_VIOLATION (or similar)
-		if (h.valid())
-			Windows.CloseHandle(h.handle());
-		else if (error.get() == Windows.ERROR_FILE_NOT_FOUND() || error.get() == Windows.ERROR_PATH_NOT_FOUND())
-			return false;
-		else
-			logger.log(Level.DEBUG, "opening {0}: {1}", portId, formatWinError(error.get()));
-
+		try (var arena = Arena.ofConfined()) {
+			final var lastError = arena.allocate(Win.captureStateLayout);
+			final HANDLE h = open(arena, portId, false, lastError);
+			// if handle is valid, port exists, otherwise it depends on last error: on existing, but
+			// used port, we would get ERROR_ACCESS_DENIED or ERROR_SHARING_VIOLATION (or similar)
+			if (h.valid())
+				Win.CloseHandle(lastError, h.handle());
+			else {
+				final int error = Win.getLastError(lastError);
+				if (error == Windows.ERROR_FILE_NOT_FOUND() || error == Windows.ERROR_PATH_NOT_FOUND())
+					return false;
+				logger.log(Level.DEBUG, "opening {0}: {1}", portId, formatWinError(error));
+			}
+		}
 		return true;
 	}
 
@@ -434,47 +440,49 @@ final class WinSerialPort extends ReadWritePort {
 	}
 
 	//call *immediately* after read/write
-	private void waitPendingIO(/*OVERLAPPED* */ final MemorySegment overlapped, final MemorySegment transferred)
-			throws IOException {
+	private void waitPendingIO(final MemorySegment lastError, /*OVERLAPPED* */ final MemorySegment overlapped,
+			final MemorySegment transferred) throws IOException {
 //		logger.log(TRACE, "wait pending I/O");
 		// the only error status tolerated is I/O pending
-		if (Windows.GetLastError() != Windows.NO_ERROR() && Windows.GetLastError() != Windows.ERROR_IO_PENDING())
+		final int error = Win.getLastError(lastError);
+		if (error != Windows.NO_ERROR() && error != Windows.ERROR_IO_PENDING())
 			// some I/O problem, throw error
-			throw newIoException();
+			throwIoException(lastError);
 
 		// wait for operation completion, and check result
 		while (true) {
 			if (Thread.currentThread().isInterrupted())
 				throw new IOException("interrupted");
 
-			final int res = Windows.WaitForSingleObject(_OVERLAPPED.hEvent(overlapped), wakeupInterval);
+			final int res = Win.WaitForSingleObject(lastError, _OVERLAPPED.hEvent(overlapped), wakeupInterval);
 			if (res == Windows.WAIT_TIMEOUT())
 				continue;
 			if (res == Windows.WAIT_OBJECT_0()
-					&& Windows.GetOverlappedResult(h.handle(), overlapped, transferred, Windows.FALSE()) != 0)
+					&& Win.GetOverlappedResult(lastError, h.handle(), overlapped, transferred, Windows.FALSE()) != 0)
 				return; // completed successfully
 			// res == WAIT_FAILED: communication or wait error
-			throw newIoException();
+			throwIoException(lastError);
 		}
 	}
 
 	private int write(final Arena arena, final MemorySegment bytes) throws IOException {
-		final var event = Windows.CreateEventA(Windows.NULL(), Windows.TRUE(), Windows.FALSE(), Windows.NULL());
+		final var lastError = arena.allocate(Win.captureStateLayout);
+		final var event = Win.CreateEventA(lastError, Windows.NULL(), Windows.TRUE(), Windows.FALSE(), Windows.NULL());
 		if (event.equals(Windows.NULL()))
-			throw newIoException();
+			throwIoException(lastError);
 
 		try {
 			final var o = _OVERLAPPED.allocate(arena);
 			_OVERLAPPED.hEvent(o, event);
 
-			if (Windows.WriteFile(h.handle(), bytes, (int) bytes.byteSize(), Windows.NULL(), o) != 0)
+			if (Win.WriteFile(lastError, h.handle(), bytes, (int) bytes.byteSize(), Windows.NULL(), o) != 0)
 				return (int) bytes.byteSize();
 			final var written = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
-			waitPendingIO(o, written);
+			waitPendingIO(lastError, o, written);
 			return written.get(ValueLayout.JAVA_INT, 0);
 		}
 		finally {
-			Windows.CloseHandle(event);
+			Win.CloseHandle(lastError, event);
 		}
 	}
 
@@ -484,22 +492,23 @@ final class WinSerialPort extends ReadWritePort {
 	}
 
 	private int read(final Arena arena, final MemorySegment bytes) throws IOException {
-		final var event = Windows.CreateEventA(Windows.NULL(), Windows.TRUE(), Windows.FALSE(), Windows.NULL());
+		final var lastError = arena.allocate(Win.captureStateLayout);
+		final var event = Win.CreateEventA(lastError, Windows.NULL(), Windows.TRUE(), Windows.FALSE(), Windows.NULL());
 		if (event.equals(Windows.NULL()))
-			throw newIoException();
+			throwIoException(lastError);
 
 		final var o = _OVERLAPPED.allocate(arena);
 		_OVERLAPPED.hEvent(o, event);
 
 		try {
-			if (Windows.ReadFile(h.handle(), bytes, (int) bytes.byteSize(), Windows.NULL(), o) != 0)
+			if (Win.ReadFile(lastError, h.handle(), bytes, (int) bytes.byteSize(), Windows.NULL(), o) != 0)
 				return (int) bytes.byteSize();
 			final var read = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
-			waitPendingIO(o, read);
+			waitPendingIO(lastError, o, read);
 			return read.get(ValueLayout.JAVA_INT, 0);
 		}
 		finally {
-			Windows.CloseHandle(event);
+			Win.CloseHandle(lastError, event);
 		}
 	}
 
@@ -510,22 +519,26 @@ final class WinSerialPort extends ReadWritePort {
 
 	@Override
 	void doDrain() throws IOException {
-		if (Windows.FlushFileBuffers(h.handle()) == 0)
-			throw newIoException();
+		try (var arena = Arena.ofConfined()) {
+			final var lastError = arena.allocate(Win.captureStateLayout);
+			if (Win.FlushFileBuffers(lastError, h.handle()) == 0)
+				throwIoException(lastError);
+		}
 	}
 
 	@Override
 	public void setEvents(final int eventMask, final boolean enable) throws IOException {
 		logger.log(TRACE, "set event: mask 0x{0}, enable={1}",  Integer.toUnsignedString(eventMask, 16), enable);
 		try (var arena = Arena.ofConfined()) {
+			final var lastError = arena.allocate(Win.captureStateLayout);
 			/*DWORD*/ final var mask = arena.allocate(ValueLayout.JAVA_INT);
-			if (Windows.GetCommMask(h.handle(), mask) == 0)
-				throw newIoException();
+			if (Win.GetCommMask(lastError, h.handle(), mask) == 0)
+				throwIoException(lastError);
 
 			final int m = mask.get(ValueLayout.JAVA_INT, 0);
 			final int set = enable ? m | eventMask : m & ~eventMask;
-			if (Windows.SetCommMask(h.handle(), set) == 0)
-				throw newIoException();
+			if (Win.SetCommMask(lastError, h.handle(), set) == 0)
+				throwIoException(lastError);
 		}
 	}
 
@@ -556,22 +569,23 @@ final class WinSerialPort extends ReadWritePort {
 	public int waitEvent() throws IOException {
 		logger.log(TRACE, "wait comm event");
 		try (var arena = Arena.ofConfined()) {
-			final var event = Windows.CreateEventA(Windows.NULL(), Windows.TRUE(), Windows.FALSE(), Windows.NULL());
+			final var lastError = arena.allocate(Win.captureStateLayout);
+			final var event = Win.CreateEventA(lastError, Windows.NULL(), Windows.TRUE(), Windows.FALSE(), Windows.NULL());
 			if (event.equals(Windows.NULL()))
-				throw newIoException();
+				throwIoException(lastError);
 
 			final /*DWORD*/ MemorySegment eventMask;
 			try {
 				final var o = _OVERLAPPED.allocate(arena);
 				_OVERLAPPED.hEvent(o, event);
 				eventMask = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
-				if (Windows.WaitCommEvent(h.handle(), eventMask, o) == 0) {
+				if (Win.WaitCommEvent(lastError, h.handle(), eventMask, o) == 0) {
 					final /*DWORD*/ var unused = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
-					waitPendingIO(o, unused);
+					waitPendingIO(lastError, o, unused);
 				}
 			}
 			finally {
-				Windows.CloseHandle(event);
+				Win.CloseHandle(lastError, event);
 			}
 			// note if event mask was changed while waiting for event we return 0
 			return eventMask.get(ValueLayout.JAVA_INT, 0);
@@ -580,6 +594,7 @@ final class WinSerialPort extends ReadWritePort {
 
 	@Override
 	int status(final Arena arena, final Status type) throws IOException {
+		final var lastError = arena.allocate(Win.captureStateLayout);
 		/*DWORD*/ final var value = arena.allocate(ValueLayout.JAVA_INT);
 		int ret;
 		final int status = switch (type) {
@@ -589,43 +604,45 @@ final class WinSerialPort extends ReadWritePort {
 				// 0x0020 : DSR (data-set-ready) signal is on
 				// 0x0040 : ring indicator signal is on
 				// 0x0080 : RLSD (receive-line-signal-detect) signal is on
-				ret = Windows.GetCommModemStatus(h.handle(), value);
+				ret = Win.GetCommModemStatus(lastError, h.handle(), value);
 				yield value.get(ValueLayout.JAVA_INT, 0);
 			}
 			case AvailableInput -> {
 				final var stat = _COMSTAT.allocate(arena);
-				ret = Windows.ClearCommError(h.handle(), value, stat);
+				ret = Win.ClearCommError(lastError, h.handle(), value, stat);
 				yield _COMSTAT.cbInQue(stat);
 			}
 			case Error -> {
-				ret = Windows.ClearCommError(h.handle(), value, Windows.NULL());
+				ret = Win.ClearCommError(lastError, h.handle(), value, Windows.NULL());
 				final int errors = value.get(ValueLayout.JAVA_INT, 0);
 				commErrors(errors);
 				yield errors;
 			}
 		};
 		if (ret == 0)
-			throw newIoException();
+			throwIoException(lastError);
 		return status;
 	}
 
 	@Override
 	void timeouts(final Arena arena, final Timeouts timeouts) throws IOException {
+		final var lastError = arena.allocate(Win.captureStateLayout);
 		final var to = _COMMTIMEOUTS.allocate(arena);
 		_COMMTIMEOUTS.ReadIntervalTimeout(to, (int) timeouts.readInterval().toMillis());
 		_COMMTIMEOUTS.ReadTotalTimeoutMultiplier(to, (int) timeouts.readTotalMultiplier().toMillis());
 		_COMMTIMEOUTS.ReadTotalTimeoutConstant(to, (int) timeouts.readTotalConstant().toMillis());
 		_COMMTIMEOUTS.WriteTotalTimeoutMultiplier(to, (int) timeouts.writeTotalMultiplier().toMillis());
 		_COMMTIMEOUTS.WriteTotalTimeoutConstant(to, (int) timeouts.writeTotalConstant().toMillis());
-		if (Windows.SetCommTimeouts(h.handle(), to) == 0)
-			throw newIoException();
+		if (Win.SetCommTimeouts(lastError, h.handle(), to) == 0)
+			throwIoException(lastError);
 	}
 
 	@Override
 	Timeouts timeouts(final Arena arena) throws IOException {
+		final var lastError = arena.allocate(Win.captureStateLayout);
 		final var to = _COMMTIMEOUTS.allocate(arena);
-		if (Windows.GetCommTimeouts(h.handle(), to) == 0)
-			throw newIoException();
+		if (Win.GetCommTimeouts(lastError, h.handle(), to) == 0)
+			throwIoException(lastError);
 		return new Timeouts(_COMMTIMEOUTS.ReadIntervalTimeout(to),
 				_COMMTIMEOUTS.ReadTotalTimeoutMultiplier(to), _COMMTIMEOUTS.ReadTotalTimeoutConstant(to),
 				_COMMTIMEOUTS.WriteTotalTimeoutMultiplier(to), _COMMTIMEOUTS.WriteTotalTimeoutConstant(to));
@@ -667,46 +684,39 @@ final class WinSerialPort extends ReadWritePort {
 			logger.log(TRACE, "CE_BREAK");
 	}
 
-	private static final int QUERY_GETLASTERROR = -1;
-
 	private static String formatWinError(/*DWORD*/ final int error) {
-		final int err = error == QUERY_GETLASTERROR ? Windows.GetLastError() : error;
 		final int size = 256;
 
 		try (var arena = Arena.ofConfined()) {
+			final var lastError = arena.allocate(Win.captureStateLayout);
 			final var buf = arena.allocate(ValueLayout.JAVA_BYTE, size);
-			int len = Windows.FormatMessageA(
+			int len = Win.FormatMessageA(lastError,
 					Windows.FORMAT_MESSAGE_FROM_SYSTEM() | Windows.FORMAT_MESSAGE_IGNORE_INSERTS()
 					| Windows.FORMAT_MESSAGE_MAX_WIDTH_MASK(),
-					Windows.NULL(), err, 0, buf, size, Windows.NULL());
+					Windows.NULL(), error, 0, buf, size, Windows.NULL());
 			while (len > 3 && (buf.get(ValueLayout.JAVA_BYTE, len - 1) == ' '
 					|| buf.get(ValueLayout.JAVA_BYTE, len - 1) == '.'))
 				--len;
 			buf.set(ValueLayout.JAVA_BYTE, len, (byte) 0);
-			return buf.getString(0) + " (error 0x" + Integer.toUnsignedString(err, 16) + ")";
+			return buf.getString(0) + " (error 0x" + Integer.toUnsignedString(error, 16) + ")";
 		}
 	}
 
-	private IOException newIoException() throws IOException {
-		return newIoException(null, QUERY_GETLASTERROR);
+	private void throwIoException(final MemorySegment lastError) throws IOException {
+		throwIoException(Win.getLastError(lastError));
 	}
 
-	private IOException newIoException(final String s) {
-		return newIoException(s, QUERY_GETLASTERROR);
+	private void throwIoException(final String s, final MemorySegment lastError) throws IOException {
+		final int error = Win.getLastError(lastError);
+		if (error == Windows.ERROR_INVALID_HANDLE())
+			throw s != null ? new PortClosedException(portName(), s) : new PortClosedException(portName());
+		final String errmsg = formatWinError(error);
+		throw new IOException(s != null ? s + ": " + errmsg : errmsg);
 	}
 
 	private void throwIoException(final int error) throws IOException {
-		final int err = error;
-		if (err == Windows.ERROR_INVALID_HANDLE())
+		if (error == Windows.ERROR_INVALID_HANDLE())
 			throw new PortClosedException(portName());
-		throw new IOException(formatWinError(err));
-	}
-
-	private IOException newIoException(final String s, /*DWORD*/ final int error) {
-		final int err = error == QUERY_GETLASTERROR ? Windows.GetLastError() : error;
-		if (err == Windows.ERROR_INVALID_HANDLE())
-			return s != null ? new PortClosedException(portName(), s) : new PortClosedException(portName());
-		final String errmsg = formatWinError(err);
-		return new IOException(s != null ? s + ": " + errmsg : errmsg);
+		throw new IOException(formatWinError(error));
 	}
 }
