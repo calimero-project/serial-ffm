@@ -38,7 +38,6 @@ import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.HexFormat;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -1144,13 +1143,6 @@ final class UnixSerialPort extends ReadWritePort {
 			}
 		}
 
-		if (debug() && offset > 0) {
-			final long end = System.nanoTime();
-			final long diff = end - start;
-			final byte[] data = buffer.asSlice(0, offset).toArray(ValueLayout.JAVA_BYTE);
-			final String hex = HexFormat.ofDelimiter(" ").formatHex(data);
-			logger.log(TRACE, "read data [{0} us] (length {1}): {2}", diff / 1000, offset, hex);
-		}
 		return offset;
 	}
 

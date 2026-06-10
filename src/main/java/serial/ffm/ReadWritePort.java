@@ -295,11 +295,15 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 
 	final int read() throws IOException {
 		try (var arena = Arena.ofConfined()) {
-			/*uint8_t*/ final MemorySegment in = arena.allocate(1);
-			final long ret = readBytes(arena, in);
+			final var buf = arena.allocate(1);
+			final long start = System.nanoTime();
+			final long ret = readBytes(arena, buf);
 			if (ret == 0)
 				return -1;
-			return in.get(ValueLayout.JAVA_BYTE, 0) & 0xff;
+			final byte b = buf.get(ValueLayout.JAVA_BYTE, 0);
+			final long elapsed = System.nanoTime() - start;
+			logger.log(TRACE, "read data [{0} us] (length 1): {1}", elapsed / 1000, HexFormat.of().toHexDigits(b));
+			return b & 0xff;
 		}
 	}
 
@@ -311,11 +315,10 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 			final int r = readBytes(arena, buf);
 			MemorySegment.copy(buf, ValueLayout.JAVA_BYTE, 0, bytes, offset, r);
 
-			if (debug() && r > 0) {
-				final long end = System.nanoTime();
-				final long diff = end - start;
+			if (r > 0 && logger.isLoggable(TRACE)) {
+				final long elapsed = System.nanoTime() - start;
 				final String hex = HexFormat.ofDelimiter(" ").formatHex(bytes, offset, offset + r);
-				logger.log(TRACE, "read data [{0} us] (length {1}): {2}", diff / 1000, offset, hex);
+				logger.log(TRACE, "read data [{0} us] (length {1}): {2}", elapsed / 1000, r, hex);
 			}
 
 			return r;
