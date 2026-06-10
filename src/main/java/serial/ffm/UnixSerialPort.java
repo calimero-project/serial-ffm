@@ -1076,7 +1076,7 @@ final class UnixSerialPort extends ReadWritePort {
 					return -2;
 
 				if (n == -1) {
-					if (errno() == Unix.EINTR)
+					if (errno() == Unix.EINTR || errno() == Unix.EAGAIN)
 						continue;
 					warnErrno("poll failed");
 					break; // e.g., EBADF
@@ -1359,7 +1359,7 @@ final class UnixSerialPort extends ReadWritePort {
 				int ret;
 				do {
 					ret = Unix.poll(pfd, 1, (int) eventPollInterval.toMillis());
-				} while (ret == -1 && errno() == Unix.EINTR);
+				} while (ret == -1 && (errno() == Unix.EINTR || errno() == Unix.EAGAIN));
 
 				if (isClosed())
 					throwIOException(Unix.EBADF);
