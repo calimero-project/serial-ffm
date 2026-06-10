@@ -190,12 +190,6 @@ final class UnixSerialPort extends ReadWritePort {
 	UnixSerialPort(final String portId) throws IOException {
 		super(portId);
 		open(portId);
-
-		final int eventMask = UnixSerialPort.EVENT_CTS | UnixSerialPort.EVENT_TXEMPTY | UnixSerialPort.EVENT_RING
-				| UnixSerialPort.EVENT_BREAK | UnixSerialPort.EVENT_CTS | UnixSerialPort.EVENT_DSR
-				| UnixSerialPort.EVENT_RLSD | UnixSerialPort.EVENT_RXCHAR;
-
-		setEvents(eventMask, true);
 	}
 
 	@Override
