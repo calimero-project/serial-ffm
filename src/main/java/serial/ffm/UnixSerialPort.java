@@ -281,7 +281,7 @@ final class UnixSerialPort extends ReadWritePort {
 		final AtomicInteger error = new AtomicInteger();
 		fd = openPort(arena, portId, true, error);
 		if (error.get() == Unix.EBUSY)
-			throw newException(Unix.EBUSY);
+			throwIOException(Unix.EBUSY);
 
 		if (debug()) {
 // #if !defined TXSETIHOG
@@ -309,7 +309,7 @@ final class UnixSerialPort extends ReadWritePort {
 		if (ret == -1) {
 			final int err = errno();
 			closePort();
-			throw newException(err);
+			throwIOException(err);
 		}
 	}
 
@@ -1012,7 +1012,7 @@ final class UnixSerialPort extends ReadWritePort {
 			if (r == -2)
 				throw new IOException("interrupted");
 			if (r == -1)
-				throw newException(errno());
+				throwIOException(errno());
 			return (int) r;
 		}
 		finally {
@@ -1023,7 +1023,7 @@ final class UnixSerialPort extends ReadWritePort {
 	private fd_t fd() throws IOException {
 		final var lfd = fd;
 		if (lfd.equals(fd_t.Invalid))
-			throw newException(Unix.EBADF);
+			throwIOException(Unix.EBADF);
 		return lfd;
 	}
 
@@ -1152,7 +1152,7 @@ final class UnixSerialPort extends ReadWritePort {
 		try {
 			final long written = Linux.write(fd.value(), bytes, bytes.byteSize());
 			if (written < 0)
-				throw newException(errno());
+				throwIOException(errno());
 			return (int) written;
 		}
 		finally {
@@ -1163,7 +1163,7 @@ final class UnixSerialPort extends ReadWritePort {
 	@Override
 	void doDrain() throws IOException {
 		if (!drain(fd))
-			throw newException(errno());
+			throwIOException(errno());
 	}
 
 	private static /*uint*/ long isInputWaiting(final Arena arena, final fd_t fd) throws IOException {
@@ -1180,7 +1180,7 @@ final class UnixSerialPort extends ReadWritePort {
 				//        	throw newException(errno());
 			} // FIORDCHK
 			else
-				throw newException(errno());
+				throwIOException(errno());
 		}
 		return bytes.get(ValueLayout.JAVA_INT, 0);
 	}
@@ -1280,7 +1280,7 @@ final class UnixSerialPort extends ReadWritePort {
 			}
 			while (ret == -1 && errno() == Unix.EINTR);
 			if (ret == -1)
-				throw newException(errno());
+				throwIOException(errno());
 			return icount;
 		}
 	}
@@ -1316,7 +1316,7 @@ final class UnixSerialPort extends ReadWritePort {
 			}
 			while (ret == -1 && errno() == Unix.EINTR);
 			if (ret == -1)
-				throw newException(errno());
+				throwIOException(errno());
 
 			final int empty = lsr() ? EVENT_TXEMPTY : 0;
 			// NYI Win behavior: if event mask was changed while waiting for event we return 0
@@ -1390,7 +1390,7 @@ final class UnixSerialPort extends ReadWritePort {
 				/*uint*/ final var mstatus = arena.allocate(ValueLayout.JAVA_INT);
 				final int ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.TIOCMGET, mstatus);
 				if (ret == -1)
-					throw newException(errno());
+					throwIOException(errno());
 
 				long v = 0;
 				final long status = mstatus.get(ValueLayout.JAVA_INT, 0);
@@ -1452,8 +1452,8 @@ final class UnixSerialPort extends ReadWritePort {
 			logger.log(TRACE, "EVENT_RTS");
 	}
 
-	private static IOException newException(final int error) {
-		return new IOException(errnoMsg(error) + " (" + error + ")");
+	private static void throwIOException(final int errno) throws IOException {
+		throw new IOException(errnoMsg(errno) + " (" + errno + ")");
 	}
 
 	private static void throwIOException(final String msg, final int errno) throws IOException {
