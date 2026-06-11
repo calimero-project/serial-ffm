@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022, 2023 B. Malinowsky
+// Copyright (c) 2022, 2026 B. Malinowsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,6 @@ class WinSerialPortTests {
 	void listPorts() {
 		final var ports = WinSerialPort.portNames();
 		assertNotNull(ports);
-		assertTrue(ports.contains("COM1"));
+		assertTrue(ports.contains(SerialPortTests.osPort()));
 	}
 }
