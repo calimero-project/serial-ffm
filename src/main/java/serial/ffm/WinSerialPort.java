@@ -309,20 +309,15 @@ final class WinSerialPort extends ReadWritePort {
 		return dcb;
 	}
 
-	// any open input/output stream accessing this port becomes unusable
 	@Override
-	public void close() {
-		if (h.valid()) {
-			logger.log(TRACE, "close handle {0}", h);
-			final var handle = h.handle();
-			h = HANDLE.Invalid;
-			try (var arena = Arena.ofConfined()) {
-				final var lastError = arena.allocate(Win.captureStateLayout);
-				final boolean closed = Win.CloseHandle(lastError, handle) == Windows.TRUE();
-				if (!closed)
-					logger.log(ERROR, "closing serial port: {0}", formatWinError(Win.getLastError(lastError)));
-			}
-		}
+	void close(final Arena arena) {
+		logger.log(TRACE, "close handle {0}", h);
+		final var handle = h.handle();
+		h = HANDLE.Invalid;
+		final var lastError = arena.allocate(Win.captureStateLayout);
+		final boolean closed = Win.CloseHandle(lastError, handle) == Windows.TRUE();
+		if (!closed)
+			logger.log(ERROR, "closing serial port: {0}", formatWinError(Win.getLastError(lastError)));
 	}
 
 	@Override

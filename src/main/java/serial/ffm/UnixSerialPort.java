@@ -310,19 +310,9 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	@Override
-	public void close() {
-		lock.lock();
-		try {
-			if (!closePort())
-				logger.log(ERROR, "closing serial port: {0}", errnoMsg());
-		}
-		catch (final IOException e) {
-			logger.log(ERROR, "closing serial port", e);
-		}
-		finally {
-			eventLooper.interrupt();
-			lock.unlock();
-		}
+	void close(final Arena arena) {
+		if (!closePort())
+			logger.log(ERROR, "closing serial port: {0}", errnoMsg());
 	}
 
 	@Override
@@ -621,13 +611,13 @@ final class UnixSerialPort extends ReadWritePort {
 		return OS.current() == OS.Linux;
 	}
 
-	private boolean closePort() throws IOException {
+	private boolean closePort() {
 		final int closeFd = fd.value();
 		fd = fd_t.Invalid;
 		return closePort(closeFd);
 	}
 
-	private boolean closePort(final int fd) throws IOException {
+	private boolean closePort(final int fd) {
 		if (fd == fd_t.Invalid.value())
 			return true;
 		logger.log(TRACE, "close fd {0}", fd);

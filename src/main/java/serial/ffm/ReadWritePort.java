@@ -279,6 +279,22 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 
 	abstract int status(Arena arena, Status type) throws IOException;
 
+	@Override
+	public void close() {
+		if (isClosed())
+			return;
+		lock.lock();
+		try (var arena = Arena.ofConfined()) {
+			close(arena);
+		}
+		finally {
+			eventLooper.interrupt();
+			lock.unlock();
+		}
+	}
+
+	abstract void close(Arena arena);
+
 	final String portName() { return portId; }
 
 	void open(final String portId) throws IOException {
