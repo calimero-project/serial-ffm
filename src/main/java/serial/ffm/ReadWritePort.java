@@ -429,7 +429,7 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 		logger.log(TRACE, "events {0}", events);
 	}
 
-	static boolean isSet(final int mask, final int flag) {
+	static boolean isSet(final long mask, final long flag) {
 		return (mask & flag) == flag;
 	}
 

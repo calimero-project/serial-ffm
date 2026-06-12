@@ -694,13 +694,13 @@ final class UnixSerialPort extends ReadWritePort {
 				cflags |= Unix.PARENB | Unix.PARODD;
 				break;
 			case Mark:
-				if ((cflags & Unix.CS7) == Unix.CS7) {
+				if (isSet(cflags, Unix.CS7)) {
 					logger.log(TRACE, "setting mark parity for 7M1");
 					// for mark parity use 7 data bits, 2 stop bits
 					cflags &= ~Unix.CSIZE;
 					cflags |= Unix.CSTOPB | Unix.CS7;
 				}
-				else if ((cflags & Unix.CS8) == Unix.CS8) {
+				else if (isSet(cflags, Unix.CS8)) {
 					logger.log(TRACE, "setting mark parity for 8M1");
 					if (markSpaceParitySupport())
 						cflags |= CMSPAR | Unix.PARENB | Unix.PARODD;
@@ -711,7 +711,7 @@ final class UnixSerialPort extends ReadWritePort {
 				}
 				break;
 			case Space:
-				if ((cflags & Unix.CS8) == Unix.CS8) {
+				if (isSet(cflags, Unix.CS8)) {
 					if (markSpaceParitySupport()) {
 						cflags |= CMSPAR | Unix.PARENB;
 						cflags &= ~Unix.PARODD;
@@ -726,16 +726,15 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private static Parity genericParity(final long cflags) {
 		if (markSpaceParitySupport()) {
-			if ((cflags & Unix.PARENB) == Unix.PARENB && (cflags & Unix.PARODD) == Unix.PARODD
-					&& (cflags & CMSPAR) == CMSPAR)
+			if (isSet(cflags, Unix.PARENB) && isSet(cflags, Unix.PARODD) && isSet(cflags, CMSPAR))
 				return Parity.Mark;
-			if ((cflags & Unix.PARENB) == Unix.PARENB && (cflags & CMSPAR) == CMSPAR)
+			if (isSet(cflags, Unix.PARENB) && isSet(cflags, CMSPAR))
 				return Parity.Space;
 		}
 
-		if ((cflags & Unix.PARENB) != 0 && (cflags & Unix.PARODD) != 0)
+		if (isSet(cflags, Unix.PARENB) && isSet(cflags, Unix.PARODD))
 			return Parity.Odd;
-		if ((cflags & Unix.PARENB) != 0)
+		if (isSet(cflags, Unix.PARENB))
 			return Parity.Even;
 
 		return Parity.None;
@@ -976,7 +975,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 	// NYI SW flow control missing
 	private static /*uint*/ FlowControl genericFlowControl(final long cflags) {
-		if ((cflags & HW_FLOWCTL) != 0)
+		if (isSet(cflags, HW_FLOWCTL))
 			return FlowControl.CtsRts;
 		return FlowControl.None;
 	}
@@ -1086,10 +1085,10 @@ final class UnixSerialPort extends ReadWritePort {
 			}
 
 			final int events = pollfd.revents(pfd);
-			final boolean pollin = (events & Unix.POLLIN) != 0;
-			final boolean pollhup = (events & Unix.POLLHUP) != 0;
-			final boolean pollerr = (events & Unix.POLLERR) != 0;
-			final boolean pollnval = (events & Unix.POLLNVAL) != 0;
+			final boolean pollin = isSet(events, Unix.POLLIN);
+			final boolean pollhup = isSet(events, Unix.POLLHUP);
+			final boolean pollerr = isSet(events, Unix.POLLERR);
+			final boolean pollnval = isSet(events, Unix.POLLNVAL);
 			if (events != 0) {
 				logger.log(TRACE, "poll returned events: {0}{1}{2}{3}",
 						pollin ? "POLLIN "  : "",
@@ -1308,7 +1307,7 @@ final class UnixSerialPort extends ReadWritePort {
 			if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TIOCSERGETLSR, lsr) == -1)
 				return false;
 			// output buffer empty?
-			return (lsr.get(ValueLayout.JAVA_BYTE, 0) & TIOCSER_TEMT) != 0;
+			return isSet(lsr.get(ValueLayout.JAVA_BYTE, 0), TIOCSER_TEMT);
 		}
 	}
 
@@ -1372,13 +1371,13 @@ final class UnixSerialPort extends ReadWritePort {
 						SerialEvent.DataSetReady, SerialEvent.CarrierDetect, SerialEvent.Ring))) {
 					final int lineStatus = status(arena, Status.Line);
 					if ((polledLineStatus != lineStatus)) {
-						if ((polledLineStatus & LINE_CTS) != (lineStatus & LINE_CTS))
+						if (isSet(polledLineStatus, LINE_CTS) != isSet(lineStatus, LINE_CTS))
 							events.add(SerialEvent.ClearToSend);
-						if ((polledLineStatus & LINE_DSR) != (lineStatus & LINE_DSR))
+						if (isSet(polledLineStatus, LINE_DSR) != isSet(lineStatus, LINE_DSR))
 							events.add(SerialEvent.DataSetReady);
-						if ((polledLineStatus & LINE_RING) != (lineStatus & LINE_RING))
+						if (isSet(polledLineStatus, LINE_RING) != isSet(lineStatus, LINE_RING))
 							events.add(SerialEvent.Ring);
-						if ((polledLineStatus & LINE_DCD) != (lineStatus & LINE_DCD))
+						if (isSet(polledLineStatus, LINE_DCD) != isSet(lineStatus, LINE_DCD))
 							events.add(SerialEvent.CarrierDetect);
 
 						polledLineStatus = lineStatus;
@@ -1419,17 +1418,17 @@ final class UnixSerialPort extends ReadWritePort {
 
 				long v = 0;
 				final long status = mstatus.get(ValueLayout.JAVA_INT, 0);
-				if ((status & Unix.TIOCM_DTR) != 0)
+				if (isSet(status, Unix.TIOCM_DTR))
 					v |= DTR;
-				if ((status & Unix.TIOCM_RTS) != 0)
+				if (isSet(status, Unix.TIOCM_RTS))
 					v |= RTS;
-				if ((status & Unix.TIOCM_CTS) != 0)
+				if (isSet(status, Unix.TIOCM_CTS))
 					v |= LINE_CTS;
-				if ((status & Unix.TIOCM_DSR) != 0)
+				if (isSet(status, Unix.TIOCM_DSR))
 					v |= LINE_DSR;
-				if ((status & Unix.TIOCM_RNG) != 0)
+				if (isSet(status, Unix.TIOCM_RNG))
 					v |= LINE_RING;
-				if ((status & Unix.TIOCM_CAR) != 0)
+				if (isSet(status, Unix.TIOCM_CAR))
 					v |= LINE_DCD;
 				yield v;
 			}
