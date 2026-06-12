@@ -1234,6 +1234,7 @@ final class UnixSerialPort extends ReadWritePort {
 			ioctlEventMask &= ~mask;
 			enabledEvents.removeAll(events);
 		}
+		enableEventLooper(!enabledEvents.isEmpty());
 	}
 
 	private int cts, dsr, rng, dcd;

@@ -534,6 +534,7 @@ final class WinSerialPort extends ReadWritePort {
 			final int set = enable ? m | eventMask : m & ~eventMask;
 			if (Win.SetCommMask(lastError, h.handle(), set) == 0)
 				throwIoException(lastError);
+			enableEventLooper(set != 0);
 		}
 	}
 

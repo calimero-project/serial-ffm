@@ -288,7 +288,7 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 			close(arena);
 		}
 		finally {
-			eventLooper.interrupt();
+			enableEventLooper(false);
 			lock.unlock();
 		}
 	}
@@ -302,7 +302,6 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 		lock.lock();
 		try (var arena = Arena.ofConfined()) {
 			open(arena, portId);
-			eventLooper = Thread.startVirtualThread(this::waitEventLoop);
 		}
 		finally {
 			lock.unlock();
@@ -388,6 +387,23 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 	abstract void doDrain() throws IOException;
 
 	abstract boolean isClosed();
+
+	void enableEventLooper(final boolean enable) {
+		lock.lock();
+		try {
+			if (enable) {
+				if (eventLooper == null)
+					eventLooper = Thread.startVirtualThread(this::waitEventLoop);
+			}
+			else if (eventLooper != null) {
+				eventLooper.interrupt();
+				eventLooper = null;
+			}
+		}
+		finally {
+			lock.unlock();
+		}
+	}
 
 	void waitEventLoop() {
 		logger.log(TRACE, "enter waitEventLoop");

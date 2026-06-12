@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -289,6 +290,37 @@ class SerialPortTests {
 	void setEvents() throws IOException {
 		final int eventMask = UnixSerialPort.EVENT_CTS | UnixSerialPort.EVENT_TXEMPTY;
 		port.setEvents(eventMask, true);
+	}
+
+	@Test
+	void events() throws IOException, InterruptedException {
+		port.events(EnumSet.noneOf(SerialPort.SerialEvent.class), true);
+		port.events(EnumSet.allOf(SerialPort.SerialEvent.class), true);
+
+		port.events(EnumSet.noneOf(SerialPort.SerialEvent.class), false);
+		port.events(EnumSet.allOf(SerialPort.SerialEvent.class), false);
+	}
+
+	@Test
+	void eventLooperEnabled() throws IOException, InterruptedException {
+		port.events(EnumSet.of(SerialPort.SerialEvent.DataAvailable), true);
+		final var rwport = (ReadWritePort) port;
+		assertNotNull(rwport.eventLooper);
+		Thread.sleep(Duration.ofMillis(50));
+		assertTrue(rwport.eventLooper.isAlive());
+	}
+
+	@Test
+	void eventLooperDisabled() throws IOException, InterruptedException {
+		final var rwport = (ReadWritePort) port;
+		assertNull(rwport.eventLooper);
+		port.events(EnumSet.of(SerialPort.SerialEvent.DataAvailable), true);
+		Thread.sleep(Duration.ofMillis(100));
+		final var thread = rwport.eventLooper;
+		port.events(EnumSet.allOf(SerialPort.SerialEvent.class), false);
+		assertNull(rwport.eventLooper);
+		Thread.sleep(Duration.ofMillis(50));
+		assertFalse(thread.isAlive());
 	}
 
 	@Test
