@@ -1150,6 +1150,7 @@ final class UnixSerialPort extends ReadWritePort {
 	void doDrain() throws IOException {
 		if (!drain(fd))
 			throwIOException(errno());
+		dispatchEvents(EnumSet.of(SerialEvent.OutputEmpty));
 	}
 
 	private /*uint*/ long isInputWaiting(final Arena arena) throws IOException {
@@ -1242,27 +1243,27 @@ final class UnixSerialPort extends ReadWritePort {
 	private int frame, overrun, parity, brk;
 	private int buf_overrun;
 
-	private /*uint*/ long genericLineEvents(final MemorySegment icount) {
-		/*uint*/ long events = 0;
+	private EnumSet<SerialEvent> genericLineEvents(final MemorySegment icount) {
+		final var events = EnumSet.noneOf(SerialEvent.class);
 		if (serial_icounter_struct.rx(icount) != rx) {
 			rx = serial_icounter_struct.rx(icount);
-			events |= EVENT_RXCHAR;
+			events.add(SerialEvent.DataAvailable);
 		}
 		if (serial_icounter_struct.cts(icount) != cts) {
 			cts = serial_icounter_struct.cts(icount);
-			events |= EVENT_CTS;
+			events.add(SerialEvent.ClearToSend);
 		}
 		if (serial_icounter_struct.dsr(icount) != dsr) {
 			dsr = serial_icounter_struct.dsr(icount);
-			events |= EVENT_DSR;
+			events.add(SerialEvent.DataSetReady);
 		}
 		if (serial_icounter_struct.dcd(icount) != dcd) {
 			dcd = serial_icounter_struct.dcd(icount);
-			events |= EVENT_RLSD;
+			events.add(SerialEvent.CarrierDetect);
 		}
 		if (serial_icounter_struct.brk(icount) != brk) {
 			brk = serial_icounter_struct.brk(icount);
-			events |= EVENT_BREAK;
+			events.add(SerialEvent.Break);
 		}
 		if (serial_icounter_struct.frame(icount) != frame
 				|| serial_icounter_struct.buf_overrun(icount) != buf_overrun
@@ -1270,11 +1271,11 @@ final class UnixSerialPort extends ReadWritePort {
 			frame = serial_icounter_struct.frame(icount);
 			buf_overrun = serial_icounter_struct.buf_overrun(icount);
 			parity = serial_icounter_struct.parity(icount);
-			events |= EVENT_ERR;
+			events.add(SerialEvent.Error);
 		}
 		if (serial_icounter_struct.rng(icount) != rng) {
 			rng = serial_icounter_struct.rng(icount);
-			events |= EVENT_RING;
+			events.add(SerialEvent.Ring);
 		}
 		return events;
 	}
@@ -1312,7 +1313,7 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	@Override
-	public int waitEvent() throws IOException, InterruptedException {
+	public EnumSet<SerialEvent> waitEvent() throws IOException, InterruptedException {
 		logger.log(TRACE, "enter wait event");
 		try {
 			if (OS.current() == OS.Mac || OS.current() == OS.Linux) {
@@ -1331,20 +1332,23 @@ final class UnixSerialPort extends ReadWritePort {
 			if (ret == -1)
 				throwIOException(errno());
 
-			final int empty = lsr() ? EVENT_TXEMPTY : 0;
+			final var events = EnumSet.noneOf(SerialEvent.class);
+			if (lsr())
+				events.add(SerialEvent.OutputEmpty);
+			events.addAll(genericLineEvents(queryInterruptCounters()));
 			// NYI Win behavior: if event mask was changed while waiting for event we return 0
-			return empty | (int) genericLineEvents(queryInterruptCounters());
+			return events;
 		}
 		finally {
 			logger.log(TRACE, "exit wait event");
 		}
 	}
 
-	private int polledWaitEvent() throws IOException, InterruptedException {
+	private EnumSet<SerialEvent> polledWaitEvent() throws IOException, InterruptedException {
 		try (var arena = Arena.ofConfined()) {
 			final var pfd = pollfd.allocate(arena);
 			pollfd.fd(pfd, fd.value());
-			pollfd.events(pfd, (short) 0);
+			pollfd.events(pfd, (short) Unix.POLLIN);
 
 			while (true) {
 				int ret;
@@ -1357,42 +1361,35 @@ final class UnixSerialPort extends ReadWritePort {
 				if (Thread.interrupted())
 					throw new InterruptedException();
 
+				final var events = EnumSet.noneOf(SerialEvent.class);
 				if (ret > 0 && enabledEvents.contains(SerialEvent.DataAvailable)) {
 					final int retEvents = pollfd.revents(pfd);
 					if (isSet(Unix.POLLIN, retEvents))
-						return EVENT_RXCHAR;
+						events.add(SerialEvent.DataAvailable);
 				}
 
 				if (!Collections.disjoint(enabledEvents, EnumSet.of(SerialEvent.ClearToSend,
 						SerialEvent.DataSetReady, SerialEvent.CarrierDetect, SerialEvent.Ring))) {
 					final int lineStatus = status(arena, Status.Line);
 					if ((polledLineStatus != lineStatus)) {
-						int events = 0;
 						if ((polledLineStatus & LINE_CTS) != (lineStatus & LINE_CTS))
-							events |= EVENT_CTS;
+							events.add(SerialEvent.ClearToSend);
 						if ((polledLineStatus & LINE_DSR) != (lineStatus & LINE_DSR))
-							events |= EVENT_DSR;
+							events.add(SerialEvent.DataSetReady);
 						if ((polledLineStatus & LINE_RING) != (lineStatus & LINE_RING))
-							events |= EVENT_RING;
+							events.add(SerialEvent.Ring);
 						if ((polledLineStatus & LINE_DCD) != (lineStatus & LINE_DCD))
-							events |= EVENT_RLSD;
-						if ((polledLineStatus & DTR) != (lineStatus & DTR))
-							events |= EVENT_DTR;
-						if ((polledLineStatus & RTS) != (lineStatus & RTS))
-							events |= EVENT_RTS;
+							events.add(SerialEvent.CarrierDetect);
 
 						polledLineStatus = lineStatus;
-						return events;
 					}
 				}
 
 				if (enabledEvents.contains(SerialEvent.Error)) {
 					final int errorStatus = status(arena, Status.Error);
 					if (polledErrorStatus != errorStatus) {
-						final int events = 0;
-
 						polledErrorStatus = errorStatus;
-						return events;
+						events.add(SerialEvent.Error);
 					}
 				}
 
@@ -1400,9 +1397,12 @@ final class UnixSerialPort extends ReadWritePort {
 					final int availStatus = status(arena, Status.AvailableInput);
 					if (polledAvailableStatus != availStatus) {
 						polledAvailableStatus = availStatus;
-						return EVENT_RXCHAR;
+						events.add(SerialEvent.DataAvailable);
 					}
 				}
+
+				if (!events.isEmpty())
+					return events;
 			}
 		}
 	}
@@ -1459,27 +1459,6 @@ final class UnixSerialPort extends ReadWritePort {
 	@Override
 	Timeouts timeouts(final Arena arena) {
 		return timeouts;
-	}
-
-	@Override
-	void dispatchEvents(final int eventMask) {
-		// data events
-		if (isSet(eventMask, EVENT_CTS))
-			logger.log(TRACE, "EVENT_CTS");
-		if (isSet(eventMask, EVENT_DSR))
-			logger.log(TRACE, "EVENT_DSR");
-		if (isSet(eventMask, EVENT_RING))
-			logger.log(TRACE, "EVENT_RING");
-		if (isSet(eventMask, EVENT_RLSD))
-			logger.log(TRACE, "EVENT_RLSD");
-		if (isSet(eventMask, EVENT_RXCHAR))
-			logger.log(TRACE, "EVENT_RXCHAR");
-		if (isSet(eventMask, EVENT_BREAK))
-			logger.log(TRACE, "EVENT_BREAK");
-		if (isSet(eventMask, EVENT_DTR))
-			logger.log(TRACE, "EVENT_DTR");
-		if (isSet(eventMask, EVENT_RTS))
-			logger.log(TRACE, "EVENT_RTS");
 	}
 
 	private void throwIOException(final int errno) throws IOException {

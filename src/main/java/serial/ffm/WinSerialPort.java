@@ -562,7 +562,7 @@ final class WinSerialPort extends ReadWritePort {
 	}
 
 	@Override
-	public int waitEvent() throws IOException, InterruptedException {
+	public EnumSet<SerialEvent> waitEvent() throws IOException, InterruptedException {
 		logger.log(TRACE, "wait comm event");
 		try (var arena = Arena.ofConfined()) {
 			final var lastError = arena.allocate(Win.captureStateLayout);
@@ -584,7 +584,7 @@ final class WinSerialPort extends ReadWritePort {
 				Win.CloseHandle(lastError, event);
 			}
 			// note if event mask was changed while waiting for event we return 0
-			return eventMask.get(ValueLayout.JAVA_INT, 0);
+			return translateEvents(eventMask.get(ValueLayout.JAVA_INT, 0));
 		}
 	}
 
@@ -644,27 +644,28 @@ final class WinSerialPort extends ReadWritePort {
 				_COMMTIMEOUTS.WriteTotalTimeoutMultiplier(to), _COMMTIMEOUTS.WriteTotalTimeoutConstant(to));
 	}
 
-	@Override
-	void dispatchEvents(final int eventMask) {
+	private EnumSet<SerialEvent> translateEvents(final int eventMask) {
+		final var events = EnumSet.noneOf(SerialEvent.class);
 		// data events
 		if (isSet(eventMask, Windows.EV_RXCHAR()))
-			logger.log(TRACE, "EV_RXCHAR");
+			events.add(SerialEvent.DataAvailable);
 
 		// pin events
 		if (isSet(eventMask, Windows.EV_CTS()))
-			logger.log(TRACE, "EV_CTS");
+			events.add(SerialEvent.ClearToSend);
 		if (isSet(eventMask, Windows.EV_DSR()))
-			logger.log(TRACE, "EV_DSR");
+			events.add(SerialEvent.DataSetReady);
 		if (isSet(eventMask, Windows.EV_RLSD()))
-			logger.log(TRACE, "EV_RLSD");
+			events.add(SerialEvent.CarrierDetect);
 		if (isSet(eventMask, Windows.EV_BREAK()))
-			logger.log(TRACE, "EV_BREAK");
+			events.add(SerialEvent.Break);
 		if (isSet(eventMask, Windows.EV_RING()))
-			logger.log(TRACE, "EV_RING");
+			events.add(SerialEvent.Ring);
 
 		// error event
 		if (isSet(eventMask, Windows.EV_ERR()))
-			logger.log(TRACE, "EV_ERR");
+			events.add(SerialEvent.Error);
+		return events;
 	}
 
 	private void commErrors(final int errors) {

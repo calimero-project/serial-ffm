@@ -334,14 +334,14 @@ class SerialPortTests {
 	}
 
 	@Test
-	void waitEvent() throws IOException {
+	void waitEvent() throws IOException, InterruptedException {
 		final int eventMask = UnixSerialPort.EVENT_CTS | UnixSerialPort.EVENT_TXEMPTY | UnixSerialPort.EVENT_RING
 				| UnixSerialPort.EVENT_BREAK | UnixSerialPort.EVENT_CTS | UnixSerialPort.EVENT_DSR
 				| UnixSerialPort.EVENT_RLSD | UnixSerialPort.EVENT_RXCHAR;
 		port.setEvents(eventMask, true);
 		// TODO commented out because waiting for events never returns
-//		final int events = port.waitEvent();
-//		((UnixSerialPort) port).dispatchEvents(events);
+//		final var events = port.waitEvent();
+//		((ReadWritePort) port).dispatchEvents(events);
 	}
 
 	@Test

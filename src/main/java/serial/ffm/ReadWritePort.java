@@ -35,6 +35,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandles;
+import java.util.EnumSet;
 import java.util.HexFormat;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -410,8 +411,8 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 		logger.log(TRACE, "serial port event monitoring started");
 		while (!isClosed()) {
 			try {
-				final int eventMask = waitEvent();
-				dispatchEvents(eventMask);
+				final var events = waitEvent();
+				dispatchEvents(events);
 			}
 			catch (final IOException e) {
 				if (!isClosed())
@@ -424,7 +425,9 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 		logger.log(TRACE, "serial port event monitoring stopped");
 	}
 
-	abstract void dispatchEvents(int eventMask);
+	void dispatchEvents(EnumSet<SerialEvent> events) {
+		logger.log(TRACE, "events {0}", events);
+	}
 
 	static boolean isSet(final int mask, final int flag) {
 		return (mask & flag) == flag;
