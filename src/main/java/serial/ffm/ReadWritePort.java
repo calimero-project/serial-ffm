@@ -284,6 +284,7 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 		if (isClosed())
 			return;
 		lock.lock();
+		logger.log(DEBUG, "close port " + portName());
 		try (var arena = Arena.ofConfined()) {
 			close(arena);
 		}
@@ -298,7 +299,7 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 	final String portName() { return portId; }
 
 	void open(final String portId) throws IOException {
-		logger.log(TRACE, "open {0}", portId);
+		logger.log(DEBUG, "open port {0}", portId);
 		lock.lock();
 		try (var arena = Arena.ofConfined()) {
 			open(arena, portId);
@@ -406,7 +407,7 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 	}
 
 	void waitEventLoop() {
-		logger.log(TRACE, "enter waitEventLoop");
+		logger.log(TRACE, "serial port event monitoring started");
 		while (!isClosed()) {
 			try {
 				final int eventMask = waitEvent();
@@ -420,7 +421,7 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 				break;
 			}
 		}
-		logger.log(TRACE, "exit waitEventLoop");
+		logger.log(TRACE, "serial port event monitoring stopped");
 	}
 
 	abstract void dispatchEvents(int eventMask);
