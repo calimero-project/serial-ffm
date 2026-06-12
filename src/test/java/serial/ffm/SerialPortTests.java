@@ -215,10 +215,17 @@ class SerialPortTests {
 
 	@Test
 	void readIntervalTimeout() throws IOException {
+		// this test fails if there is no (manual) data input generated
+		// -> readBytes() waits (forever) for the first data byte and exceeds the asserted timeout
+
 		final var timeouts = Timeouts.readInterval(Duration.ofMillis(2000));
 		port.timeouts(timeouts);
 		final var rwport = (ReadWritePort) port;
-		assertTimeoutPreemptively(timeouts.readInterval().plus(delta), rwport::read);
+		final int len = 100;
+		assertTimeoutPreemptively(timeouts.readInterval().multipliedBy(5), () -> {
+			final int read = rwport.readBytes(new byte[len], 0, len);
+			assertTrue(read < len);
+		});
 	}
 
 	@Test
