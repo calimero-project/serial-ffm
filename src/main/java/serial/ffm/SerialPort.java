@@ -139,7 +139,7 @@ public interface SerialPort extends AutoCloseable {
 	@Deprecated(forRemoval = true)
 	void setEvents(int eventMask, boolean enable) throws IOException;
 
-	int waitEvent() throws IOException;
+	int waitEvent() throws IOException, InterruptedException;
 
 	// line status bit field
 	long LINE_CTS = 0x0010;    	// CTS (clear-to-send) signal is on

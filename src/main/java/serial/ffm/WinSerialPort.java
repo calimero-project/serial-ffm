@@ -436,7 +436,7 @@ final class WinSerialPort extends ReadWritePort {
 
 	//call *immediately* after read/write
 	private void waitPendingIO(final MemorySegment lastError, /*OVERLAPPED* */ final MemorySegment overlapped,
-			final MemorySegment transferred) throws IOException {
+			final MemorySegment transferred) throws IOException, InterruptedException {
 //		logger.log(TRACE, "wait pending I/O");
 		// the only error status tolerated is I/O pending
 		final int error = Win.getLastError(lastError);
@@ -446,8 +446,8 @@ final class WinSerialPort extends ReadWritePort {
 
 		// wait for operation completion, and check result
 		while (true) {
-			if (Thread.currentThread().isInterrupted())
-				throw new IOException("interrupted");
+			if (Thread.interrupted())
+				throw new InterruptedException();
 
 			final int res = Win.WaitForSingleObject(lastError, _OVERLAPPED.hEvent(overlapped), wakeupInterval);
 			if (res == Windows.WAIT_TIMEOUT())
@@ -460,7 +460,8 @@ final class WinSerialPort extends ReadWritePort {
 		}
 	}
 
-	private int write(final Arena arena, final MemorySegment bytes) throws IOException {
+	@Override
+	int writeBytes(final Arena arena, final MemorySegment bytes) throws IOException {
 		final var lastError = arena.allocate(Win.captureStateLayout);
 		final var event = Win.CreateEventA(lastError, Windows.NULL(), Windows.TRUE(), Windows.FALSE(), Windows.NULL());
 		if (event.equals(Windows.NULL()))
@@ -476,17 +477,17 @@ final class WinSerialPort extends ReadWritePort {
 			waitPendingIO(lastError, o, written);
 			return written.get(ValueLayout.JAVA_INT, 0);
 		}
+		catch (final InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IOException("interrupted");
+		}
 		finally {
 			Win.CloseHandle(lastError, event);
 		}
 	}
 
 	@Override
-	int writeBytes(final Arena arena, final MemorySegment bytes) throws IOException {
-		return write(arena, bytes);
-	}
-
-	private int read(final Arena arena, final MemorySegment bytes) throws IOException {
+	int readBytes(final Arena arena, final MemorySegment bytes) throws IOException {
 		final var lastError = arena.allocate(Win.captureStateLayout);
 		final var event = Win.CreateEventA(lastError, Windows.NULL(), Windows.TRUE(), Windows.FALSE(), Windows.NULL());
 		if (event.equals(Windows.NULL()))
@@ -502,14 +503,13 @@ final class WinSerialPort extends ReadWritePort {
 			waitPendingIO(lastError, o, read);
 			return read.get(ValueLayout.JAVA_INT, 0);
 		}
+		catch (final InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IOException("interrupted");
+		}
 		finally {
 			Win.CloseHandle(lastError, event);
 		}
-	}
-
-	@Override
-	int readBytes(final Arena arena, final MemorySegment bytes) throws IOException {
-		return read(arena, bytes);
 	}
 
 	@Override
@@ -562,7 +562,7 @@ final class WinSerialPort extends ReadWritePort {
 	}
 
 	@Override
-	public int waitEvent() throws IOException {
+	public int waitEvent() throws IOException, InterruptedException {
 		logger.log(TRACE, "wait comm event");
 		try (var arena = Arena.ofConfined()) {
 			final var lastError = arena.allocate(Win.captureStateLayout);

@@ -416,6 +416,9 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 				if (!isClosed())
 					logger.log(Level.WARNING, "waitEventLoop", e);
 			}
+			catch (final InterruptedException e) {
+				break;
+			}
 		}
 		logger.log(TRACE, "exit waitEventLoop");
 	}

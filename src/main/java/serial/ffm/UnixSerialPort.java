@@ -1312,7 +1312,7 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	@Override
-	public int waitEvent() throws IOException {
+	public int waitEvent() throws IOException, InterruptedException {
 		logger.log(TRACE, "enter wait event");
 		try {
 			if (OS.current() == OS.Mac || OS.current() == OS.Linux) {
@@ -1340,7 +1340,7 @@ final class UnixSerialPort extends ReadWritePort {
 		}
 	}
 
-	private int polledWaitEvent() throws IOException {
+	private int polledWaitEvent() throws IOException, InterruptedException {
 		try (var arena = Arena.ofConfined()) {
 			final var pfd = pollfd.allocate(arena);
 			pollfd.fd(pfd, fd.value());
@@ -1354,6 +1354,8 @@ final class UnixSerialPort extends ReadWritePort {
 
 				if (isClosed())
 					throwIOException(Unix.EBADF);
+				if (Thread.interrupted())
+					throw new InterruptedException();
 
 				if (ret > 0 && enabledEvents.contains(SerialEvent.DataAvailable)) {
 					final int retEvents = pollfd.revents(pfd);

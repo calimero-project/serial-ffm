@@ -324,6 +324,16 @@ class SerialPortTests {
 	}
 
 	@Test
+	void interruptWaitEvent() throws IOException {
+		port.events(EnumSet.of(SerialPort.SerialEvent.DataAvailable), true);
+		final var waitEventThread = Thread.currentThread();
+		final var timeToInterrupt = Duration.ofMillis(200);
+		Executors.newSingleThreadScheduledExecutor().schedule(waitEventThread::interrupt,
+				timeToInterrupt.toMillis(), TimeUnit.MILLISECONDS);
+		assertThrows(InterruptedException.class, () -> port.waitEvent());
+	}
+
+	@Test
 	void waitEvent() throws IOException {
 		final int eventMask = UnixSerialPort.EVENT_CTS | UnixSerialPort.EVENT_TXEMPTY | UnixSerialPort.EVENT_RING
 				| UnixSerialPort.EVENT_BREAK | UnixSerialPort.EVENT_CTS | UnixSerialPort.EVENT_DSR
