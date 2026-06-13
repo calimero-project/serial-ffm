@@ -277,8 +277,7 @@ class SerialPortTests {
 
 		final var readerThread = Thread.currentThread();
 		final var timeToInterrupt = Duration.ofMillis(700);
-		Executors.newSingleThreadScheduledExecutor().schedule(readerThread::interrupt,
-				timeToInterrupt.toMillis(), TimeUnit.MILLISECONDS);
+		schedule(readerThread::interrupt, timeToInterrupt);
 
 		final var rwport = (ReadWritePort) port;
 		assertThrowsWithTimeout(IOException.class, rwport::read, "interrupted", timeToInterrupt);
@@ -352,8 +351,7 @@ class SerialPortTests {
 		port.events(EnumSet.of(SerialPort.SerialEvent.DataAvailable), true);
 		final var waitEventThread = Thread.currentThread();
 		final var timeToInterrupt = Duration.ofMillis(200);
-		Executors.newSingleThreadScheduledExecutor().schedule(waitEventThread::interrupt,
-				timeToInterrupt.toMillis(), TimeUnit.MILLISECONDS);
+		schedule(waitEventThread::interrupt, timeToInterrupt);
 		assertThrows(InterruptedException.class, () -> port.waitEvent());
 	}
 
