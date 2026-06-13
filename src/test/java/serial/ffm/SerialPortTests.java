@@ -218,7 +218,7 @@ class SerialPortTests {
 		// this test fails if there is no (manual) data input generated
 		// -> readBytes() waits (forever) for the first data byte and exceeds the asserted timeout
 
-		final var timeouts = Timeouts.readInterval(Duration.ofMillis(2000));
+		final var timeouts = Timeouts.readInterval(Duration.ofMillis(1000));
 		port.timeouts(timeouts);
 		final var rwport = (ReadWritePort) port;
 		final int len = 100;
@@ -253,21 +253,25 @@ class SerialPortTests {
 		final var rwport = (ReadWritePort) port;
 		final int bytes = 1;
 		final var total = timeouts.readTotalConstant().plus(timeouts.readTotalMultiplier().multipliedBy(bytes));
-		assertTimeoutPreemptively(total.plus(delta), rwport::read);
+		assertTimeoutPreemptively(total.plus(delta), () -> {
+			int read = rwport.read();
+			assertEquals(-1, read);
+		});
 	}
 
 	@Test
 	void readIntervalAndTotalTimeout() throws IOException {
-		final var timeouts = new Timeouts(Duration.ofMillis(200), Duration.ofMillis(70), Duration.ofMillis(20),
+		final var timeouts = new Timeouts(Duration.ofMillis(1000), Duration.ofMillis(400), Duration.ofMillis(20),
 				Duration.ZERO, Duration.ZERO);
 		port.timeouts(timeouts);
 
 		final var data = new byte[10];
-		final var interval = timeouts.readInterval();
 		final var total = timeouts.readTotalConstant().plus(timeouts.readTotalMultiplier().multipliedBy(data.length));
-		final var min = interval.compareTo(total) <= 0 ? interval : total;
 		final var rwport = (ReadWritePort) port;
-		assertTimeoutPreemptively(min.plus(delta), () -> rwport.readBytes(data, 0, data.length));
+		assertTimeoutPreemptively(total.plus(delta), () -> {
+			int read = rwport.readBytes(data, 0, data.length);
+			assertTrue(read < data.length);
+		});
 	}
 
 	@Test
