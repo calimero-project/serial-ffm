@@ -88,14 +88,6 @@ tasks.test {
         showStandardStreams = true
         exceptionFormat = TestExceptionFormat.FULL
     }
-
- 	beforeTest(closureOf<TestDescriptor> {
-        println("$name started")
-    })
-
-	afterTest(closureOf<TestDescriptor> {
-		println("$name finished")
-	})
 }
 
 tasks.jextract {
