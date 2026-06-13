@@ -33,6 +33,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
@@ -639,9 +640,11 @@ final class WinSerialPort extends ReadWritePort {
 		final var to = _COMMTIMEOUTS.allocate(arena);
 		if (Win.GetCommTimeouts(lastError, h.handle(), to) == 0)
 			throwIoException(lastError);
-		return new Timeouts(_COMMTIMEOUTS.ReadIntervalTimeout(to),
-				_COMMTIMEOUTS.ReadTotalTimeoutMultiplier(to), _COMMTIMEOUTS.ReadTotalTimeoutConstant(to),
-				_COMMTIMEOUTS.WriteTotalTimeoutMultiplier(to), _COMMTIMEOUTS.WriteTotalTimeoutConstant(to));
+		return new Timeouts(Duration.ofMillis(_COMMTIMEOUTS.ReadIntervalTimeout(to)),
+				Duration.ofMillis(_COMMTIMEOUTS.ReadTotalTimeoutConstant(to)),
+				Duration.ofMillis(_COMMTIMEOUTS.ReadTotalTimeoutMultiplier(to)),
+				Duration.ofMillis(_COMMTIMEOUTS.WriteTotalTimeoutConstant(to)),
+				Duration.ofMillis(_COMMTIMEOUTS.WriteTotalTimeoutMultiplier(to)));
 	}
 
 	private EnumSet<SerialEvent> translateEvents(final int eventMask) {
