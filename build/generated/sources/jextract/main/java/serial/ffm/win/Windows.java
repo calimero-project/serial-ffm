@@ -663,16 +663,17 @@ public class Windows extends Windows$shared {
         }
     }
 
-    private static class GetOverlappedResult {
+    private static class GetOverlappedResultEx {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             Windows.C_INT,
             Windows.C_POINTER,
             Windows.C_POINTER,
             Windows.C_POINTER,
+            Windows.C_LONG,
             Windows.C_INT
         );
 
-        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetOverlappedResult");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetOverlappedResultEx");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -680,106 +681,45 @@ public class Windows extends Windows$shared {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, BOOL bWait)
+     * BOOL GetOverlappedResultEx(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, DWORD dwMilliseconds, BOOL bAlertable)
      * }
      */
-    public static FunctionDescriptor GetOverlappedResult$descriptor() {
-        return GetOverlappedResult.DESC;
+    public static FunctionDescriptor GetOverlappedResultEx$descriptor() {
+        return GetOverlappedResultEx.DESC;
     }
 
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, BOOL bWait)
+     * BOOL GetOverlappedResultEx(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, DWORD dwMilliseconds, BOOL bAlertable)
      * }
      */
-    public static MethodHandle GetOverlappedResult$handle() {
-        return GetOverlappedResult.HANDLE;
+    public static MethodHandle GetOverlappedResultEx$handle() {
+        return GetOverlappedResultEx.HANDLE;
     }
 
     /**
      * Address for:
      * {@snippet lang=c :
-     * BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, BOOL bWait)
+     * BOOL GetOverlappedResultEx(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, DWORD dwMilliseconds, BOOL bAlertable)
      * }
      */
-    public static MemorySegment GetOverlappedResult$address() {
-        return GetOverlappedResult.ADDR;
+    public static MemorySegment GetOverlappedResultEx$address() {
+        return GetOverlappedResultEx.ADDR;
     }
 
     /**
      * {@snippet lang=c :
-     * BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, BOOL bWait)
+     * BOOL GetOverlappedResultEx(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, DWORD dwMilliseconds, BOOL bAlertable)
      * }
      */
-    public static int GetOverlappedResult(MemorySegment hFile, MemorySegment lpOverlapped, MemorySegment lpNumberOfBytesTransferred, int bWait) {
-        var mh$ = GetOverlappedResult.HANDLE;
+    public static int GetOverlappedResultEx(MemorySegment hFile, MemorySegment lpOverlapped, MemorySegment lpNumberOfBytesTransferred, int dwMilliseconds, int bAlertable) {
+        var mh$ = GetOverlappedResultEx.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
-                traceDowncall("GetOverlappedResult", hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
+                traceDowncall("GetOverlappedResultEx", hFile, lpOverlapped, lpNumberOfBytesTransferred, dwMilliseconds, bAlertable);
             }
-            return (int)mh$.invokeExact(hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
-        } catch (Error | RuntimeException ex) {
-           throw ex;
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class WaitForSingleObject {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_LONG,
-            Windows.C_POINTER,
-            Windows.C_LONG
-        );
-
-        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("WaitForSingleObject");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
-     * }
-     */
-    public static FunctionDescriptor WaitForSingleObject$descriptor() {
-        return WaitForSingleObject.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
-     * }
-     */
-    public static MethodHandle WaitForSingleObject$handle() {
-        return WaitForSingleObject.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
-     * }
-     */
-    public static MemorySegment WaitForSingleObject$address() {
-        return WaitForSingleObject.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
-     * }
-     */
-    public static int WaitForSingleObject(MemorySegment hHandle, int dwMilliseconds) {
-        var mh$ = WaitForSingleObject.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("WaitForSingleObject", hHandle, dwMilliseconds);
-            }
-            return (int)mh$.invokeExact(hHandle, dwMilliseconds);
+            return (int)mh$.invokeExact(hFile, lpOverlapped, lpNumberOfBytesTransferred, dwMilliseconds, bAlertable);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {
@@ -1886,15 +1826,6 @@ public class Windows extends Windows$shared {
     public static MemorySegment INVALID_HANDLE_VALUE() {
         return INVALID_HANDLE_VALUE;
     }
-    private static final int WAIT_OBJECT_0 = (int)0L;
-    /**
-     * {@snippet lang=c :
-     * #define WAIT_OBJECT_0 0
-     * }
-     */
-    public static int WAIT_OBJECT_0() {
-        return WAIT_OBJECT_0;
-    }
     private static final int INFINITE = (int)4294967295L;
     /**
      * {@snippet lang=c :
@@ -1966,6 +1897,15 @@ public class Windows extends Windows$shared {
      */
     public static int ERROR_NO_MORE_ITEMS() {
         return ERROR_NO_MORE_ITEMS;
+    }
+    private static final int ERROR_IO_INCOMPLETE = (int)996L;
+    /**
+     * {@snippet lang=c :
+     * #define ERROR_IO_INCOMPLETE 996
+     * }
+     */
+    public static int ERROR_IO_INCOMPLETE() {
+        return ERROR_IO_INCOMPLETE;
     }
     private static final int ERROR_IO_PENDING = (int)997L;
     /**

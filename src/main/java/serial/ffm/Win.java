@@ -51,8 +51,7 @@ final class Win {
 	private static final MethodHandle ReadFile = linker.downcallHandle(Windows.ReadFile$address(), Windows.ReadFile$descriptor(), ccs);
 	private static final MethodHandle WriteFile = linker.downcallHandle(Windows.WriteFile$address(), Windows.WriteFile$descriptor(), ccs);
 	private static final MethodHandle CloseHandle = linker.downcallHandle(Windows.CloseHandle$address(), Windows.CloseHandle$descriptor(), ccs);
-	private static final MethodHandle GetOverlappedResult = linker.downcallHandle(Windows.GetOverlappedResult$address(), Windows.GetOverlappedResult$descriptor(), ccs);
-	private static final MethodHandle WaitForSingleObject = linker.downcallHandle(Windows.WaitForSingleObject$address(), Windows.WaitForSingleObject$descriptor(), ccs);
+	private static final MethodHandle GetOverlappedResultEx = linker.downcallHandle(Windows.GetOverlappedResultEx$address(), Windows.GetOverlappedResultEx$descriptor(), ccs);
 	private static final MethodHandle CreateEventA = linker.downcallHandle(Windows.CreateEventA$address(), Windows.CreateEventA$descriptor(), ccs);
 	private static final MethodHandle ClearCommError = linker.downcallHandle(Windows.ClearCommError$address(), Windows.ClearCommError$descriptor(), ccs);
 	private static final MethodHandle SetupComm = linker.downcallHandle(Windows.SetupComm$address(), Windows.SetupComm$descriptor(), ccs);
@@ -182,31 +181,14 @@ final class Win {
 
 	/**
 	 * {@snippet lang=c :
-	 * BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, BOOL bWait)
+	 * BOOL GetOverlappedResultEx(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, DWORD dwMilliseconds, BOOL bAlertable)
 	 * }
 	 */
-	static int GetOverlappedResult(final MemorySegment lastError, final MemorySegment hFile, final MemorySegment lpOverlapped, final MemorySegment lpNumberOfBytesTransferred, final int bWait) {
+	public static int GetOverlappedResultEx(final MemorySegment lastError, final MemorySegment hFile, final MemorySegment lpOverlapped, final MemorySegment lpNumberOfBytesTransferred, final int dwMilliseconds, final int bAlertable) {
 		try {
 			if (traceDowncalls)
-				traceDowncall("GetOverlappedResult", hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
-			return (int) GetOverlappedResult.invokeExact(lastError, hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
-		} catch (Error | RuntimeException e) {
-			throw e;
-		} catch (final Throwable t) {
-			throw new AssertionError("should not reach here", t);
-		}
-	}
-
-	/**
-	 * {@snippet lang=c :
-	 * DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
-	 * }
-	 */
-	static int WaitForSingleObject(final MemorySegment lastError, final MemorySegment hHandle, final int dwMilliseconds) {
-		try {
-			if (traceDowncalls)
-				traceDowncall("WaitForSingleObject", hHandle, dwMilliseconds);
-			return (int) WaitForSingleObject.invokeExact(lastError, hHandle, dwMilliseconds);
+				traceDowncall("GetOverlappedResultEx", hFile, lpOverlapped, lpNumberOfBytesTransferred, dwMilliseconds, bAlertable);
+			return (int) GetOverlappedResultEx.invokeExact(lastError, hFile, lpOverlapped, lpNumberOfBytesTransferred, dwMilliseconds, bAlertable);
 		} catch (Error | RuntimeException e) {
 			throw e;
 		} catch (final Throwable t) {

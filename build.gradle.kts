@@ -140,13 +140,14 @@ tasks.jextract {
                 "GetFileType", "CloseHandle", "CreateFileA", "ReadFile", "WriteFile", "FlushFileBuffers",
                 "SetupComm", "GetCommProperties", "EscapeCommFunction", "GetCommState", "SetCommState", "ClearCommError",
                 "GetCommMask", "GetCommModemStatus", "SetCommMask", "WaitCommEvent", "GetCommTimeouts", "SetCommTimeouts",
-                "FormatMessageA", "GetOverlappedResult", "CreateEventA", "WaitForSingleObject")
+                "FormatMessageA", "GetOverlappedResultEx", "CreateEventA")
             structFilter = listOf("HKEY__", "_COMMPROP", "_COMMTIMEOUTS", "_COMSTAT", "_DCB", "_OVERLAPPED")
             constantFilter = listOf("FALSE", "TRUE", "NULL",
                 "HKEY_LOCAL_MACHINE", "KEY_READ",
                 "FILE_TYPE_CHAR", "GENERIC_READ", "GENERIC_WRITE", "FILE_ATTRIBUTE_NORMAL", "OPEN_EXISTING", "FILE_FLAG_OVERLAPPED",
-                "WAIT_OBJECT_0", "WAIT_TIMEOUT", "INFINITE",
-                "NO_ERROR", "ERROR_SUCCESS", "ERROR_PATH_NOT_FOUND", "ERROR_INVALID_HANDLE", "ERROR_NO_MORE_ITEMS", "ERROR_IO_PENDING",
+                "WAIT_TIMEOUT", "INFINITE",
+                "NO_ERROR", "ERROR_SUCCESS", "ERROR_PATH_NOT_FOUND", "ERROR_INVALID_HANDLE", "ERROR_NO_MORE_ITEMS",
+                "ERROR_IO_PENDING", "ERROR_IO_INCOMPLETE",
                 "INVALID_HANDLE_VALUE", "FILE_TYPE_UNKNOWN", "ERROR_FILE_NOT_FOUND",
                 "NOPARITY", "ONESTOPBIT", "TWOSTOPBITS",
                 "RTS_CONTROL_HANDSHAKE", "RTS_CONTROL_DISABLE", "DTR_CONTROL_DISABLE", "SETDTR",
