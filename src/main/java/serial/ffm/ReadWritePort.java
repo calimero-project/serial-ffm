@@ -395,7 +395,7 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 		try {
 			if (enable) {
 				if (eventLooper == null)
-					eventLooper = Thread.startVirtualThread(this::waitEventLoop);
+					eventLooper = Thread.ofVirtual().name("Serial Port Event Monitor").start(this::waitEventLoop);
 			}
 			else if (eventLooper != null) {
 				eventLooper.interrupt();
