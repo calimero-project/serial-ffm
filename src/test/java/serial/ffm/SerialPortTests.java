@@ -229,6 +229,23 @@ class SerialPortTests {
 	}
 
 	@Test
+	void noReadIntervalTimeoutOnFirstByte() throws IOException {
+		final var timeouts = Timeouts.readInterval(Duration.ofMillis(100));
+		port.timeouts(timeouts);
+		final var rwport = (ReadWritePort) port;
+
+		final var readerThread = Thread.currentThread();
+		schedule(readerThread::interrupt, Duration.ofMillis(2000));
+		var e = assertThrows(IOException.class, rwport::read);
+		assertEquals("interrupted", e.getMessage());
+
+		schedule(readerThread::interrupt, Duration.ofMillis(2000));
+		final int len = 100;
+		e = assertThrows(IOException.class, () -> rwport.readBytes(new byte[len], 0, len));
+		assertEquals("interrupted", e.getMessage());
+	}
+
+	@Test
 	void readTotalTimeout() throws IOException {
 		final var timeouts = Timeouts.readTotal(Duration.ofMillis(1000), Duration.ofMillis(300));
 		port.timeouts(timeouts);
@@ -419,5 +436,9 @@ class SerialPortTests {
 		System.setProperty(ReadWritePort.wakeupIntervalKey, value);
 		int timeout = ReadWritePort.wakeupInterval();
 		assertEquals(ReadWritePort.defaultWakeupInterval, timeout);
+	}
+
+	private static void schedule(final Runnable run, final Duration delay) {
+		Executors.newSingleThreadScheduledExecutor().schedule(run, delay.toMillis(), TimeUnit.MILLISECONDS);
 	}
 }

@@ -1033,7 +1033,7 @@ final class UnixSerialPort extends ReadWritePort {
 			final long elapsed = (System.nanoTime() - start) / 1_000_000;
 			long pollTimeout = 0;
 
-			if (readInterval > 0) {
+			if (remaining < buffer.byteSize() && readInterval > 0) {
 				// check whether we reached interval timeout for next byte
 				final long remainingInterval = readInterval - elapsed;
 				if (remainingInterval < 0)
