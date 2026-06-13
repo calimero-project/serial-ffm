@@ -1,2 +1,4 @@
+jdk:
+  - openjdk25
 install:
   - ./gradlew -x test publishToMavenLocal
