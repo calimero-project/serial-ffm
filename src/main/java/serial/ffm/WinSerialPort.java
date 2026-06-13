@@ -570,21 +570,22 @@ final class WinSerialPort extends ReadWritePort {
 			if (event.equals(Windows.NULL()))
 				throwIoException(lastError);
 
-			final /*DWORD*/ MemorySegment eventMask;
 			try {
 				final var o = _OVERLAPPED.allocate(arena);
 				_OVERLAPPED.hEvent(o, event);
-				eventMask = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
-				if (Win.WaitCommEvent(lastError, h.handle(), eventMask, o) == 0) {
-					final /*DWORD*/ var unused = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
-					waitPendingIO(lastError, o, unused);
+				final /*DWORD*/ var eventMask = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
+				final /*DWORD*/ var unused = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
+				while (true) {
+					if (Win.WaitCommEvent(lastError, h.handle(), eventMask, o) == Windows.FALSE())
+						waitPendingIO(lastError, o, unused);
+					final var events = translateEvents(eventMask.get(ValueLayout.JAVA_INT, 0));
+					if (!events.isEmpty())
+						return events;
 				}
 			}
 			finally {
 				Win.CloseHandle(lastError, event);
 			}
-			// note if event mask was changed while waiting for event we return 0
-			return translateEvents(eventMask.get(ValueLayout.JAVA_INT, 0));
 		}
 	}
 
