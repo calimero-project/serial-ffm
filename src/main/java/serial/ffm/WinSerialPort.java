@@ -438,10 +438,11 @@ final class WinSerialPort extends ReadWritePort {
 	//call *immediately* after read/write
 	private void waitPendingIO(final MemorySegment lastError, /*OVERLAPPED* */ final MemorySegment overlapped,
 			final MemorySegment transferred) throws IOException, InterruptedException {
-//		logger.log(TRACE, "wait pending I/O");
 		// the only error status tolerated is I/O pending
 		final int error = Win.getLastError(lastError);
-		if (error != Windows.NO_ERROR() && error != Windows.ERROR_IO_PENDING())
+		if (error == Windows.NO_ERROR())
+			throw new IOException("no I/O operation in progress");
+		if (error != Windows.ERROR_IO_PENDING())
 			// some I/O problem, throw error
 			throwIoException(lastError);
 
