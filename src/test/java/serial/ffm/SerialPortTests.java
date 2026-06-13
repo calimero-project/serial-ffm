@@ -293,8 +293,8 @@ class SerialPortTests {
 	private static void assertWithinRange(final Duration expected, final long actualNanos) {
 		if (expected.minusNanos(actualNanos).abs().compareTo(delta) > 0)
 			assertionFailure()
-					.expected(expected + " ±" + delta)
-					.actual(actualNanos)
+					.expected(expected.toMillis() + " ±" + delta.toMillis() + " ms")
+					.actual(actualNanos / 1_000_000 + " ms")
 					.trimStacktrace(Assertions.class)
 					.buildAndThrow();
 	}
