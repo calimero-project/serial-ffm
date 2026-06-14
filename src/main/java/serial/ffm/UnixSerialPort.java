@@ -1365,13 +1365,17 @@ final class UnixSerialPort extends ReadWritePort {
 						SerialEvent.DataSetReady, SerialEvent.CarrierDetect, SerialEvent.Ring))) {
 					final int lineStatus = status(arena, Status.Line);
 					if ((polledLineStatus != lineStatus)) {
-						if (isSet(polledLineStatus, LINE_CTS) != isSet(lineStatus, LINE_CTS))
+						if (enabledEvents.contains(SerialEvent.ClearToSend)	&&
+								isSet(polledLineStatus, LINE_CTS) != isSet(lineStatus, LINE_CTS))
 							events.add(SerialEvent.ClearToSend);
-						if (isSet(polledLineStatus, LINE_DSR) != isSet(lineStatus, LINE_DSR))
+						if (enabledEvents.contains(SerialEvent.DataSetReady) &&
+								isSet(polledLineStatus, LINE_DSR) != isSet(lineStatus, LINE_DSR))
 							events.add(SerialEvent.DataSetReady);
-						if (isSet(polledLineStatus, LINE_RING) != isSet(lineStatus, LINE_RING))
+						if (enabledEvents.contains(SerialEvent.Ring) &&
+								isSet(polledLineStatus, LINE_RING) != isSet(lineStatus, LINE_RING))
 							events.add(SerialEvent.Ring);
-						if (isSet(polledLineStatus, LINE_DCD) != isSet(lineStatus, LINE_DCD))
+						if (enabledEvents.contains(SerialEvent.CarrierDetect) &&
+								isSet(polledLineStatus, LINE_DCD) != isSet(lineStatus, LINE_DCD))
 							events.add(SerialEvent.CarrierDetect);
 
 						polledLineStatus = lineStatus;
