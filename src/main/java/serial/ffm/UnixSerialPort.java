@@ -129,8 +129,6 @@ final class UnixSerialPort extends ReadWritePort {
 	private final Set<SerialEvent> enabledEvents = Collections.synchronizedSet(EnumSet.noneOf(SerialEvent.class));
 	private volatile int ioctlEventMask;
 
-	// only necessary on platforms like macOS which don't support waiting for events
-	private final Duration eventPollInterval = Duration.ofMillis(50);
 	private volatile int polledLineStatus;
 	private volatile int polledErrorStatus;
 	private volatile int polledAvailableStatus;
@@ -1352,7 +1350,7 @@ final class UnixSerialPort extends ReadWritePort {
 			while (true) {
 				int ret;
 				do {
-					ret = Unix.poll(pfd, 1, (int) eventPollInterval.toMillis());
+					ret = Unix.poll(pfd, 1, wakeupInterval);
 				} while (ret == -1 && (errno() == Unix.EINTR || errno() == Unix.EAGAIN));
 
 				if (isClosed())
