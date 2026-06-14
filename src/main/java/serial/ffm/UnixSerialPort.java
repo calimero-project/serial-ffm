@@ -77,10 +77,6 @@ final class UnixSerialPort extends ReadWritePort {
 	// Ring signal detected
 	static final int EVENT_RING = 0x0100;
 
-	static final int EVENT_DTR = 0x0200;
-	static final int EVENT_RTS = 0x0400;
-
-
 	private static final String lockDir = "/var/lock/";
 	private static final String lckPrefix = "LCK..";
 	private static final String pidPrefix = "PID..";
@@ -1444,9 +1440,6 @@ final class UnixSerialPort extends ReadWritePort {
 			}
 		};
 	}
-
-	// for readIntervalTimeout, so it has same behavior as in windows when set to this specific value
-	private static final /*uint*/ int MAXDWORD = 0xffff_ffff;
 
 	@Override
 	void timeouts(final Arena arena, final Timeouts timeouts) {
