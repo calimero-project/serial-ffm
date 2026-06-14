@@ -645,17 +645,10 @@ final class UnixSerialPort extends ReadWritePort {
 		long flags = termios.c_cflag(cflags);
 
 		flags &= ~Unix.CSTOPB;
-		switch (stopbits) {
-			case Two:
-				flags |= Unix.CSTOPB;
-				break;
-//		case STOPBITS_15: /* does not exist */
-//			break;
-			case One:
-				break;
-			default:
-				break;
-		}
+		flags |= switch (stopbits) {
+			case One -> 0;
+			case Two -> Unix.CSTOPB;
+		};
 		termios.c_cflag(cflags, (int) flags);
 	}
 
