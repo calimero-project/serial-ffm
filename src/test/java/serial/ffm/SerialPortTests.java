@@ -314,12 +314,6 @@ class SerialPortTests {
 	}
 
 	@Test
-	void setEvents() throws IOException {
-		final int eventMask = UnixSerialPort.EVENT_CTS | UnixSerialPort.EVENT_TXEMPTY;
-		port.setEvents(eventMask, true);
-	}
-
-	@Test
 	void events() throws IOException, InterruptedException {
 		port.events(EnumSet.noneOf(SerialPort.SerialEvent.class), true);
 		port.events(EnumSet.allOf(SerialPort.SerialEvent.class), true);
@@ -361,10 +355,8 @@ class SerialPortTests {
 
 	@Test
 	void waitEvent() throws IOException, InterruptedException {
-		final int eventMask = UnixSerialPort.EVENT_CTS | UnixSerialPort.EVENT_TXEMPTY | UnixSerialPort.EVENT_RING
-				| UnixSerialPort.EVENT_BREAK | UnixSerialPort.EVENT_CTS | UnixSerialPort.EVENT_DSR
-				| UnixSerialPort.EVENT_RLSD | UnixSerialPort.EVENT_RXCHAR;
-		port.setEvents(eventMask, true);
+		final var enableEvents = EnumSet.allOf(SerialPort.SerialEvent.class);
+		port.events(enableEvents, true);
 		// TODO commented out because waiting for events never returns
 //		final var events = port.waitEvent();
 //		((ReadWritePort) port).dispatchEvents(events);

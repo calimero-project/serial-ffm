@@ -59,24 +59,6 @@ import serial.ffm.unix.termios;
  * contains platform dependent code.
  */
 final class UnixSerialPort extends ReadWritePort {
-
-	// Any Character received
-	static final int EVENT_RXCHAR = 0x0001;
-	// Transmit Queue Empty
-	static final int EVENT_TXEMPTY = 0x0004;
-	// CTS changed state
-	static final int EVENT_CTS = 0x0008;
-	// DSR changed state
-	static final int EVENT_DSR = 0x0010;
-	// RLSD changed state
-	static final int EVENT_RLSD = 0x0020;
-	// BREAK received
-	static final int EVENT_BREAK = 0x0040;
-	// Line status error occurred
-	private static final int EVENT_ERR = 0x0080;
-	// Ring signal detected
-	static final int EVENT_RING = 0x0100;
-
 	private static final String lockDir = "/var/lock/";
 	private static final String lckPrefix = "LCK..";
 	private static final String pidPrefix = "PID..";
@@ -1160,37 +1142,6 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private static boolean definedFIORDCHK() {
 		return false;
-	}
-
-	@Override
-	public void setEvents(final int eventMask, final boolean enable) {
-		int events = 0;
-		// XXX assign those
-		if ((eventMask & EVENT_RXCHAR) != 0)
-			events |= 0;
-		if ((eventMask & EVENT_TXEMPTY) != 0)
-			events |= 0;
-
-		if ((eventMask & EVENT_CTS) != 0)
-			events |= Unix.TIOCM_CTS;
-		if ((eventMask & EVENT_DSR) != 0)
-			events |= Unix.TIOCM_DSR;
-		if ((eventMask & EVENT_RLSD) != 0)
-			events |= Unix.TIOCM_CAR;
-		// XXX assign those
-		if ((eventMask & EVENT_BREAK) != 0)
-			events |= 0;
-		if ((eventMask & EVENT_ERR) != 0)
-			events |= 0;
-		if ((eventMask & EVENT_RING) != 0)
-			events |= Unix.TIOCM_RNG;
-
-		if (enable) {
-			ioctlEventMask |= events;
-		}
-		else {
-			ioctlEventMask &= ~events;
-		}
 	}
 
 	@Override
