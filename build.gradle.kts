@@ -77,7 +77,7 @@ tasks.withType<Test> {
 testing {
     suites {
         // Configure the built-in test suite
-        val test by getting(JvmTestSuite::class) {
+        val test = named<JvmTestSuite>("test") {
             useJUnitJupiter(project.extra["junitJupiterVersion"].toString())
         }
     }
