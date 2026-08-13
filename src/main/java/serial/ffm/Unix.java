@@ -117,13 +117,17 @@ final class Unix {
 	static final int POLLHUP  = OS.current() == OS.Linux ? Linux.POLLHUP() : Mac.POLLHUP();
 	static final int POLLNVAL = OS.current() == OS.Linux ? Linux.POLLNVAL() : Mac.POLLNVAL();
 
-	private static final MemorySegment errno = OS.current() == OS.Linux ? Linux.__errno_location() : Mac.__error();
+	// errno is thread-local, so its location has to be queried on the thread we want it of:
+	// caching one segment hands every other thread the errno of the thread that cached it
+	private static MemorySegment errnoLocation() {
+		return OS.current() == OS.Linux ? Linux.__errno_location() : Mac.__error();
+	}
 
 	static int errno() {
-		return errno.get(ValueLayout.JAVA_INT, 0);
+		return errnoLocation().get(ValueLayout.JAVA_INT, 0);
 	}
 
 	static void errno(final int error) {
-		errno.set(ValueLayout.JAVA_INT, 0, error);
+		errnoLocation().set(ValueLayout.JAVA_INT, 0, error);
 	}
 }

@@ -366,7 +366,9 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 		try (var arena = Arena.ofConfined()) {
 			final var buf = arena.allocate(length);
 			MemorySegment.copy(bytes, offset, buf, ValueLayout.JAVA_BYTE, 0, length);
-			writeBytes(arena, buf);
+			final int written = writeBytes(arena, buf);
+			if (written != length)
+				throw new IOException("write incomplete, " + written + " of " + length + " bytes");
 		}
 		finally {
 			logger.log(TRACE, "end write");

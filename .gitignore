@@ -8,6 +8,8 @@
 
 !src/**/build/
 
+/.idea
+
 # Eclipse
 .project
 .classpath

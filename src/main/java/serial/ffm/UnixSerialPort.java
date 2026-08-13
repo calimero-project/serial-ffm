@@ -136,6 +136,21 @@ final class UnixSerialPort extends ReadWritePort {
 		return checkPortsDir("/dev");
 	}
 
+	// device name prefixes of serial ports, each followed by the port number
+	private static final String[] linuxPortNames = { "ttyS", "ttyUSB", "ttyACM", "ttyAMA", "ttyXRUSB",
+		"ttymxc", "ttyTHS", "ttySAC", "ttyPS", "ttySC", "ttyMI", "ttyO", "rfcomm", "ircomm" };
+
+	// deciding whether a device is a serial port requires opening it, so keep the obvious non-ports
+	// out: opening every node in /dev is slow, and those we cannot open are reported as ports
+	private static boolean isPortName(final String name) {
+		if (OS.current() == OS.Mac)
+			return name.startsWith("cu.") || name.startsWith("tty.");
+		for (final var prefix : linuxPortNames)
+			if (name.length() > prefix.length() && name.startsWith(prefix))
+				return true;
+		return false;
+	}
+
 	private static Set<String> checkPortsDir(final String dir) {
 		try (var arena = Arena.ofConfined()) {
 			final var logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
@@ -153,6 +168,8 @@ final class UnixSerialPort extends ReadWritePort {
 				final String name = dirent.d_name(entry).getString(0);
 				// ignore entries '.' and '..'
 				if (name.charAt(0) == '.' && name.length() <= 2)
+					continue;
+				if (!isPortName(name))
 					continue;
 
 				if (debug())
@@ -504,11 +521,13 @@ final class UnixSerialPort extends ReadWritePort {
 	private fd_t openPort(final Arena arena, final String portId, final boolean configurePort,
 			final AtomicInteger lastError) throws IOException {
 		fd_t fd;
-//		errno(0);
 		int error = 0;
 
 		ensureLock(portId);
 		final var port = arena.allocateFrom(portId);
+		// the EBUSY check below runs on a successfully opened port, where errno still holds whatever
+		// the last failing call on this thread left there, so start from a known value
+		errno(0);
 		do {
 			// we set the port exclusive below, not here
 			fd = fd_t.of(Linux.open.makeInvoker().apply(port, /*O_EXCL |*/Unix.O_RDWR | Unix.O_NOCTTY | Unix.O_NONBLOCK));
