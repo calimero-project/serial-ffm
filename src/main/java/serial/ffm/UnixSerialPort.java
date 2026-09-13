@@ -499,17 +499,10 @@ final class UnixSerialPort extends ReadWritePort {
 		}
 		while (errno() == Unix.EINTR);
 
-		// check if someone else has opened the port
 		if (fd.equals(fd_t.Invalid)) {
 			lastError.set(errno());
 			releaseLock();
 			throw new IOException("failed to open port '" + portId + "': " + errnoMsg());
-		}
-		if (errno() == Unix.EBUSY) {
-			logger.log(TRACE, "busy {0}", fd);
-			lastError.set(errno());
-			releaseLock();
-			return fd;
 		}
 
 		// we continue if we are not able to set exclusive mode
