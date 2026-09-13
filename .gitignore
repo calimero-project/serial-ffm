@@ -8,6 +8,10 @@
 
 !src/**/build/
 
+# IntelliJ
+.idea/
+*.iml
+
 # Eclipse
 .project
 .classpath
