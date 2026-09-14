@@ -136,9 +136,6 @@ public interface SerialPort extends AutoCloseable {
 
 	void events(EnumSet<SerialEvent> events, boolean enable) throws IOException;
 
-	@Deprecated(forRemoval = true)
-	void setEvents(int eventMask, boolean enable) throws IOException;
-
 	EnumSet<SerialEvent> waitEvent() throws IOException, InterruptedException;
 
 	// line status bit field

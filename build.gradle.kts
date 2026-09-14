@@ -3,17 +3,17 @@ import java.util.Locale
 
 buildscript {
     dependencies {
-        classpath("com.guardsquare:proguard-gradle:7.9.1")
+        classpath("com.guardsquare:proguard-gradle:7.10.0")
     }
 }
 
 plugins {
     id("java-library")
-    id("com.github.ben-manes.versions") version "0.54.0"
+    id("io.github.ben-manes.versions") version "0.62.0"
     id("io.github.krakowski.jextract") version "0.5.0"
     id("maven-publish")
     signing
-    id("org.graalvm.buildtools.native") version "1.1.1"
+    id("org.graalvm.buildtools.native") version "1.1.12"
 }
 
 repositories {
@@ -23,7 +23,7 @@ repositories {
 group = "io.calimero"
 version = "0.7-SNAPSHOT"
 
-extra["junitJupiterVersion"] = "6.1.0"
+extra["junitJupiterVersion"] = "6.1.3"
 
 java {
     toolchain {
@@ -77,7 +77,7 @@ tasks.withType<Test> {
 testing {
     suites {
         // Configure the built-in test suite
-        val test by getting(JvmTestSuite::class) {
+        val test = named<JvmTestSuite>("test") {
             useJUnitJupiter(project.extra["junitJupiterVersion"].toString())
         }
     }
@@ -237,8 +237,8 @@ tasks.register<proguard.gradle.ProGuardTask>("strip") {
 }
 
 dependencies {
-    testRuntimeOnly("org.slf4j:slf4j-jdk-platform-logging:2.0.18")
-    testRuntimeOnly("org.slf4j:slf4j-simple:2.0.18")
+    testRuntimeOnly("org.slf4j:slf4j-jdk-platform-logging:2.0.19")
+    testRuntimeOnly("org.slf4j:slf4j-simple:2.0.19")
 }
 
 graalvmNative {

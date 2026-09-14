@@ -523,23 +523,6 @@ final class WinSerialPort extends ReadWritePort {
 	}
 
 	@Override
-	public void setEvents(final int eventMask, final boolean enable) throws IOException {
-		logger.log(TRACE, "set event: mask 0x{0}, enable={1}",  Integer.toUnsignedString(eventMask, 16), enable);
-		try (var arena = Arena.ofConfined()) {
-			final var lastError = arena.allocate(Win.captureStateLayout);
-			/*DWORD*/ final var mask = arena.allocate(ValueLayout.JAVA_INT);
-			if (Win.GetCommMask(lastError, h.handle(), mask) == 0)
-				throwIoException(lastError);
-
-			final int m = mask.get(ValueLayout.JAVA_INT, 0);
-			final int set = enable ? m | eventMask : m & ~eventMask;
-			if (Win.SetCommMask(lastError, h.handle(), set) == 0)
-				throwIoException(lastError);
-			enableEventLooper(set != 0);
-		}
-	}
-
-	@Override
 	public void events(final EnumSet<SerialEvent> events, final boolean enable) throws IOException {
 		if (isClosed())
 			throwIoException(Windows.ERROR_INVALID_HANDLE());
@@ -559,7 +542,19 @@ final class WinSerialPort extends ReadWritePort {
 				case Ring -> Windows.EV_RING();
 			};
 		}
-		setEvents(mask, enable);
+
+		try (var arena = Arena.ofConfined()) {
+			final var lastError = arena.allocate(Win.captureStateLayout);
+			final var maskBuf = arena.allocate(ValueLayout.JAVA_INT);
+			if (Win.GetCommMask(lastError, h.handle(), maskBuf) == 0)
+				throwIoException(lastError);
+
+			final int currentMask = maskBuf.get(ValueLayout.JAVA_INT, 0);
+			final int setMask = enable ? currentMask | mask : currentMask & ~mask;
+			if (Win.SetCommMask(lastError, h.handle(), setMask) == 0)
+				throwIoException(lastError);
+			enableEventLooper(setMask != 0);
+		}
 	}
 
 	@Override
