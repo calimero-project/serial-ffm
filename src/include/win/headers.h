@@ -51,3 +51,4 @@
 
 
 #include <windows.h>
+#include <cfgmgr32.h>

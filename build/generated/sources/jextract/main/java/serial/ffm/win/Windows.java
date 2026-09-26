@@ -5,6 +5,7 @@ package serial.ffm.win;
 import java.lang.invoke.*;
 import java.lang.foreign.*;
 import java.util.*;
+import java.util.function.*;
 import java.util.stream.*;
 
 public class Windows extends Windows$shared {
@@ -15,7 +16,9 @@ public class Windows extends Windows$shared {
 
     static final Arena LIBRARY_ARENA = Arena.ofAuto();
 
-    static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.loaderLookup()
+    static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName("kernel32"), LIBRARY_ARENA)
+            .or(SymbolLookup.libraryLookup(System.mapLibraryName("cfgmgr32"), LIBRARY_ARENA))
+            .or(SymbolLookup.loaderLookup())
             .or(Linker.nativeLinker().defaultLookup());
 
     private static final int FALSE = (int)0L;
@@ -287,6 +290,24 @@ public class Windows extends Windows$shared {
      */
     public static int FORMAT_MESSAGE_MAX_WIDTH_MASK() {
         return FORMAT_MESSAGE_MAX_WIDTH_MASK;
+    }
+    private static final int DEVPROP_TYPE_STRING = (int)18L;
+    /**
+     * {@snippet lang=c :
+     * #define DEVPROP_TYPE_STRING 18
+     * }
+     */
+    public static int DEVPROP_TYPE_STRING() {
+        return DEVPROP_TYPE_STRING;
+    }
+    private static final int CM_LOCATE_DEVNODE_NORMAL = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * #define CM_LOCATE_DEVNODE_NORMAL 0
+     * }
+     */
+    public static int CM_LOCATE_DEVNODE_NORMAL() {
+        return CM_LOCATE_DEVNODE_NORMAL;
     }
 
     private static class CreateFileA {
@@ -1781,6 +1802,455 @@ public class Windows extends Windows$shared {
            throw new AssertionError("should not reach here", ex$);
         }
     }
+
+    private static class RegQueryValueExW {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("RegQueryValueExW");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * LSTATUS RegQueryValueExW(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+     * }
+     */
+    public static FunctionDescriptor RegQueryValueExW$descriptor() {
+        return RegQueryValueExW.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * LSTATUS RegQueryValueExW(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+     * }
+     */
+    public static MethodHandle RegQueryValueExW$handle() {
+        return RegQueryValueExW.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * LSTATUS RegQueryValueExW(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+     * }
+     */
+    public static MemorySegment RegQueryValueExW$address() {
+        return RegQueryValueExW.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * LSTATUS RegQueryValueExW(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+     * }
+     */
+    public static int RegQueryValueExW(MemorySegment hKey, MemorySegment lpValueName, MemorySegment lpReserved, MemorySegment lpType, MemorySegment lpData, MemorySegment lpcbData) {
+        var mh$ = RegQueryValueExW.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("RegQueryValueExW", hKey, lpValueName, lpReserved, lpType, lpData, lpcbData);
+            }
+            return (int)mh$.invokeExact(hKey, lpValueName, lpReserved, lpType, lpData, lpcbData);
+        } catch (Error | RuntimeException ex) {
+            throw ex;
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class CM_Get_DevNode_PropertyW {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CM_Get_DevNode_PropertyW");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_DevNode_PropertyW(DEVINST dnDevInst, const DEVPROPKEY *PropertyKey, DEVPROPTYPE *PropertyType, PBYTE PropertyBuffer, PULONG PropertyBufferSize, ULONG ulFlags)
+     * }
+     */
+    public static FunctionDescriptor CM_Get_DevNode_PropertyW$descriptor() {
+        return CM_Get_DevNode_PropertyW.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_DevNode_PropertyW(DEVINST dnDevInst, const DEVPROPKEY *PropertyKey, DEVPROPTYPE *PropertyType, PBYTE PropertyBuffer, PULONG PropertyBufferSize, ULONG ulFlags)
+     * }
+     */
+    public static MethodHandle CM_Get_DevNode_PropertyW$handle() {
+        return CM_Get_DevNode_PropertyW.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_DevNode_PropertyW(DEVINST dnDevInst, const DEVPROPKEY *PropertyKey, DEVPROPTYPE *PropertyType, PBYTE PropertyBuffer, PULONG PropertyBufferSize, ULONG ulFlags)
+     * }
+     */
+    public static MemorySegment CM_Get_DevNode_PropertyW$address() {
+        return CM_Get_DevNode_PropertyW.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_DevNode_PropertyW(DEVINST dnDevInst, const DEVPROPKEY *PropertyKey, DEVPROPTYPE *PropertyType, PBYTE PropertyBuffer, PULONG PropertyBufferSize, ULONG ulFlags)
+     * }
+     */
+    public static int CM_Get_DevNode_PropertyW(int dnDevInst, MemorySegment PropertyKey, MemorySegment PropertyType, MemorySegment PropertyBuffer, MemorySegment PropertyBufferSize, int ulFlags) {
+        var mh$ = CM_Get_DevNode_PropertyW.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CM_Get_DevNode_PropertyW", dnDevInst, PropertyKey, PropertyType, PropertyBuffer, PropertyBufferSize, ulFlags);
+            }
+            return (int)mh$.invokeExact(dnDevInst, PropertyKey, PropertyType, PropertyBuffer, PropertyBufferSize, ulFlags);
+        } catch (Error | RuntimeException ex) {
+            throw ex;
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class CM_Get_Device_Interface_ListW {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_LONG
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CM_Get_Device_Interface_ListW");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_Device_Interface_ListW(LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceID, PZZWSTR Buffer, ULONG BufferLen, ULONG ulFlags)
+     * }
+     */
+    public static FunctionDescriptor CM_Get_Device_Interface_ListW$descriptor() {
+        return CM_Get_Device_Interface_ListW.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_Device_Interface_ListW(LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceID, PZZWSTR Buffer, ULONG BufferLen, ULONG ulFlags)
+     * }
+     */
+    public static MethodHandle CM_Get_Device_Interface_ListW$handle() {
+        return CM_Get_Device_Interface_ListW.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_Device_Interface_ListW(LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceID, PZZWSTR Buffer, ULONG BufferLen, ULONG ulFlags)
+     * }
+     */
+    public static MemorySegment CM_Get_Device_Interface_ListW$address() {
+        return CM_Get_Device_Interface_ListW.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_Device_Interface_ListW(LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceID, PZZWSTR Buffer, ULONG BufferLen, ULONG ulFlags)
+     * }
+     */
+    public static int CM_Get_Device_Interface_ListW(MemorySegment InterfaceClassGuid, MemorySegment pDeviceID, MemorySegment Buffer, int BufferLen, int ulFlags) {
+        var mh$ = CM_Get_Device_Interface_ListW.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CM_Get_Device_Interface_ListW", InterfaceClassGuid, pDeviceID, Buffer, BufferLen, ulFlags);
+            }
+            return (int)mh$.invokeExact(InterfaceClassGuid, pDeviceID, Buffer, BufferLen, ulFlags);
+        } catch (Error | RuntimeException ex) {
+            throw ex;
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class CM_Get_Device_Interface_List_SizeW {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CM_Get_Device_Interface_List_SizeW");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_Device_Interface_List_SizeW(PULONG pulLen, LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceID, ULONG ulFlags)
+     * }
+     */
+    public static FunctionDescriptor CM_Get_Device_Interface_List_SizeW$descriptor() {
+        return CM_Get_Device_Interface_List_SizeW.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_Device_Interface_List_SizeW(PULONG pulLen, LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceID, ULONG ulFlags)
+     * }
+     */
+    public static MethodHandle CM_Get_Device_Interface_List_SizeW$handle() {
+        return CM_Get_Device_Interface_List_SizeW.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_Device_Interface_List_SizeW(PULONG pulLen, LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceID, ULONG ulFlags)
+     * }
+     */
+    public static MemorySegment CM_Get_Device_Interface_List_SizeW$address() {
+        return CM_Get_Device_Interface_List_SizeW.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_Device_Interface_List_SizeW(PULONG pulLen, LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceID, ULONG ulFlags)
+     * }
+     */
+    public static int CM_Get_Device_Interface_List_SizeW(MemorySegment pulLen, MemorySegment InterfaceClassGuid, MemorySegment pDeviceID, int ulFlags) {
+        var mh$ = CM_Get_Device_Interface_List_SizeW.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CM_Get_Device_Interface_List_SizeW", pulLen, InterfaceClassGuid, pDeviceID, ulFlags);
+            }
+            return (int)mh$.invokeExact(pulLen, InterfaceClassGuid, pDeviceID, ulFlags);
+        } catch (Error | RuntimeException ex) {
+            throw ex;
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class CM_Get_Device_Interface_PropertyW {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CM_Get_Device_Interface_PropertyW");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_Device_Interface_PropertyW(LPCWSTR pszDeviceInterface, const DEVPROPKEY *PropertyKey, DEVPROPTYPE *PropertyType, PBYTE PropertyBuffer, PULONG PropertyBufferSize, ULONG ulFlags)
+     * }
+     */
+    public static FunctionDescriptor CM_Get_Device_Interface_PropertyW$descriptor() {
+        return CM_Get_Device_Interface_PropertyW.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_Device_Interface_PropertyW(LPCWSTR pszDeviceInterface, const DEVPROPKEY *PropertyKey, DEVPROPTYPE *PropertyType, PBYTE PropertyBuffer, PULONG PropertyBufferSize, ULONG ulFlags)
+     * }
+     */
+    public static MethodHandle CM_Get_Device_Interface_PropertyW$handle() {
+        return CM_Get_Device_Interface_PropertyW.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_Device_Interface_PropertyW(LPCWSTR pszDeviceInterface, const DEVPROPKEY *PropertyKey, DEVPROPTYPE *PropertyType, PBYTE PropertyBuffer, PULONG PropertyBufferSize, ULONG ulFlags)
+     * }
+     */
+    public static MemorySegment CM_Get_Device_Interface_PropertyW$address() {
+        return CM_Get_Device_Interface_PropertyW.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * CONFIGRET CM_Get_Device_Interface_PropertyW(LPCWSTR pszDeviceInterface, const DEVPROPKEY *PropertyKey, DEVPROPTYPE *PropertyType, PBYTE PropertyBuffer, PULONG PropertyBufferSize, ULONG ulFlags)
+     * }
+     */
+    public static int CM_Get_Device_Interface_PropertyW(MemorySegment pszDeviceInterface, MemorySegment PropertyKey, MemorySegment PropertyType, MemorySegment PropertyBuffer, MemorySegment PropertyBufferSize, int ulFlags) {
+        var mh$ = CM_Get_Device_Interface_PropertyW.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CM_Get_Device_Interface_PropertyW", pszDeviceInterface, PropertyKey, PropertyType, PropertyBuffer, PropertyBufferSize, ulFlags);
+            }
+            return (int)mh$.invokeExact(pszDeviceInterface, PropertyKey, PropertyType, PropertyBuffer, PropertyBufferSize, ulFlags);
+        } catch (Error | RuntimeException ex) {
+            throw ex;
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class CM_Locate_DevNodeW {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CM_Locate_DevNodeW");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Locate_DevNodeW(PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, ULONG ulFlags)
+     * }
+     */
+    public static FunctionDescriptor CM_Locate_DevNodeW$descriptor() {
+        return CM_Locate_DevNodeW.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Locate_DevNodeW(PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, ULONG ulFlags)
+     * }
+     */
+    public static MethodHandle CM_Locate_DevNodeW$handle() {
+        return CM_Locate_DevNodeW.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Locate_DevNodeW(PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, ULONG ulFlags)
+     * }
+     */
+    public static MemorySegment CM_Locate_DevNodeW$address() {
+        return CM_Locate_DevNodeW.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * CONFIGRET CM_Locate_DevNodeW(PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, ULONG ulFlags)
+     * }
+     */
+    public static int CM_Locate_DevNodeW(MemorySegment pdnDevInst, MemorySegment pDeviceID, int ulFlags) {
+        var mh$ = CM_Locate_DevNodeW.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CM_Locate_DevNodeW", pdnDevInst, pDeviceID, ulFlags);
+            }
+            return (int)mh$.invokeExact(pdnDevInst, pDeviceID, ulFlags);
+        } catch (Error | RuntimeException ex) {
+            throw ex;
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class CM_Open_DevNode_Key {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_LONG
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CM_Open_DevNode_Key");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Open_DevNode_Key(DEVINST dnDevNode, REGSAM samDesired, ULONG ulHardwareProfile, REGDISPOSITION Disposition, PHKEY phkDevice, ULONG ulFlags)
+     * }
+     */
+    public static FunctionDescriptor CM_Open_DevNode_Key$descriptor() {
+        return CM_Open_DevNode_Key.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Open_DevNode_Key(DEVINST dnDevNode, REGSAM samDesired, ULONG ulHardwareProfile, REGDISPOSITION Disposition, PHKEY phkDevice, ULONG ulFlags)
+     * }
+     */
+    public static MethodHandle CM_Open_DevNode_Key$handle() {
+        return CM_Open_DevNode_Key.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * CONFIGRET CM_Open_DevNode_Key(DEVINST dnDevNode, REGSAM samDesired, ULONG ulHardwareProfile, REGDISPOSITION Disposition, PHKEY phkDevice, ULONG ulFlags)
+     * }
+     */
+    public static MemorySegment CM_Open_DevNode_Key$address() {
+        return CM_Open_DevNode_Key.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * CONFIGRET CM_Open_DevNode_Key(DEVINST dnDevNode, REGSAM samDesired, ULONG ulHardwareProfile, REGDISPOSITION Disposition, PHKEY phkDevice, ULONG ulFlags)
+     * }
+     */
+    public static int CM_Open_DevNode_Key(int dnDevNode, int samDesired, int ulHardwareProfile, int Disposition, MemorySegment phkDevice, int ulFlags) {
+        var mh$ = CM_Open_DevNode_Key.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CM_Open_DevNode_Key", dnDevNode, samDesired, ulHardwareProfile, Disposition, phkDevice, ulFlags);
+            }
+            return (int)mh$.invokeExact(dnDevNode, samDesired, ulHardwareProfile, Disposition, phkDevice, ulFlags);
+        } catch (Error | RuntimeException ex) {
+            throw ex;
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
     private static final MemorySegment NULL = MemorySegment.ofAddress(0L);
     /**
      * {@snippet lang=c :
@@ -1816,6 +2286,15 @@ public class Windows extends Windows$shared {
      */
     public static int KEY_READ() {
         return KEY_READ;
+    }
+    private static final int REG_SZ = (int)1L;
+    /**
+     * {@snippet lang=c :
+     * #define REG_SZ 1
+     * }
+     */
+    public static int REG_SZ() {
+        return REG_SZ;
     }
     private static final MemorySegment INVALID_HANDLE_VALUE = MemorySegment.ofAddress(-1L);
     /**
@@ -1924,5 +2403,59 @@ public class Windows extends Windows$shared {
      */
     public static MemorySegment HKEY_LOCAL_MACHINE() {
         return HKEY_LOCAL_MACHINE;
+    }
+    private static final int DEVPROP_TYPE_STRING_LIST = (int)8210L;
+    /**
+     * {@snippet lang=c :
+     * #define DEVPROP_TYPE_STRING_LIST 8210
+     * }
+     */
+    public static int DEVPROP_TYPE_STRING_LIST() {
+        return DEVPROP_TYPE_STRING_LIST;
+    }
+    private static final int RegDisposition_OpenExisting = (int)1L;
+    /**
+     * {@snippet lang=c :
+     * #define RegDisposition_OpenExisting 1
+     * }
+     */
+    public static int RegDisposition_OpenExisting() {
+        return RegDisposition_OpenExisting;
+    }
+    private static final int CM_GET_DEVICE_INTERFACE_LIST_PRESENT = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * #define CM_GET_DEVICE_INTERFACE_LIST_PRESENT 0
+     * }
+     */
+    public static int CM_GET_DEVICE_INTERFACE_LIST_PRESENT() {
+        return CM_GET_DEVICE_INTERFACE_LIST_PRESENT;
+    }
+    private static final int CM_REGISTRY_HARDWARE = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * #define CM_REGISTRY_HARDWARE 0
+     * }
+     */
+    public static int CM_REGISTRY_HARDWARE() {
+        return CM_REGISTRY_HARDWARE;
+    }
+    private static final int CR_SUCCESS = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * #define CR_SUCCESS 0
+     * }
+     */
+    public static int CR_SUCCESS() {
+        return CR_SUCCESS;
+    }
+    private static final int CR_BUFFER_SMALL = (int)26L;
+    /**
+     * {@snippet lang=c :
+     * #define CR_BUFFER_SMALL 26
+     * }
+     */
+    public static int CR_BUFFER_SMALL() {
+        return CR_BUFFER_SMALL;
     }
 }

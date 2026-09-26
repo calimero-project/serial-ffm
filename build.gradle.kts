@@ -99,6 +99,7 @@ tasks.jextract {
 
 	var headersDir: String   // directory of our headers.h file
 	val paths: List<String>  // system directories containing header files
+    var libs: List<String> = listOf()
     var tgtPkg: String       // package name for extracted headers
 	var clsName: String
 	// filters for extracted header file definitions, initialized for Unix (Linux, macOS)
@@ -124,16 +125,23 @@ tasks.jextract {
 //            paths = listOf("C:/mingw64/x86_64-w64-mingw32/include")
             val sdkDir = "C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0"
             paths = listOf("$sdkDir/um", "$sdkDir/shared", "$sdkDir/ucrt")
+            libs = listOf("kernel32", "cfgmgr32")
             tgtPkg = "serial.ffm.win"
             clsName = "Windows"
 
             // adjust filters for Windows
-            funcFilter = listOf("RegOpenKeyExA", "RegEnumValueA", "RegCloseKey",
+            funcFilter = listOf("RegOpenKeyExA", "RegEnumValueA", "RegQueryValueExW", "RegCloseKey",
                 "GetFileType", "CloseHandle", "CreateFileA", "ReadFile", "WriteFile", "FlushFileBuffers",
                 "SetupComm", "GetCommProperties", "EscapeCommFunction", "GetCommState", "SetCommState", "ClearCommError",
                 "GetCommMask", "GetCommModemStatus", "SetCommMask", "WaitCommEvent", "GetCommTimeouts", "SetCommTimeouts",
-                "FormatMessageA", "GetOverlappedResultEx", "CreateEventA")
-            structFilter = listOf("HKEY__", "_COMMPROP", "_COMMTIMEOUTS", "_COMSTAT", "_DCB", "_OVERLAPPED")
+                "FormatMessageA", "GetOverlappedResultEx", "CreateEventA",
+                // CfgMgr32:
+                "CM_Get_Device_Interface_List_SizeW", "CM_Get_Device_Interface_ListW", "CM_Get_Device_Interface_PropertyW",
+                "CM_Locate_DevNodeW", "CM_Get_DevNode_PropertyW", "CM_Open_DevNode_Key"
+            )
+            structFilter = listOf("HKEY__", "_COMMPROP", "_COMMTIMEOUTS", "_COMSTAT", "_DCB", "_OVERLAPPED",
+                // CfgMgr32:
+                "_GUID", "_DEVPROPKEY")
             constantFilter = listOf("FALSE", "TRUE", "NULL",
                 "HKEY_LOCAL_MACHINE", "KEY_READ",
                 "FILE_TYPE_CHAR", "GENERIC_READ", "GENERIC_WRITE", "FILE_ATTRIBUTE_NORMAL", "OPEN_EXISTING", "FILE_FLAG_OVERLAPPED",
@@ -145,7 +153,11 @@ tasks.jextract {
                 "RTS_CONTROL_HANDSHAKE", "RTS_CONTROL_DISABLE", "DTR_CONTROL_DISABLE", "SETDTR",
                 "EV_RLSD", "EV_DSR", "EV_RXCHAR", "EV_TXEMPTY", "EV_CTS", "EV_BREAK", "EV_RING", "EV_ERR",
                 "CE_BREAK", "CE_RXOVER", "CE_OVERRUN", "CE_RXPARITY", "CE_FRAME",
-                "FORMAT_MESSAGE_FROM_SYSTEM", "FORMAT_MESSAGE_IGNORE_INSERTS", "FORMAT_MESSAGE_MAX_WIDTH_MASK")
+                "FORMAT_MESSAGE_FROM_SYSTEM", "FORMAT_MESSAGE_IGNORE_INSERTS", "FORMAT_MESSAGE_MAX_WIDTH_MASK",
+                // CfgMgr32:
+                "CR_SUCCESS", "CR_BUFFER_SMALL", "CM_GET_DEVICE_INTERFACE_LIST_PRESENT", "CM_LOCATE_DEVNODE_NORMAL",
+                "DEVPROP_TYPE_STRING", "DEVPROP_TYPE_STRING_LIST", "RegDisposition_OpenExisting", "CM_REGISTRY_HARDWARE"
+            )
         }
         os.contains("linux") -> {
             headersDir = "unix"
@@ -169,6 +181,7 @@ tasks.jextract {
 		targetPackage.set(tgtPkg)
 		className.set(clsName)
 		includes.set(paths)
+        libraries.set(libs)
         functions.set(funcFilter)
         structs.set(structFilter)
         constants.set(constantFilter)

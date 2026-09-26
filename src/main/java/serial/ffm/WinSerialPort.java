@@ -62,10 +62,6 @@ final class WinSerialPort extends ReadWritePort {
 	// #define CE_TXFULL 0x0100 // TX Queue is full
 	// #define CE_MODE 0x8000 // Requested mode unsupported
 
-	static {
-		System.loadLibrary("Kernel32");
-	}
-
 
 	private record HANDLE(MemorySegment handle) {
 		static final HANDLE Invalid = new HANDLE(Windows.INVALID_HANDLE_VALUE());
@@ -680,7 +676,7 @@ final class WinSerialPort extends ReadWritePort {
 			logger.log(TRACE, "CE_BREAK");
 	}
 
-	private static String formatWinError(/*DWORD*/ final int error) {
+	static String formatWinError(/*DWORD*/ final int error) {
 		final int size = 256;
 
 		try (var arena = Arena.ofConfined()) {
