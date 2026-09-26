@@ -13,7 +13,8 @@ public class Mac extends Mac$shared {
 
     static final Arena LIBRARY_ARENA = Arena.ofAuto();
 
-    static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.loaderLookup()
+    static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.libraryLookup("/System/Library/Frameworks/IOKit.framework/IOKit", LIBRARY_ARENA)
+            .or(SymbolLookup.loaderLookup())
             .or(Linker.nativeLinker().defaultLookup());
 
     private static final int SEEK_SET = (int)0L;
@@ -600,6 +601,15 @@ public class Mac extends Mac$shared {
      */
     public static int PATH_MAX() {
         return PATH_MAX;
+    }
+    private static final int KERN_SUCCESS = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * #define KERN_SUCCESS 0
+     * }
+     */
+    public static int KERN_SUCCESS() {
+        return KERN_SUCCESS;
     }
 
     private static class close {
@@ -2151,6 +2161,1116 @@ public class Mac extends Mac$shared {
            throw new AssertionError("should not reach here", ex$);
         }
     }
+
+    private static class CFAllocatorGetDefault {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_POINTER    );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CFAllocatorGetDefault");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * extern CFAllocatorRef CFAllocatorGetDefault(void)
+     * }
+     */
+    public static FunctionDescriptor CFAllocatorGetDefault$descriptor() {
+        return CFAllocatorGetDefault.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * extern CFAllocatorRef CFAllocatorGetDefault(void)
+     * }
+     */
+    public static MethodHandle CFAllocatorGetDefault$handle() {
+        return CFAllocatorGetDefault.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern CFAllocatorRef CFAllocatorGetDefault(void)
+     * }
+     */
+    public static MemorySegment CFAllocatorGetDefault$address() {
+        return CFAllocatorGetDefault.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern CFAllocatorRef CFAllocatorGetDefault(void)
+     * }
+     */
+    public static MemorySegment CFAllocatorGetDefault() {
+        var mh$ = CFAllocatorGetDefault.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CFAllocatorGetDefault");
+            }
+            return (MemorySegment)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class CFGetTypeID {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_LONG,
+            Mac.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CFGetTypeID");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * extern CFTypeID CFGetTypeID(CFTypeRef cf)
+     * }
+     */
+    public static FunctionDescriptor CFGetTypeID$descriptor() {
+        return CFGetTypeID.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * extern CFTypeID CFGetTypeID(CFTypeRef cf)
+     * }
+     */
+    public static MethodHandle CFGetTypeID$handle() {
+        return CFGetTypeID.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern CFTypeID CFGetTypeID(CFTypeRef cf)
+     * }
+     */
+    public static MemorySegment CFGetTypeID$address() {
+        return CFGetTypeID.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern CFTypeID CFGetTypeID(CFTypeRef cf)
+     * }
+     */
+    public static long CFGetTypeID(MemorySegment cf) {
+        var mh$ = CFGetTypeID.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CFGetTypeID", cf);
+            }
+            return (long)mh$.invokeExact(cf);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class CFRelease {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            Mac.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CFRelease");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * extern void CFRelease(CFTypeRef cf)
+     * }
+     */
+    public static FunctionDescriptor CFRelease$descriptor() {
+        return CFRelease.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * extern void CFRelease(CFTypeRef cf)
+     * }
+     */
+    public static MethodHandle CFRelease$handle() {
+        return CFRelease.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern void CFRelease(CFTypeRef cf)
+     * }
+     */
+    public static MemorySegment CFRelease$address() {
+        return CFRelease.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern void CFRelease(CFTypeRef cf)
+     * }
+     */
+    public static void CFRelease(MemorySegment cf) {
+        var mh$ = CFRelease.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CFRelease", cf);
+            }
+            mh$.invokeExact(cf);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    private static final int kCFNumberSInt64Type = (int)4L;
+    /**
+     * {@snippet lang=c :
+     * enum enum (unnamed at /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreFoundation.framework/Headers/CFNumber.h:31:9).kCFNumberSInt64Type = 4
+     * }
+     */
+    public static int kCFNumberSInt64Type() {
+        return kCFNumberSInt64Type;
+    }
+
+    private static class CFNumberGetTypeID {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_LONG    );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CFNumberGetTypeID");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * extern CFTypeID CFNumberGetTypeID(void)
+     * }
+     */
+    public static FunctionDescriptor CFNumberGetTypeID$descriptor() {
+        return CFNumberGetTypeID.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * extern CFTypeID CFNumberGetTypeID(void)
+     * }
+     */
+    public static MethodHandle CFNumberGetTypeID$handle() {
+        return CFNumberGetTypeID.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern CFTypeID CFNumberGetTypeID(void)
+     * }
+     */
+    public static MemorySegment CFNumberGetTypeID$address() {
+        return CFNumberGetTypeID.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern CFTypeID CFNumberGetTypeID(void)
+     * }
+     */
+    public static long CFNumberGetTypeID() {
+        var mh$ = CFNumberGetTypeID.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CFNumberGetTypeID");
+            }
+            return (long)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class CFNumberGetValue {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_CHAR,
+            Mac.C_POINTER,
+            Mac.C_LONG,
+            Mac.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CFNumberGetValue");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * extern Boolean CFNumberGetValue(CFNumberRef number, CFNumberType theType, void *valuePtr)
+     * }
+     */
+    public static FunctionDescriptor CFNumberGetValue$descriptor() {
+        return CFNumberGetValue.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * extern Boolean CFNumberGetValue(CFNumberRef number, CFNumberType theType, void *valuePtr)
+     * }
+     */
+    public static MethodHandle CFNumberGetValue$handle() {
+        return CFNumberGetValue.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern Boolean CFNumberGetValue(CFNumberRef number, CFNumberType theType, void *valuePtr)
+     * }
+     */
+    public static MemorySegment CFNumberGetValue$address() {
+        return CFNumberGetValue.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern Boolean CFNumberGetValue(CFNumberRef number, CFNumberType theType, void *valuePtr)
+     * }
+     */
+    public static byte CFNumberGetValue(MemorySegment number, long theType, MemorySegment valuePtr) {
+        var mh$ = CFNumberGetValue.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CFNumberGetValue", number, theType, valuePtr);
+            }
+            return (byte)mh$.invokeExact(number, theType, valuePtr);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    private static final int kCFStringEncodingUTF8 = (int)134217984L;
+    /**
+     * {@snippet lang=c :
+     * enum enum (unnamed at /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreFoundation.framework/Headers/CFString.h:106:9).kCFStringEncodingUTF8 = 134217984
+     * }
+     */
+    public static int kCFStringEncodingUTF8() {
+        return kCFStringEncodingUTF8;
+    }
+
+    private static class CFStringGetTypeID {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_LONG    );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CFStringGetTypeID");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * extern CFTypeID CFStringGetTypeID(void)
+     * }
+     */
+    public static FunctionDescriptor CFStringGetTypeID$descriptor() {
+        return CFStringGetTypeID.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * extern CFTypeID CFStringGetTypeID(void)
+     * }
+     */
+    public static MethodHandle CFStringGetTypeID$handle() {
+        return CFStringGetTypeID.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern CFTypeID CFStringGetTypeID(void)
+     * }
+     */
+    public static MemorySegment CFStringGetTypeID$address() {
+        return CFStringGetTypeID.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern CFTypeID CFStringGetTypeID(void)
+     * }
+     */
+    public static long CFStringGetTypeID() {
+        var mh$ = CFStringGetTypeID.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CFStringGetTypeID");
+            }
+            return (long)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class CFStringCreateWithCString {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_POINTER,
+            Mac.C_POINTER,
+            Mac.C_POINTER,
+            Mac.C_INT
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CFStringCreateWithCString");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * extern CFStringRef CFStringCreateWithCString(CFAllocatorRef alloc, const char *cStr, CFStringEncoding encoding)
+     * }
+     */
+    public static FunctionDescriptor CFStringCreateWithCString$descriptor() {
+        return CFStringCreateWithCString.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * extern CFStringRef CFStringCreateWithCString(CFAllocatorRef alloc, const char *cStr, CFStringEncoding encoding)
+     * }
+     */
+    public static MethodHandle CFStringCreateWithCString$handle() {
+        return CFStringCreateWithCString.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern CFStringRef CFStringCreateWithCString(CFAllocatorRef alloc, const char *cStr, CFStringEncoding encoding)
+     * }
+     */
+    public static MemorySegment CFStringCreateWithCString$address() {
+        return CFStringCreateWithCString.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern CFStringRef CFStringCreateWithCString(CFAllocatorRef alloc, const char *cStr, CFStringEncoding encoding)
+     * }
+     */
+    public static MemorySegment CFStringCreateWithCString(MemorySegment alloc, MemorySegment cStr, int encoding) {
+        var mh$ = CFStringCreateWithCString.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CFStringCreateWithCString", alloc, cStr, encoding);
+            }
+            return (MemorySegment)mh$.invokeExact(alloc, cStr, encoding);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class CFStringGetCString {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_CHAR,
+            Mac.C_POINTER,
+            Mac.C_POINTER,
+            Mac.C_LONG,
+            Mac.C_INT
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CFStringGetCString");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * extern Boolean CFStringGetCString(CFStringRef theString, char *buffer, CFIndex bufferSize, CFStringEncoding encoding)
+     * }
+     */
+    public static FunctionDescriptor CFStringGetCString$descriptor() {
+        return CFStringGetCString.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * extern Boolean CFStringGetCString(CFStringRef theString, char *buffer, CFIndex bufferSize, CFStringEncoding encoding)
+     * }
+     */
+    public static MethodHandle CFStringGetCString$handle() {
+        return CFStringGetCString.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern Boolean CFStringGetCString(CFStringRef theString, char *buffer, CFIndex bufferSize, CFStringEncoding encoding)
+     * }
+     */
+    public static MemorySegment CFStringGetCString$address() {
+        return CFStringGetCString.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern Boolean CFStringGetCString(CFStringRef theString, char *buffer, CFIndex bufferSize, CFStringEncoding encoding)
+     * }
+     */
+    public static byte CFStringGetCString(MemorySegment theString, MemorySegment buffer, long bufferSize, int encoding) {
+        var mh$ = CFStringGetCString.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CFStringGetCString", theString, buffer, bufferSize, encoding);
+            }
+            return (byte)mh$.invokeExact(theString, buffer, bufferSize, encoding);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class IOObjectRelease {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_INT,
+            Mac.C_INT
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("IOObjectRelease");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * kern_return_t IOObjectRelease(io_object_t object)
+     * }
+     */
+    public static FunctionDescriptor IOObjectRelease$descriptor() {
+        return IOObjectRelease.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * kern_return_t IOObjectRelease(io_object_t object)
+     * }
+     */
+    public static MethodHandle IOObjectRelease$handle() {
+        return IOObjectRelease.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * kern_return_t IOObjectRelease(io_object_t object)
+     * }
+     */
+    public static MemorySegment IOObjectRelease$address() {
+        return IOObjectRelease.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * kern_return_t IOObjectRelease(io_object_t object)
+     * }
+     */
+    public static int IOObjectRelease(int object) {
+        var mh$ = IOObjectRelease.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("IOObjectRelease", object);
+            }
+            return (int)mh$.invokeExact(object);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class IOObjectGetClass {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_INT,
+            Mac.C_INT,
+            Mac.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("IOObjectGetClass");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * kern_return_t IOObjectGetClass(io_object_t object, io_name_t className)
+     * }
+     */
+    public static FunctionDescriptor IOObjectGetClass$descriptor() {
+        return IOObjectGetClass.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * kern_return_t IOObjectGetClass(io_object_t object, io_name_t className)
+     * }
+     */
+    public static MethodHandle IOObjectGetClass$handle() {
+        return IOObjectGetClass.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * kern_return_t IOObjectGetClass(io_object_t object, io_name_t className)
+     * }
+     */
+    public static MemorySegment IOObjectGetClass$address() {
+        return IOObjectGetClass.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * kern_return_t IOObjectGetClass(io_object_t object, io_name_t className)
+     * }
+     */
+    public static int IOObjectGetClass(int object, MemorySegment className) {
+        var mh$ = IOObjectGetClass.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("IOObjectGetClass", object, className);
+            }
+            return (int)mh$.invokeExact(object, className);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class IOIteratorNext {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_INT,
+            Mac.C_INT
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("IOIteratorNext");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * io_object_t IOIteratorNext(io_iterator_t iterator)
+     * }
+     */
+    public static FunctionDescriptor IOIteratorNext$descriptor() {
+        return IOIteratorNext.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * io_object_t IOIteratorNext(io_iterator_t iterator)
+     * }
+     */
+    public static MethodHandle IOIteratorNext$handle() {
+        return IOIteratorNext.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * io_object_t IOIteratorNext(io_iterator_t iterator)
+     * }
+     */
+    public static MemorySegment IOIteratorNext$address() {
+        return IOIteratorNext.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * io_object_t IOIteratorNext(io_iterator_t iterator)
+     * }
+     */
+    public static int IOIteratorNext(int iterator) {
+        var mh$ = IOIteratorNext.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("IOIteratorNext", iterator);
+            }
+            return (int)mh$.invokeExact(iterator);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class IOServiceGetMatchingServices {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_INT,
+            Mac.C_INT,
+            Mac.C_POINTER,
+            Mac.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("IOServiceGetMatchingServices");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * kern_return_t IOServiceGetMatchingServices(mach_port_t mainPort, CFDictionaryRef matching, io_iterator_t *existing)
+     * }
+     */
+    public static FunctionDescriptor IOServiceGetMatchingServices$descriptor() {
+        return IOServiceGetMatchingServices.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * kern_return_t IOServiceGetMatchingServices(mach_port_t mainPort, CFDictionaryRef matching, io_iterator_t *existing)
+     * }
+     */
+    public static MethodHandle IOServiceGetMatchingServices$handle() {
+        return IOServiceGetMatchingServices.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * kern_return_t IOServiceGetMatchingServices(mach_port_t mainPort, CFDictionaryRef matching, io_iterator_t *existing)
+     * }
+     */
+    public static MemorySegment IOServiceGetMatchingServices$address() {
+        return IOServiceGetMatchingServices.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * kern_return_t IOServiceGetMatchingServices(mach_port_t mainPort, CFDictionaryRef matching, io_iterator_t *existing)
+     * }
+     */
+    public static int IOServiceGetMatchingServices(int mainPort, MemorySegment matching, MemorySegment existing) {
+        var mh$ = IOServiceGetMatchingServices.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("IOServiceGetMatchingServices", mainPort, matching, existing);
+            }
+            return (int)mh$.invokeExact(mainPort, matching, existing);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class IORegistryEntryGetName {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_INT,
+            Mac.C_INT,
+            Mac.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("IORegistryEntryGetName");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetName(io_registry_entry_t entry, io_name_t name)
+     * }
+     */
+    public static FunctionDescriptor IORegistryEntryGetName$descriptor() {
+        return IORegistryEntryGetName.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetName(io_registry_entry_t entry, io_name_t name)
+     * }
+     */
+    public static MethodHandle IORegistryEntryGetName$handle() {
+        return IORegistryEntryGetName.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetName(io_registry_entry_t entry, io_name_t name)
+     * }
+     */
+    public static MemorySegment IORegistryEntryGetName$address() {
+        return IORegistryEntryGetName.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetName(io_registry_entry_t entry, io_name_t name)
+     * }
+     */
+    public static int IORegistryEntryGetName(int entry, MemorySegment name) {
+        var mh$ = IORegistryEntryGetName.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("IORegistryEntryGetName", entry, name);
+            }
+            return (int)mh$.invokeExact(entry, name);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class IORegistryEntryGetPath {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_INT,
+            Mac.C_INT,
+            Mac.C_POINTER,
+            Mac.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("IORegistryEntryGetPath");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetPath(io_registry_entry_t entry, const io_name_t plane, io_string_t path)
+     * }
+     */
+    public static FunctionDescriptor IORegistryEntryGetPath$descriptor() {
+        return IORegistryEntryGetPath.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetPath(io_registry_entry_t entry, const io_name_t plane, io_string_t path)
+     * }
+     */
+    public static MethodHandle IORegistryEntryGetPath$handle() {
+        return IORegistryEntryGetPath.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetPath(io_registry_entry_t entry, const io_name_t plane, io_string_t path)
+     * }
+     */
+    public static MemorySegment IORegistryEntryGetPath$address() {
+        return IORegistryEntryGetPath.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetPath(io_registry_entry_t entry, const io_name_t plane, io_string_t path)
+     * }
+     */
+    public static int IORegistryEntryGetPath(int entry, MemorySegment plane, MemorySegment path) {
+        var mh$ = IORegistryEntryGetPath.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("IORegistryEntryGetPath", entry, plane, path);
+            }
+            return (int)mh$.invokeExact(entry, plane, path);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class IORegistryEntryGetRegistryEntryID {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_INT,
+            Mac.C_INT,
+            Mac.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("IORegistryEntryGetRegistryEntryID");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetRegistryEntryID(io_registry_entry_t entry, uint64_t *entryID)
+     * }
+     */
+    public static FunctionDescriptor IORegistryEntryGetRegistryEntryID$descriptor() {
+        return IORegistryEntryGetRegistryEntryID.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetRegistryEntryID(io_registry_entry_t entry, uint64_t *entryID)
+     * }
+     */
+    public static MethodHandle IORegistryEntryGetRegistryEntryID$handle() {
+        return IORegistryEntryGetRegistryEntryID.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetRegistryEntryID(io_registry_entry_t entry, uint64_t *entryID)
+     * }
+     */
+    public static MemorySegment IORegistryEntryGetRegistryEntryID$address() {
+        return IORegistryEntryGetRegistryEntryID.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetRegistryEntryID(io_registry_entry_t entry, uint64_t *entryID)
+     * }
+     */
+    public static int IORegistryEntryGetRegistryEntryID(int entry, MemorySegment entryID) {
+        var mh$ = IORegistryEntryGetRegistryEntryID.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("IORegistryEntryGetRegistryEntryID", entry, entryID);
+            }
+            return (int)mh$.invokeExact(entry, entryID);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class IORegistryEntryCreateCFProperty {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_POINTER,
+            Mac.C_INT,
+            Mac.C_POINTER,
+            Mac.C_POINTER,
+            Mac.C_INT
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("IORegistryEntryCreateCFProperty");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * CFTypeRef IORegistryEntryCreateCFProperty(io_registry_entry_t entry, CFStringRef key, CFAllocatorRef allocator, IOOptionBits options)
+     * }
+     */
+    public static FunctionDescriptor IORegistryEntryCreateCFProperty$descriptor() {
+        return IORegistryEntryCreateCFProperty.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * CFTypeRef IORegistryEntryCreateCFProperty(io_registry_entry_t entry, CFStringRef key, CFAllocatorRef allocator, IOOptionBits options)
+     * }
+     */
+    public static MethodHandle IORegistryEntryCreateCFProperty$handle() {
+        return IORegistryEntryCreateCFProperty.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * CFTypeRef IORegistryEntryCreateCFProperty(io_registry_entry_t entry, CFStringRef key, CFAllocatorRef allocator, IOOptionBits options)
+     * }
+     */
+    public static MemorySegment IORegistryEntryCreateCFProperty$address() {
+        return IORegistryEntryCreateCFProperty.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * CFTypeRef IORegistryEntryCreateCFProperty(io_registry_entry_t entry, CFStringRef key, CFAllocatorRef allocator, IOOptionBits options)
+     * }
+     */
+    public static MemorySegment IORegistryEntryCreateCFProperty(int entry, MemorySegment key, MemorySegment allocator, int options) {
+        var mh$ = IORegistryEntryCreateCFProperty.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("IORegistryEntryCreateCFProperty", entry, key, allocator, options);
+            }
+            return (MemorySegment)mh$.invokeExact(entry, key, allocator, options);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class IORegistryEntryGetParentEntry {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_INT,
+            Mac.C_INT,
+            Mac.C_POINTER,
+            Mac.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("IORegistryEntryGetParentEntry");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetParentEntry(io_registry_entry_t entry, const io_name_t plane, io_registry_entry_t *parent)
+     * }
+     */
+    public static FunctionDescriptor IORegistryEntryGetParentEntry$descriptor() {
+        return IORegistryEntryGetParentEntry.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetParentEntry(io_registry_entry_t entry, const io_name_t plane, io_registry_entry_t *parent)
+     * }
+     */
+    public static MethodHandle IORegistryEntryGetParentEntry$handle() {
+        return IORegistryEntryGetParentEntry.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetParentEntry(io_registry_entry_t entry, const io_name_t plane, io_registry_entry_t *parent)
+     * }
+     */
+    public static MemorySegment IORegistryEntryGetParentEntry$address() {
+        return IORegistryEntryGetParentEntry.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * kern_return_t IORegistryEntryGetParentEntry(io_registry_entry_t entry, const io_name_t plane, io_registry_entry_t *parent)
+     * }
+     */
+    public static int IORegistryEntryGetParentEntry(int entry, MemorySegment plane, MemorySegment parent) {
+        var mh$ = IORegistryEntryGetParentEntry.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("IORegistryEntryGetParentEntry", entry, plane, parent);
+            }
+            return (int)mh$.invokeExact(entry, plane, parent);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class IOServiceMatching {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Mac.C_POINTER,
+            Mac.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("IOServiceMatching");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * CFMutableDictionaryRef IOServiceMatching(const char *name)
+     * }
+     */
+    public static FunctionDescriptor IOServiceMatching$descriptor() {
+        return IOServiceMatching.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * CFMutableDictionaryRef IOServiceMatching(const char *name)
+     * }
+     */
+    public static MethodHandle IOServiceMatching$handle() {
+        return IOServiceMatching.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * CFMutableDictionaryRef IOServiceMatching(const char *name)
+     * }
+     */
+    public static MemorySegment IOServiceMatching$address() {
+        return IOServiceMatching.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * CFMutableDictionaryRef IOServiceMatching(const char *name)
+     * }
+     */
+    public static MemorySegment IOServiceMatching(MemorySegment name) {
+        var mh$ = IOServiceMatching.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("IOServiceMatching", name);
+            }
+            return (MemorySegment)mh$.invokeExact(name);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
     private static final MemorySegment NULL = MemorySegment.ofAddress(0L);
     /**
      * {@snippet lang=c :
@@ -2213,5 +3333,137 @@ public class Mac extends Mac$shared {
      */
     public static int EWOULDBLOCK() {
         return EWOULDBLOCK;
+    }
+    /**
+     * {@snippet lang=c :
+     * #define kIOServiceClass "IOService"
+     * }
+     */
+    public static MemorySegment kIOServiceClass() {
+        class Holder {
+            static final MemorySegment kIOServiceClass
+                = Mac.LIBRARY_ARENA.allocateFrom("IOService");
+        }
+        return Holder.kIOServiceClass;
+    }
+    /**
+     * {@snippet lang=c :
+     * #define kIOSerialBSDServiceValue "IOSerialBSDClient"
+     * }
+     */
+    public static MemorySegment kIOSerialBSDServiceValue() {
+        class Holder {
+            static final MemorySegment kIOSerialBSDServiceValue
+                = Mac.LIBRARY_ARENA.allocateFrom("IOSerialBSDClient");
+        }
+        return Holder.kIOSerialBSDServiceValue;
+    }
+    /**
+     * {@snippet lang=c :
+     * #define kIOCalloutDeviceKey "IOCalloutDevice"
+     * }
+     */
+    public static MemorySegment kIOCalloutDeviceKey() {
+        class Holder {
+            static final MemorySegment kIOCalloutDeviceKey
+                = Mac.LIBRARY_ARENA.allocateFrom("IOCalloutDevice");
+        }
+        return Holder.kIOCalloutDeviceKey;
+    }
+    /**
+     * {@snippet lang=c :
+     * #define kIODialinDeviceKey "IODialinDevice"
+     * }
+     */
+    public static MemorySegment kIODialinDeviceKey() {
+        class Holder {
+            static final MemorySegment kIODialinDeviceKey
+                = Mac.LIBRARY_ARENA.allocateFrom("IODialinDevice");
+        }
+        return Holder.kIODialinDeviceKey;
+    }
+    /**
+     * {@snippet lang=c :
+     * #define kUSBVendorID "idVendor"
+     * }
+     */
+    public static MemorySegment kUSBVendorID() {
+        class Holder {
+            static final MemorySegment kUSBVendorID
+                = Mac.LIBRARY_ARENA.allocateFrom("idVendor");
+        }
+        return Holder.kUSBVendorID;
+    }
+    /**
+     * {@snippet lang=c :
+     * #define kUSBProductID "idProduct"
+     * }
+     */
+    public static MemorySegment kUSBProductID() {
+        class Holder {
+            static final MemorySegment kUSBProductID
+                = Mac.LIBRARY_ARENA.allocateFrom("idProduct");
+        }
+        return Holder.kUSBProductID;
+    }
+    /**
+     * {@snippet lang=c :
+     * #define kUSBInterfaceNumber "bInterfaceNumber"
+     * }
+     */
+    public static MemorySegment kUSBInterfaceNumber() {
+        class Holder {
+            static final MemorySegment kUSBInterfaceNumber
+                = Mac.LIBRARY_ARENA.allocateFrom("bInterfaceNumber");
+        }
+        return Holder.kUSBInterfaceNumber;
+    }
+    /**
+     * {@snippet lang=c :
+     * #define kUSBProductString "kUSBProductString"
+     * }
+     */
+    public static MemorySegment kUSBProductString() {
+        class Holder {
+            static final MemorySegment kUSBProductString
+                = Mac.LIBRARY_ARENA.allocateFrom("kUSBProductString");
+        }
+        return Holder.kUSBProductString;
+    }
+    /**
+     * {@snippet lang=c :
+     * #define kUSBVendorString "kUSBVendorString"
+     * }
+     */
+    public static MemorySegment kUSBVendorString() {
+        class Holder {
+            static final MemorySegment kUSBVendorString
+                = Mac.LIBRARY_ARENA.allocateFrom("kUSBVendorString");
+        }
+        return Holder.kUSBVendorString;
+    }
+    /**
+     * {@snippet lang=c :
+     * #define kUSBSerialNumberString "kUSBSerialNumberString"
+     * }
+     */
+    public static MemorySegment kUSBSerialNumberString() {
+        class Holder {
+            static final MemorySegment kUSBSerialNumberString
+                = Mac.LIBRARY_ARENA.allocateFrom("kUSBSerialNumberString");
+        }
+        return Holder.kUSBSerialNumberString;
+    }
+    /**
+     * {@snippet lang=c :
+     * #define kIOPropertyProductNameKey "Product Name"
+     * }
+     */
+    public static MemorySegment kIOPropertyProductNameKey() {
+        class Holder {
+            static final MemorySegment kIOPropertyProductNameKey
+                = Mac.LIBRARY_ARENA.allocateFrom("Product Name");
+        }
+        return Holder.kIOPropertyProductNameKey;
     }
 }

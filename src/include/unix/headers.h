@@ -23,3 +23,11 @@
 #ifdef __linux__
 #include <linux/serial.h> // serial_icounter_struct, serial_struct
 #endif
+
+#ifdef __APPLE__
+#include <CoreFoundation/CFNumber.h>
+#include <IOKit/IOKitLib.h>
+#include <IOKit/serial/IOSerialKeys.h>
+#include <IOKit/usb/USBSpec.h>
+#include <IOKit/storage/IOStorageDeviceCharacteristics.h>
+#endif

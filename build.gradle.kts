@@ -172,7 +172,23 @@ tasks.jextract {
             tgtPkg = "serial.ffm.mac"
             clsName = "Mac"
             paths = listOf("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include")
-            funcFilter = funcFilter + listOf("__error")
+            libs = listOf(":/System/Library/Frameworks/IOKit.framework/IOKit")
+            funcFilter = funcFilter + listOf("__error",
+                // CoreFoundation
+                "CFAllocatorGetDefault", "CFGetTypeID", "CFRelease", // common core functions
+                "CFStringCreateWithCString", "CFStringGetCString", "CFStringGetTypeID", // CFString
+                "CFNumberGetValue", "CFNumberGetTypeID", // CFNumber
+                // IOKit
+                "IOServiceMatching", "IOServiceGetMatchingServices", "IOIteratorNext", // service lookup/iteration
+                "IOObjectGetClass", "IOObjectRelease", // object mgmt
+                // registry
+                "IORegistryEntryGetParentEntry", "IORegistryEntryGetName", "IORegistryEntryGetPath",
+                "IORegistryEntryGetRegistryEntryID", "IORegistryEntryCreateCFProperty"
+            )
+            constantFilter = constantFilter + listOf("KERN_SUCCESS", "kIOSerialBSDServiceValue", "kIOServiceClass",
+                "kIOCalloutDeviceKey", "kIODialinDeviceKey", "kCFStringEncodingUTF8", "kCFNumberSInt64Type",
+                "kUSBVendorID", "kUSBProductID", "locationID", "kUSBInterfaceNumber",
+                "kUSBVendorString", "kUSBProductString", "kUSBSerialNumberString", "kIOPropertyProductNameKey")
         }
         else -> throw RuntimeException("Unsupported platform \"$os\"")
     }
