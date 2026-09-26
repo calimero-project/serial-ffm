@@ -639,7 +639,7 @@ final class WinSerialPort extends ReadWritePort {
 				Duration.ofMillis(_COMMTIMEOUTS.WriteTotalTimeoutMultiplier(to)));
 	}
 
-	private EnumSet<SerialEvent> translateEvents(final int eventMask) {
+	private static EnumSet<SerialEvent> translateEvents(final int eventMask) {
 		final var events = EnumSet.noneOf(SerialEvent.class);
 		// data events
 		if (isSet(eventMask, Windows.EV_RXCHAR()))

@@ -1083,10 +1083,9 @@ final class UnixSerialPort extends ReadWritePort {
 					warnErrno("read");
 					break;
 				}
-				else {
-					offset += ret;
-					remaining -= ret;
-				}
+
+				offset += ret;
+				remaining -= ret;
 			}
 		}
 

@@ -288,7 +288,7 @@ class SerialPortTests {
 	}
 
 	private static <T extends Throwable> void assertThrowsWithTimeout(final Class<T> expectedType,
-			final Executable run, String msg, final Duration timeout) {
+			final Executable run, final String msg, final Duration timeout) {
 		final long start = System.nanoTime();
 		assertThrows(expectedType, run, msg);
 		assertWithinRange(timeout, System.nanoTime() - start);

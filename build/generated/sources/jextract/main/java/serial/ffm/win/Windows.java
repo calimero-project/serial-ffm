@@ -312,14 +312,14 @@ public class Windows extends Windows$shared {
 
     private static class CreateFileA {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_POINTER,
-            Windows.C_POINTER,
-            Windows.C_LONG,
-            Windows.C_LONG,
-            Windows.C_POINTER,
-            Windows.C_LONG,
-            Windows.C_LONG,
-            Windows.C_POINTER
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CreateFileA");
@@ -370,16 +370,16 @@ public class Windows extends Windows$shared {
             }
             return (MemorySegment)mh$.invokeExact(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class FlushFileBuffers {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER
+                Windows.C_INT,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("FlushFileBuffers");
@@ -430,16 +430,16 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class GetFileType {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_LONG,
-            Windows.C_POINTER
+                Windows.C_LONG,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetFileType");
@@ -490,20 +490,20 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class ReadFile {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_POINTER,
-            Windows.C_LONG,
-            Windows.C_POINTER,
-            Windows.C_POINTER
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ReadFile");
@@ -554,20 +554,20 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class WriteFile {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_POINTER,
-            Windows.C_LONG,
-            Windows.C_POINTER,
-            Windows.C_POINTER
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("WriteFile");
@@ -618,16 +618,16 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class CloseHandle {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER
+                Windows.C_INT,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CloseHandle");
@@ -678,20 +678,20 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hObject);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class GetOverlappedResultEx {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_POINTER,
-            Windows.C_POINTER,
-            Windows.C_LONG,
-            Windows.C_INT
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_INT
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetOverlappedResultEx");
@@ -742,19 +742,19 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, lpOverlapped, lpNumberOfBytesTransferred, dwMilliseconds, bAlertable);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class CreateEventA {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_POINTER,
-            Windows.C_POINTER,
-            Windows.C_INT,
-            Windows.C_INT,
-            Windows.C_POINTER
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_INT,
+                Windows.C_INT,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("CreateEventA");
@@ -805,18 +805,18 @@ public class Windows extends Windows$shared {
             }
             return (MemorySegment)mh$.invokeExact(lpEventAttributes, bManualReset, bInitialState, lpName);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class ClearCommError {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_POINTER,
-            Windows.C_POINTER
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ClearCommError");
@@ -867,18 +867,18 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, lpErrors, lpStat);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class SetupComm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_LONG,
-            Windows.C_LONG
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_LONG
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("SetupComm");
@@ -929,17 +929,17 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, dwInQueue, dwOutQueue);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class EscapeCommFunction {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_LONG
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_LONG
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("EscapeCommFunction");
@@ -990,17 +990,17 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, dwFunc);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class GetCommMask {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_POINTER
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetCommMask");
@@ -1051,17 +1051,17 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, lpEvtMask);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class GetCommProperties {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_POINTER
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetCommProperties");
@@ -1112,17 +1112,17 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, lpCommProp);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class GetCommModemStatus {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_POINTER
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetCommModemStatus");
@@ -1173,17 +1173,17 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, lpModemStat);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class GetCommState {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_POINTER
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetCommState");
@@ -1234,17 +1234,17 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, lpDCB);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class GetCommTimeouts {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_POINTER
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("GetCommTimeouts");
@@ -1295,17 +1295,17 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, lpCommTimeouts);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class SetCommMask {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_LONG
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_LONG
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("SetCommMask");
@@ -1356,17 +1356,17 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, dwEvtMask);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class SetCommState {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_POINTER
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("SetCommState");
@@ -1417,17 +1417,17 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, lpDCB);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class SetCommTimeouts {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_POINTER
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("SetCommTimeouts");
@@ -1478,18 +1478,18 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, lpCommTimeouts);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class WaitCommEvent {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_INT,
-            Windows.C_POINTER,
-            Windows.C_POINTER,
-            Windows.C_POINTER
+                Windows.C_INT,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("WaitCommEvent");
@@ -1540,22 +1540,22 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hFile, lpEvtMask, lpOverlapped);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class FormatMessageA {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_LONG,
-            Windows.C_LONG,
-            Windows.C_POINTER,
-            Windows.C_LONG,
-            Windows.C_LONG,
-            Windows.C_POINTER,
-            Windows.C_LONG,
-            Windows.C_POINTER
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("FormatMessageA");
@@ -1606,16 +1606,16 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(dwFlags, lpSource, dwMessageId, dwLanguageId, lpBuffer, nSize, Arguments);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class RegCloseKey {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_LONG,
-            Windows.C_POINTER
+                Windows.C_LONG,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("RegCloseKey");
@@ -1666,23 +1666,23 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hKey);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class RegEnumValueA {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_LONG,
-            Windows.C_POINTER,
-            Windows.C_LONG,
-            Windows.C_POINTER,
-            Windows.C_POINTER,
-            Windows.C_POINTER,
-            Windows.C_POINTER,
-            Windows.C_POINTER,
-            Windows.C_POINTER
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("RegEnumValueA");
@@ -1733,20 +1733,20 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hKey, dwIndex, lpValueName, lpcchValueName, lpReserved, lpType, lpData, lpcbData);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
     private static class RegOpenKeyExA {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            Windows.C_LONG,
-            Windows.C_POINTER,
-            Windows.C_POINTER,
-            Windows.C_LONG,
-            Windows.C_LONG,
-            Windows.C_POINTER
+                Windows.C_LONG,
+                Windows.C_POINTER,
+                Windows.C_POINTER,
+                Windows.C_LONG,
+                Windows.C_LONG,
+                Windows.C_POINTER
         );
 
         public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("RegOpenKeyExA");
@@ -1797,9 +1797,9 @@ public class Windows extends Windows$shared {
             }
             return (int)mh$.invokeExact(hKey, lpSubKey, ulOptions, samDesired, phkResult);
         } catch (Error | RuntimeException ex) {
-           throw ex;
+            throw ex;
         } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
