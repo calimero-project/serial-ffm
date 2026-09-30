@@ -125,7 +125,7 @@ tasks.jextract {
 //            paths = listOf("C:/mingw64/x86_64-w64-mingw32/include")
             val sdkDir = "C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0"
             paths = listOf("$sdkDir/um", "$sdkDir/shared", "$sdkDir/ucrt")
-            libs = listOf("kernel32", "cfgmgr32")
+            libs = listOf("kernel32", "advapi32", "cfgmgr32")
             tgtPkg = "serial.ffm.win"
             clsName = "Windows"
 
