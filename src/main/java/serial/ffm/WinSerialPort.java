@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import serial.ffm.win.HKEY__;
 import serial.ffm.win.Windows;
 import serial.ffm.win._COMMPROP;
 import serial.ffm.win._COMMTIMEOUTS;
@@ -89,36 +88,41 @@ final class WinSerialPort extends ReadWritePort {
 
 		try (var arena = Arena.ofConfined()) {
 			final var subKey = arena.allocateFrom("HARDWARE\\DEVICEMAP\\SERIALCOMM");
-			final var serialCommKey = HKEY__.allocate(arena);
+			final var serialCommKeyPtr = arena.allocate(ValueLayout.ADDRESS);
 
-			int ret = Windows.RegOpenKeyExA(Windows.HKEY_LOCAL_MACHINE(), subKey, 0, Windows.KEY_READ(), serialCommKey);
+			int ret = Windows.RegOpenKeyExA(Windows.HKEY_LOCAL_MACHINE(), subKey, 0, Windows.KEY_READ(), serialCommKeyPtr);
 			if (ret == Windows.ERROR_SUCCESS()) {
-				final int size = 256;
-				final var deviceName = arena.allocate(size);
-				final var deviceNameLength = arena.allocate(ValueLayout.JAVA_INT, size);
-				final var portName = arena.allocate(size);
-				final var portNameLength = arena.allocate(ValueLayout.JAVA_INT, size);
+				final var serialCommKey = serialCommKeyPtr.get(ValueLayout.ADDRESS, 0);
+				try {
+					final int size = 256;
+					final var deviceName = arena.allocate(size);
+					final var deviceNameLength = arena.allocate(ValueLayout.JAVA_INT, size);
+					final var portName = arena.allocate(size);
+					final var portNameLength = arena.allocate(ValueLayout.JAVA_INT, size);
 
-				for (int i = 0;; i++) {
-					// reinit chars with size on every iteration
-					deviceNameLength.set(ValueLayout.JAVA_INT, 0, size);
-					portNameLength.set(ValueLayout.JAVA_INT, 0, size);
-					ret = Windows.RegEnumValueA(MemorySegment.ofAddress(HKEY__.unused(serialCommKey)), i, deviceName,
-							deviceNameLength, Windows.NULL(), Windows.NULL(), portName, portNameLength);
+					for (int i = 0;; i++) {
+						// reinit chars with size on every iteration
+						deviceNameLength.set(ValueLayout.JAVA_INT, 0, size);
+						portNameLength.set(ValueLayout.JAVA_INT, 0, size);
+						ret = Windows.RegEnumValueA(serialCommKey, i, deviceName, 
+								deviceNameLength, Windows.NULL(), Windows.NULL(), portName, portNameLength);
+						
+						if (ret == Windows.ERROR_NO_MORE_ITEMS())
+							break;
 
-					if (ret == Windows.ERROR_NO_MORE_ITEMS())
-						break;
-
-					if (ret == Windows.ERROR_SUCCESS()) {
-						final String port = extractString(portName, portNameLength);
-						logger.log(TRACE, "{0} = {1}", extractString(deviceName, deviceNameLength), port);
-						portNames.add(port);
-					}
-					else {
-						logger.log(WARNING, "RegEnumValueA error: {0}", formatWinError(ret));
+						if (ret == Windows.ERROR_SUCCESS()) {
+							final String port = extractString(portName, portNameLength);
+							logger.log(TRACE, "{0} = {1}", extractString(deviceName, deviceNameLength), port);
+							portNames.add(port);
+						}
+						else {
+							logger.log(WARNING, "RegEnumValueA error: {0}", formatWinError(ret));
+						}
 					}
 				}
-				Windows.RegCloseKey(serialCommKey);
+				finally {
+					Windows.RegCloseKey(serialCommKey);
+				}
 			}
 			else {
 				logger.log(TRACE, "RegOpenKeyExA error: {0}", formatWinError(ret));

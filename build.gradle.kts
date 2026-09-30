@@ -139,7 +139,7 @@ tasks.jextract {
                 "CM_Get_Device_Interface_List_SizeW", "CM_Get_Device_Interface_ListW", "CM_Get_Device_Interface_PropertyW",
                 "CM_Locate_DevNodeW", "CM_Get_DevNode_PropertyW", "CM_Open_DevNode_Key"
             )
-            structFilter = listOf("HKEY__", "_COMMPROP", "_COMMTIMEOUTS", "_COMSTAT", "_DCB", "_OVERLAPPED",
+            structFilter = listOf("_COMMPROP", "_COMMTIMEOUTS", "_COMSTAT", "_DCB", "_OVERLAPPED",
                 // CfgMgr32:
                 "_GUID", "_DEVPROPKEY")
             constantFilter = listOf("FALSE", "TRUE", "NULL",
