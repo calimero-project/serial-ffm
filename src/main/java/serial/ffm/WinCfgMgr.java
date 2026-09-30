@@ -173,7 +173,9 @@ final class WinCfgMgr {
 			final var type = arena.allocate(ValueLayout.JAVA_INT);
 			final var dataSize = arena.allocate(ValueLayout.JAVA_INT);
 			status = Windows.RegQueryValueExW(hKey, valueName, Windows.NULL(), type, Windows.NULL(), dataSize);
-			if (status == Windows.ERROR_SUCCESS() && type.get(ValueLayout.JAVA_INT, 0) == Windows.REG_SZ()) {
+			if (status == Windows.ERROR_SUCCESS()) {
+				if (type.get(ValueLayout.JAVA_INT, 0) != Windows.REG_SZ())
+					return null;
 				final var buffer = arena.allocate(dataSize.get(ValueLayout.JAVA_INT, 0));
 				status = Windows.RegQueryValueExW(hKey, valueName, Windows.NULL(), type, buffer, dataSize);
 				if (status == Windows.ERROR_SUCCESS())
