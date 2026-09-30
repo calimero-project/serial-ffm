@@ -71,6 +71,15 @@ public class Mac extends Mac$shared {
     public static int O_NOCTTY() {
         return O_NOCTTY;
     }
+    private static final int O_CLOEXEC = (int)16777216L;
+    /**
+     * {@snippet lang=c :
+     * #define O_CLOEXEC 16777216
+     * }
+     */
+    public static int O_CLOEXEC() {
+        return O_CLOEXEC;
+    }
     private static final int F_SETFL = (int)4L;
     /**
      * {@snippet lang=c :

@@ -384,7 +384,8 @@ final class UnixSerialPort extends ReadWritePort {
 		final String pidFile = createLockName(lockDir, pidPrefix, "" + myPid);
 		try (var arena = Arena.ofConfined()) {
 			final var mpidFile = arena.allocateFrom(pidFile);
-			final fd_t fd = fd_t.of(Linux.open.makeInvoker(Linux.C_INT).apply(mpidFile, Unix.O_RDWR | Unix.O_EXCL | Unix.O_CREAT, 0644));
+			final fd_t fd = fd_t.of(Linux.open.makeInvoker(Linux.C_INT).apply(mpidFile,
+					Unix.O_RDWR | Unix.O_EXCL | Unix.O_CREAT | Unix.O_CLOEXEC, 0644));
 			if (fd.equals(fd_t.Invalid)) {
 				if (errno() == Unix.EEXIST)
 					throw new IOException("port '" + port + "' is already locked");
@@ -493,7 +494,8 @@ final class UnixSerialPort extends ReadWritePort {
 		final var port = arena.allocateFrom(portId);
 		do {
 			// we set the port exclusive below, not here
-			fd = fd_t.of(Linux.open.makeInvoker().apply(port, /*O_EXCL |*/Unix.O_RDWR | Unix.O_NOCTTY | Unix.O_NONBLOCK));
+			fd = fd_t.of(Linux.open.makeInvoker().apply(port,
+					/*O_EXCL |*/Unix.O_RDWR | Unix.O_NOCTTY | Unix.O_NONBLOCK | Unix.O_CLOEXEC));
 			if (!fd.equals(fd_t.Invalid))
 				break;
 		}

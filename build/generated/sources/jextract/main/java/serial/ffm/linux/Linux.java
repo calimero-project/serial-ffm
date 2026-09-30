@@ -2018,6 +2018,15 @@ public class Linux extends Linux$shared {
     public static int F_SETLK() {
         return F_SETLK;
     }
+    private static final int O_CLOEXEC = (int)524288L;
+    /**
+     * {@snippet lang=c :
+     * #define O_CLOEXEC 524288
+     * }
+     */
+    public static int O_CLOEXEC() {
+        return O_CLOEXEC;
+    }
     private static final int F_SETOWN = (int)8L;
     /**
      * {@snippet lang=c :

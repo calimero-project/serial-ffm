@@ -87,6 +87,7 @@ final class Unix {
 	static final int O_CREAT    = OS.current() == OS.Linux ? Linux.O_CREAT() : Mac.O_CREAT();
 	static final int O_EXCL     = OS.current() == OS.Linux ? Linux.O_EXCL() : Mac.O_EXCL();
 	static final int O_NOCTTY   = OS.current() == OS.Linux ? Linux.O_NOCTTY() : Mac.O_NOCTTY();
+	static final int O_CLOEXEC  = OS.current() == OS.Linux ? Linux.O_CLOEXEC() : Mac.O_CLOEXEC();
 
 	static final int B0      = OS.current() == OS.Linux ? Linux.B0() : Mac.B0();
 	static final int B50     = OS.current() == OS.Linux ? Linux.B50() : Mac.B50();
