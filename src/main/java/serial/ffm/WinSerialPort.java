@@ -32,7 +32,6 @@ import java.lang.System.Logger.Level;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.EnumSet;
 import java.util.Map;
@@ -99,24 +98,23 @@ final class WinSerialPort extends ReadWritePort {
 					final var deviceNameLength = arena.allocate(ValueLayout.JAVA_INT, size);
 					final var portName = arena.allocate(size);
 					final var portNameLength = arena.allocate(ValueLayout.JAVA_INT, size);
+					final var type = arena.allocate(ValueLayout.JAVA_INT);
 
 					for (int i = 0;; i++) {
 						// reinit chars with size on every iteration
 						deviceNameLength.set(ValueLayout.JAVA_INT, 0, size);
 						portNameLength.set(ValueLayout.JAVA_INT, 0, size);
-						ret = Windows.RegEnumValueA(serialCommKey, i, deviceName, 
-								deviceNameLength, Windows.NULL(), Windows.NULL(), portName, portNameLength);
-						
+						ret = Windows.RegEnumValueA(serialCommKey, i, deviceName, deviceNameLength,
+								Windows.NULL(), type, portName, portNameLength);
 						if (ret == Windows.ERROR_NO_MORE_ITEMS())
 							break;
 
-						if (ret == Windows.ERROR_SUCCESS()) {
-							final String port = extractString(portName, portNameLength);
-							logger.log(TRACE, "{0} = {1}", extractString(deviceName, deviceNameLength), port);
-							portNames.add(port);
-						}
-						else {
+						if (ret != Windows.ERROR_SUCCESS())
 							logger.log(WARNING, "RegEnumValueA error: {0}", formatWinError(ret));
+						else if (type.get(ValueLayout.JAVA_INT, 0) == Windows.REG_SZ()) {
+							final String port = portName.getString(0);
+							logger.log(TRACE, "{0} = {1}", deviceName.getString(0), port);
+							portNames.add(port);
 						}
 					}
 				}
@@ -129,15 +127,6 @@ final class WinSerialPort extends ReadWritePort {
 			}
 		}
 		return portNames;
-	}
-
-	// don't assume the string in the registry is null-terminated
-	private static String extractString(final MemorySegment string, final MemorySegment length) {
-		int actualLength = length.get(ValueLayout.JAVA_INT, 0);
-		final int terminator = string.get(ValueLayout.JAVA_BYTE, actualLength) == 0 ? 1 : 0;
-		actualLength -= terminator;
-		final var bytes = string.asSlice(0, actualLength).toArray(ValueLayout.JAVA_BYTE);
-		return new String(bytes, StandardCharsets.UTF_8);
 	}
 
 	// TODO only for port exists check

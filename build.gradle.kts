@@ -143,7 +143,7 @@ tasks.jextract {
                 // CfgMgr32:
                 "_GUID", "_DEVPROPKEY")
             constantFilter = listOf("FALSE", "TRUE", "NULL",
-                "HKEY_LOCAL_MACHINE", "KEY_READ",
+                "HKEY_LOCAL_MACHINE", "KEY_READ", "REG_SZ",
                 "FILE_TYPE_CHAR", "GENERIC_READ", "GENERIC_WRITE", "FILE_ATTRIBUTE_NORMAL", "OPEN_EXISTING", "FILE_FLAG_OVERLAPPED",
                 "WAIT_TIMEOUT", "INFINITE",
                 "NO_ERROR", "ERROR_SUCCESS", "ERROR_PATH_NOT_FOUND", "ERROR_INVALID_HANDLE", "ERROR_NO_MORE_ITEMS",
