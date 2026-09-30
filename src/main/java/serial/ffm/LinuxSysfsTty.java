@@ -39,7 +39,12 @@ final class LinuxSysfsTty {
 	private LinuxSysfsTty() {}
 
 	static boolean available() {
-		return Files.isDirectory(SysClassTty);
+		try {
+			return "sysfs".equals(Files.getFileStore(SysClassTty).type());
+		}
+		catch (final IOException e) {
+			return false;
+		}
 	}
 
 	static Set<SerialPortId> enumerate() throws IOException {
