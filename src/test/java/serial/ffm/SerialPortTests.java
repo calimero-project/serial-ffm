@@ -88,6 +88,15 @@ class SerialPortTests {
 			port.close();
 	}
 
+	static class Static {
+		@Test
+		void availablePorts() {
+			final var ports = SerialPort.availablePorts();
+			ports.stream().map(DefaultSerialPortId.class::cast).map(id -> id + ": " + id.info())
+					.forEach(System.out::println);
+		}
+	}
+
 	@Test
 	void existingPortExists() {
 		assertTrue(SerialPort.portExists(portId));

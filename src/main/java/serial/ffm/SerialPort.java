@@ -25,9 +25,11 @@ package serial.ffm;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public interface SerialPort extends AutoCloseable {
 	enum StopBits {
@@ -83,13 +85,30 @@ public interface SerialPort extends AutoCloseable {
 		}
 	}
 
+	static Set<SerialPortId> availablePorts() {
+		class UnsupportedPlatformException extends RuntimeException {
+			UnsupportedPlatformException(final String message) { super(message); }
+		}
+		try {
+			return Set.copyOf(switch (OS.current()) {
+				case Windows -> WinSerialPort.availablePorts();
+				case Linux   -> UnixSerialPort.availablePortsLinux();
+				case Mac     -> UnixSerialPort.availablePortsMac();
+				case Other   -> throw new UnsupportedPlatformException("unsupported platform '" + OS.osName() + "'");
+			});
+		}
+		catch (final UnsupportedPlatformException e) {
+			throw e;
+		}
+		catch (IOException | RuntimeException e) {
+			final var logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
+			logger.log(System.Logger.Level.WARNING, "error enumerating serial ports", e);
+			return Set.of();
+		}
+	}
 
 	static Set<String> portIdentifiers() {
-		return switch (OS.current()) {
-			case Windows    -> WinSerialPort.portNames();
-			case Linux, Mac -> UnixSerialPort.portIdentifiers();
-			case Other      -> throw new RuntimeException("unsupported platform '" + OS.osName() + "'");
-		};
+		return availablePorts().stream().map(SerialPortId::port).collect(Collectors.toUnmodifiableSet());
 	}
 
 	static boolean portExists(final String portId) {

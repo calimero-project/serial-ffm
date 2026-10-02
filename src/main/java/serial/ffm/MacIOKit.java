@@ -104,7 +104,7 @@ final class MacIOKit {
 			usb.product = portName;
 		final var info = new SerialPortInfo(usb.manufacturer, usb.product, usb.serialNumber, ioClass, usb.vendorId,
 				usb.productId, registryPath, Long.toUnsignedString(registryEntryId), null, List.of());
-		return Optional.of(new SerialPortId(portName, port, info));
+		return Optional.of(new DefaultSerialPortId(portName, port, info));
 	}
 
 	private static void walkParents(final Arena arena, final IOObjHandle entry, final UsbProperties usb, final int remaining) {

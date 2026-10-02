@@ -64,7 +64,7 @@ final class LinuxSysfsTty {
 		try {
 			final var driverOpt = filterSerialTty(classPath);
 			if (driverOpt.isPresent())
-				return Optional.of(new SerialPortId(fileName.toString(), devPath.toString(),
+				return Optional.of(new DefaultSerialPortId(fileName.toString(), devPath.toString(),
 						LinuxSerialPortInfo.read(resolveSysfsDevicePath(classPath), driverOpt.get())));
 		}
 		catch (IOException | RuntimeException e) {

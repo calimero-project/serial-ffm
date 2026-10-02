@@ -37,6 +37,7 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import serial.ffm.win.Windows;
 import serial.ffm.win._COMMPROP;
@@ -79,7 +80,22 @@ final class WinSerialPort extends ReadWritePort {
 	private int maxBaudRate;
 
 
-	// port names currently listed in registry
+	static Set<SerialPortId> availablePorts() {
+		final var ports = WinCfgMgr.enumerate();
+
+		final var portLookup = ports.stream().map(SerialPortId::port).collect(Collectors.toSet());
+		// merge with port names from registry device map, in case there are any ports missing
+		for (final String portName : portNames()) {
+			final String port = portName.startsWith("COM") ? "\\\\.\\" + portName : portName;
+			if (!portLookup.contains(port)) {
+				final String name = portName.startsWith("\\\\.\\") ? portName.substring(4) : portName;
+				ports.add(new DefaultSerialPortId(name, port, SerialPortInfo.none()));
+			}
+		}
+		return ports;
+	}
+
+	// port names currently listed in registry device map
 	static Set<String> portNames() {
 		final var logger = System.getLogger("serial.ffm");
 		logger.log(TRACE, "query serial port names from registry");

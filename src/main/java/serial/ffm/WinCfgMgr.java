@@ -151,7 +151,7 @@ final class WinCfgMgr {
 
 			final var info = new SerialPortInfo(manufacturer, description, serialNumber, service, usb.vendorId(),
 					usb.productId(), interfacePath, devInstId, friendlyName , hardwareIds);
-			return Optional.of(new SerialPortId(portName, "\\\\.\\" + portName, info));
+			return Optional.of(new DefaultSerialPortId(portName, "\\\\.\\" + portName, info));
 		}
 		catch (final RuntimeException e) {
 			logger.log(INFO, "error inspecting {0}", interfacePath, e);

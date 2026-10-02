@@ -22,7 +22,13 @@
 
 package serial.ffm;
 
-record SerialPortId(String name, String port, SerialPortInfo info) {
+public interface SerialPortId {
+	String name();
+
+	String port();
+}
+
+record DefaultSerialPortId(String name, String port, SerialPortInfo info) implements SerialPortId {
 	@Override
 	public String toString() { return port; }
 }

@@ -34,6 +34,8 @@ record SerialPortInfo(
 		// win
 		String friendlyName, List<String> hardwareIds) {
 
+	static SerialPortInfo none() { return new SerialPortInfo(null, null, null, null, 0, 0, null, null, null, List.of()); }
+
 	SerialPortInfo {
 		hardwareIds = List.copyOf(hardwareIds);
 	}

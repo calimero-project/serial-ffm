@@ -114,6 +114,20 @@ final class UnixSerialPort extends ReadWritePort {
 	private Timeouts timeouts = Timeouts.readInterval(Duration.ZERO);
 
 
+	static Set<SerialPortId> availablePortsLinux() throws IOException {
+		if (!LinuxSysfsTty.available()) {
+			final var logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
+			logger.log(System.Logger.Level.WARNING, LinuxSysfsTty.SysClassTty
+					+ " is unavailable, cannot enumerate serial ports");
+			return Set.of();
+		}
+		return LinuxSysfsTty.enumerate();
+	}
+
+	static Set<SerialPortId> availablePortsMac() throws IOException {
+		return MacIOKit.enumerate();
+	}
+
 	static Set<String> portIdentifiers() {
 		return checkPortsDir("/dev");
 	}
