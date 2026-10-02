@@ -32,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.EnumSet;
 import java.util.concurrent.Executors;
@@ -44,7 +43,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
-import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.util.RestoreSystemProperties;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -59,10 +57,6 @@ import serial.ffm.SerialPort.StopBits;
 import serial.ffm.SerialPort.Timeouts;
 
 class SerialPortTests {
-
-	@TempDir
-	private Path tmpDir;
-
 	private final String portId = osPort();
 
 	static String osPort() {
@@ -124,7 +118,7 @@ class SerialPortTests {
 	}
 
 	@Test
-	void useAfterClose() throws IOException, InterruptedException {
+	void useAfterClose() {
 		port.close();
 		port.close(); // idempotent, shouldn't throw
 		assertThrows(PortClosedException.class, () -> port.baudRate());
@@ -323,7 +317,7 @@ class SerialPortTests {
 	}
 
 	@Test
-	void events() throws IOException, InterruptedException {
+	void events() throws IOException {
 		port.events(EnumSet.noneOf(SerialPort.SerialEvent.class), true);
 		port.events(EnumSet.allOf(SerialPort.SerialEvent.class), true);
 
