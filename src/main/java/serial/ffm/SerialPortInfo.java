@@ -47,10 +47,19 @@ record SerialPortInfo(
 			for (var component : getClass().getRecordComponents())
 				Optional.ofNullable(component.getAccessor().invoke(this))
 						.filter(v -> !(v instanceof List<?> l && l.isEmpty())) // omit empty list of hardwareIds
-						.map(v -> component.getName() + "=" + v).ifPresent(joiner::add);
+						.map(v -> switch(component.getName()) {
+							case "vendorId" -> vidPid(); // special-case usb vid:pid format (if set)
+							case "productId" -> null;
+							default -> component.getName() + "=" + v;
+						})
+						.ifPresent(joiner::add);
 		} catch (final ReflectiveOperationException e) {
 			throw new IllegalStateException(e);
 		}
 		return joiner.toString();
+	}
+
+	private String vidPid() {
+		return vendorId != 0 && productId != 0 ? "usb=%04x:%04x".formatted(vendorId, productId) : null;
 	}
 }
