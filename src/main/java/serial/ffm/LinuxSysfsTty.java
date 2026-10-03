@@ -36,6 +36,9 @@ final class LinuxSysfsTty {
 
 	private static final System.Logger logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
 
+	// linux/serial.h supported serial types
+	private static final int PortUnknown = 0;
+
 	private LinuxSysfsTty() {}
 
 	static boolean available() {
@@ -93,6 +96,9 @@ final class LinuxSysfsTty {
 		if (isPtmx(classPath))
 			return Optional.empty();
 
+		if (portType(classPath).filter(type -> type == PortUnknown).isPresent())
+			return Optional.empty();
+
 		return findTtyDriver(classPath);
 	}
 
@@ -108,6 +114,15 @@ final class LinuxSysfsTty {
 		final Path uevent = classPath.resolve("uevent");
 		final var lines = Files.readAllLines(uevent);
 		return lines.contains("MAJOR=5") && lines.contains("MINOR=2");
+	}
+
+	private static Optional<Integer> portType(final Path classPath) {
+		final Path type = classPath.resolve("type");
+		try {
+			return Files.readString(type).lines().findFirst().map(Integer::parseUnsignedInt);
+		}
+		catch (IOException | NumberFormatException ignore) {}
+		return Optional.empty();
 	}
 
 	private static Optional<String> findTtyDriver(final Path classPath) throws IOException {
