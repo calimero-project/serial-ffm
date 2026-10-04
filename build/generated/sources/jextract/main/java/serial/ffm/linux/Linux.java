@@ -234,6 +234,15 @@ public class Linux extends Linux$shared {
     public static int CLOCAL() {
         return CLOCAL;
     }
+    private static final int TIOCSER_TEMT = (int)1L;
+    /**
+     * {@snippet lang=c :
+     * #define TIOCSER_TEMT 1
+     * }
+     */
+    public static int TIOCSER_TEMT() {
+        return TIOCSER_TEMT;
+    }
     private static final int TCSANOW = (int)0L;
     /**
      * {@snippet lang=c :
@@ -278,6 +287,33 @@ public class Linux extends Linux$shared {
      */
     public static int FIONREAD() {
         return FIONREAD;
+    }
+    private static final int TIOCSERGETLSR = (int)21593L;
+    /**
+     * {@snippet lang=c :
+     * #define TIOCSERGETLSR 21593
+     * }
+     */
+    public static int TIOCSERGETLSR() {
+        return TIOCSERGETLSR;
+    }
+    private static final int TIOCMIWAIT = (int)21596L;
+    /**
+     * {@snippet lang=c :
+     * #define TIOCMIWAIT 21596
+     * }
+     */
+    public static int TIOCMIWAIT() {
+        return TIOCMIWAIT;
+    }
+    private static final int TIOCGICOUNT = (int)21597L;
+    /**
+     * {@snippet lang=c :
+     * #define TIOCGICOUNT 21597
+     * }
+     */
+    public static int TIOCGICOUNT() {
+        return TIOCGICOUNT;
     }
     private static final int TIOCM_DTR = (int)2L;
     /**

@@ -1226,17 +1226,14 @@ final class UnixSerialPort extends ReadWritePort {
 		return events;
 	}
 
-	// not defined on macOS
-	private static final int TIOCMIWAIT = 0x545C;
-	private static final int TIOCGICOUNT = 0x545D;
-
+	// Linux-specific
 	private MemorySegment queryInterruptCounters() throws IOException {
 		logger.log(TRACE, "queryInterruptCounters");
 		try (var arena = Arena.ofConfined()) {
 			final var icount = serial_icounter_struct.allocate(arena);
 			int ret;
 			do {
-				ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TIOCGICOUNT, icount);
+				ret = Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCGICOUNT(), icount);
 			}
 			while (ret == -1 && errno() == Unix.EINTR);
 			if (ret == -1)
@@ -1245,16 +1242,14 @@ final class UnixSerialPort extends ReadWritePort {
 		}
 	}
 
-	private static final int TIOCSERGETLSR = 0x5459;	/* Get line status register */
-	private static final int TIOCSER_TEMT = 0x01;		/* Transmitter physically empty */
-
+	// Linux-specific
 	private boolean lsr() {
 		try (var arena = Arena.ofConfined()) {
 			final var lsr = arena.allocate(1);
-			if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TIOCSERGETLSR, lsr) == -1)
+			if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCSERGETLSR(), lsr) == -1)
 				return false;
 			// output buffer empty?
-			return isSet(lsr.get(ValueLayout.JAVA_BYTE, 0), TIOCSER_TEMT);
+			return isSet(lsr.get(ValueLayout.JAVA_BYTE, 0), Linux.TIOCSER_TEMT());
 		}
 	}
 
@@ -1267,10 +1262,11 @@ final class UnixSerialPort extends ReadWritePort {
 				return polledWaitEvent();
 			}
 
+			// the following code is Linux-specific
 			final int mask = ioctlEventMask;
 			int ret;
 			do {
-				ret = Linux.ioctl.makeInvoker(Linux.C_INT).apply(fd.value(), TIOCMIWAIT, mask);
+				ret = Linux.ioctl.makeInvoker(Linux.C_INT).apply(fd.value(), Linux.TIOCMIWAIT(), mask);
 				if (ret == -1 && errno() == Unix.EINTR)
 					logger.log(TRACE, "waitEvent interrupted");
 			}

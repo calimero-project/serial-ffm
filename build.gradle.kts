@@ -166,6 +166,7 @@ tasks.jextract {
             paths = listOf("/usr/include")
             funcFilter = funcFilter + listOf("__errno_location")
             structFilter = structFilter + listOf("serial_icounter_struct", "serial_struct")
+            constantFilter = constantFilter + listOf("TIOCMIWAIT", "TIOCGICOUNT", "TIOCSERGETLSR", "TIOCSER_TEMT")
         }
         os.contains("mac") -> {
             headersDir = "unix"
