@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
-import serial.ffm.SerialPort.Status;
-
 final class PortInputStream extends InputStream {
 	private final ReadWritePort port;
 
@@ -54,6 +52,6 @@ final class PortInputStream extends InputStream {
 
 	@Override
 	public int available() throws IOException {
-		return port.status(Status.AvailableInput);
+		return port.bytesAvailable();
 	}
 }

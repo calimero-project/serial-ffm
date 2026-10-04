@@ -312,6 +312,19 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 
 	abstract void open(Arena arena, String portId) throws IOException;
 
+	final int bytesAvailable() throws IOException {
+		logger.log(TRACE, "query bytes available");
+		lock.lock();
+		try (var arena = Arena.ofConfined()) {
+			return bytesAvailable(arena);
+		}
+		finally {
+			lock.unlock();
+		}
+	}
+
+	abstract int bytesAvailable(Arena arena) throws IOException;
+
 	final int read() throws IOException {
 		try (var arena = Arena.ofConfined()) {
 			final var buf = arena.allocate(1);

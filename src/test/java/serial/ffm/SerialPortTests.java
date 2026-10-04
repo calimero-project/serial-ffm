@@ -129,7 +129,6 @@ class SerialPortTests {
 		assertThrows(PortClosedException.class, () -> port.flowControl(FlowControl.None));
 		assertThrows(PortClosedException.class, () -> port.parity());
 		assertThrows(PortClosedException.class, () -> port.parity(Parity.None));
-		assertThrows(PortClosedException.class, () -> port.status(Status.AvailableInput));
 		assertThrows(PortClosedException.class, () -> port.status(Status.Error));
 		assertThrows(PortClosedException.class, () -> port.status(Status.Line));
 		assertThrows(PortClosedException.class, () -> port.stopBits());
@@ -367,7 +366,6 @@ class SerialPortTests {
 
 	@Test
 	void status() throws IOException {
-		assertEquals(0, port.status(Status.AvailableInput));
 		assertEquals(0, port.status(Status.Error));
 		// Line status will have DTR/RTS set after port open, so just verify no exception
 		port.status(Status.Line);

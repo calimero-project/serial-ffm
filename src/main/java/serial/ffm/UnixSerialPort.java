@@ -1129,7 +1129,8 @@ final class UnixSerialPort extends ReadWritePort {
 		dispatchEvents(EnumSet.of(SerialEvent.OutputEmpty));
 	}
 
-	private /*uint*/ long isInputWaiting(final Arena arena) throws IOException {
+	@Override
+	int bytesAvailable(final Arena arena) throws IOException {
 		Linux.fcntl.makeInvoker(Linux.C_INT).apply(fd.value(), Unix.F_SETFL, Unix.O_NONBLOCK);
 		/*uint*/ final var bytes = arena.allocate(ValueLayout.JAVA_INT);
 		if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Unix.FIONREAD, bytes) == -1) {
@@ -1343,10 +1344,11 @@ final class UnixSerialPort extends ReadWritePort {
 				}
 
 				if (enabledEvents.contains(SerialEvent.DataAvailable)) {
-					final int availStatus = status(arena, Status.AvailableInput);
+					final int availStatus = bytesAvailable(arena);
 					if (polledAvailableStatus != availStatus) {
 						polledAvailableStatus = availStatus;
-						events.add(SerialEvent.DataAvailable);
+						if (availStatus > 0)
+							events.add(SerialEvent.DataAvailable);
 					}
 				}
 
@@ -1382,7 +1384,6 @@ final class UnixSerialPort extends ReadWritePort {
 					v |= LINE_DCD;
 				yield v;
 			}
-			case AvailableInput -> isInputWaiting(arena);
 			case Error -> {
 				if (isClosed())
 					throwIOException(Unix.EBADF);

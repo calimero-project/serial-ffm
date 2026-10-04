@@ -51,7 +51,7 @@ public interface SerialPort extends AutoCloseable {
 	}
 
 	enum Status {
-		Error, AvailableInput, Line
+		Error, Line
 	}
 
 	enum SerialEvent {

@@ -605,11 +605,6 @@ final class WinSerialPort extends ReadWritePort {
 				ret = Win.GetCommModemStatus(lastError, h.handle(), value);
 				yield value.get(ValueLayout.JAVA_INT, 0);
 			}
-			case AvailableInput -> {
-				final var stat = _COMSTAT.allocate(arena);
-				ret = Win.ClearCommError(lastError, h.handle(), value, stat);
-				yield _COMSTAT.cbInQue(stat);
-			}
 			case Error -> {
 				ret = Win.ClearCommError(lastError, h.handle(), value, Windows.NULL());
 				final int errors = value.get(ValueLayout.JAVA_INT, 0);
@@ -620,6 +615,16 @@ final class WinSerialPort extends ReadWritePort {
 		if (ret == 0)
 			throwIoException(lastError);
 		return status;
+	}
+
+	@Override
+	int bytesAvailable(final Arena arena) throws IOException {
+		final var lastError = arena.allocate(Win.captureStateLayout);
+		final var unused = arena.allocate(ValueLayout.JAVA_INT);
+		final var stat = _COMSTAT.allocate(arena);
+		if (Win.ClearCommError(lastError, h.handle(), unused, stat) == 0)
+			throwIoException(lastError);
+		return _COMSTAT.cbInQue(stat);
 	}
 
 	@Override
