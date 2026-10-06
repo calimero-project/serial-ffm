@@ -486,6 +486,15 @@ public class Linux extends Linux$shared {
     public static int PATH_MAX() {
         return PATH_MAX;
     }
+    private static final int PORT_UNKNOWN = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * #define PORT_UNKNOWN 0
+     * }
+     */
+    public static int PORT_UNKNOWN() {
+        return PORT_UNKNOWN;
+    }
 
     private static class close {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(

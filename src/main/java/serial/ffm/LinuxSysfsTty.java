@@ -30,14 +30,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import serial.ffm.linux.Linux;
+
 // Linux only: enumerate /sys/class/tty for serial ports
 final class LinuxSysfsTty {
 	static final Path SysClassTty = Path.of("/sys/class/tty");
 
 	private static final System.Logger logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
-
-	// linux/serial.h supported serial types
-	private static final int PortUnknown = 0;
 
 	private LinuxSysfsTty() {}
 
@@ -96,7 +95,7 @@ final class LinuxSysfsTty {
 		if (isPtmx(classPath))
 			return Optional.empty();
 
-		if (portType(classPath).filter(type -> type == PortUnknown).isPresent())
+		if (portType(classPath).filter(type -> type == Linux.PORT_UNKNOWN()).isPresent())
 			return Optional.empty();
 
 		return findTtyDriver(classPath);

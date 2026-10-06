@@ -311,7 +311,6 @@ final class UnixSerialPort extends ReadWritePort {
 	}
 
 	private static final long TIOCGSERIAL = 0x541E;
-	private static final long PORT_UNKNOWN = 0;
 
 	// this will open the port, alternatives might be to use /dev/serial or /proc/tty
 	boolean portExists(final String portId) {
@@ -324,7 +323,7 @@ final class UnixSerialPort extends ReadWritePort {
 			if (definedTIOCGSERIAL()) {
 				final var info = serial_struct.allocate(arena);
 				if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TIOCGSERIAL, info) == 0) {
-					if (serial_struct.type(info) != PORT_UNKNOWN)
+					if (serial_struct.type(info) != Linux.PORT_UNKNOWN())
 						valid = true;
 					else if (hasDevSerialLink(arena, portId))
 						valid = true;
