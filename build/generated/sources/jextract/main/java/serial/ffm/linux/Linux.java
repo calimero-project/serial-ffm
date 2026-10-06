@@ -288,6 +288,15 @@ public class Linux extends Linux$shared {
     public static int FIONREAD() {
         return FIONREAD;
     }
+    private static final int TIOCGSERIAL = (int)21534L;
+    /**
+     * {@snippet lang=c :
+     * #define TIOCGSERIAL 21534
+     * }
+     */
+    public static int TIOCGSERIAL() {
+        return TIOCGSERIAL;
+    }
     private static final int TIOCSERGETLSR = (int)21593L;
     /**
      * {@snippet lang=c :

@@ -310,8 +310,6 @@ final class UnixSerialPort extends ReadWritePort {
 		return fd == fd_t.Invalid;
 	}
 
-	private static final long TIOCGSERIAL = 0x541E;
-
 	// this will open the port, alternatives might be to use /dev/serial or /proc/tty
 	boolean portExists(final String portId) {
 		final var error = new AtomicInteger();
@@ -320,9 +318,9 @@ final class UnixSerialPort extends ReadWritePort {
 
 			boolean valid = false;
 
-			if (definedTIOCGSERIAL()) {
+			if (OS.current() == OS.Linux) {
 				final var info = serial_struct.allocate(arena);
-				if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), TIOCGSERIAL, info) == 0) {
+				if (Linux.ioctl.makeInvoker(Linux.C_POINTER).apply(fd.value(), Linux.TIOCGSERIAL(), info) == 0) {
 					if (serial_struct.type(info) != Linux.PORT_UNKNOWN())
 						valid = true;
 					else if (hasDevSerialLink(arena, portId))
@@ -589,10 +587,6 @@ final class UnixSerialPort extends ReadWritePort {
 		}
 		Linux.closedir(dirp);
 		return false;
-	}
-
-	private static boolean definedTIOCGSERIAL() {
-		return OS.current() == OS.Linux;
 	}
 
 	private boolean closePort() {
