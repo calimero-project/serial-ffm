@@ -97,8 +97,7 @@ final class WinSerialPort extends ReadWritePort {
 
 	// port names currently listed in registry device map
 	static Set<String> portNames() {
-		final var logger = System.getLogger("serial.ffm");
-		logger.log(TRACE, "query serial port names from registry");
+		slogger().log(TRACE, "query serial port names from registry");
 		final var portNames = new TreeSet<String>();
 
 		try (var arena = Arena.ofConfined()) {
@@ -126,10 +125,10 @@ final class WinSerialPort extends ReadWritePort {
 							break;
 
 						if (ret != Windows.ERROR_SUCCESS())
-							logger.log(WARNING, "RegEnumValueA error: {0}", formatWinError(ret));
+							slogger().log(WARNING, "RegEnumValueA error: {0}", formatWinError(ret));
 						else if (type.get(ValueLayout.JAVA_INT, 0) == Windows.REG_SZ()) {
 							final String port = portName.getString(0);
-							logger.log(TRACE, "{0} = {1}", deviceName.getString(0), port);
+							slogger().log(TRACE, "{0} = {1}", deviceName.getString(0), port);
 							portNames.add(port);
 						}
 					}
@@ -139,7 +138,7 @@ final class WinSerialPort extends ReadWritePort {
 				}
 			}
 			else {
-				logger.log(TRACE, "RegOpenKeyExA error: {0}", formatWinError(ret));
+				slogger().log(TRACE, "RegOpenKeyExA error: {0}", formatWinError(ret));
 			}
 		}
 		return portNames;

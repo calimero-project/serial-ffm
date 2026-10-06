@@ -34,7 +34,6 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -116,8 +115,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 	static Set<SerialPortId> availablePortsLinux() throws IOException {
 		if (!LinuxSysfsTty.available()) {
-			final var logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
-			logger.log(System.Logger.Level.WARNING, LinuxSysfsTty.SysClassTty
+			slogger().log(System.Logger.Level.WARNING, LinuxSysfsTty.SysClassTty
 					+ " is unavailable, cannot enumerate serial ports");
 			return Set.of();
 		}
@@ -134,11 +132,9 @@ final class UnixSerialPort extends ReadWritePort {
 
 	private static Set<String> checkPortsDir(final String dir) {
 		try (var arena = Arena.ofConfined()) {
-			final var logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
-
 			var /*DIR*/ addr = Linux.opendir(arena.allocateFrom(dir));
 			if (addr.equals(Linux.NULL())) {
-				logger.log(WARNING, "cannot open ''{0}'': ", dir, errnoMsg());
+				slogger().log(WARNING, "cannot open ''{0}'': ", dir, errnoMsg());
 				return Set.of();
 			}
 
@@ -152,14 +148,14 @@ final class UnixSerialPort extends ReadWritePort {
 					continue;
 
 				if (debug())
-					logger.log(TRACE, LayoutFormatter.format(entry, dirent.layout()));
+					slogger().log(TRACE, LayoutFormatter.format(entry, dirent.layout()));
 
 				final String filename = dir + "/" + name;
-				logger.log(TRACE, "test {0}", filename);
+				slogger().log(TRACE, "test {0}", filename);
 				final var cfilename = arena.allocateFrom(filename);
 				final var stbuf = stat.allocate(arena);
 				if (Linux.stat(cfilename, stbuf) == -1) {
-					logger.log(WARNING, "stat failed for ''{0}'': {1}", filename, errnoMsg());
+					slogger().log(WARNING, "stat failed for ''{0}'': {1}", filename, errnoMsg());
 					continue;
 				}
 				if (SerialPort.portExists(filename))

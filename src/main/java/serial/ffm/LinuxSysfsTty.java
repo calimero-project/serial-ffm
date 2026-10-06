@@ -23,7 +23,6 @@
 package serial.ffm;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -32,11 +31,11 @@ import java.util.stream.Collectors;
 
 import serial.ffm.linux.Linux;
 
+import static serial.ffm.ReadWritePort.slogger;
+
 // Linux only: enumerate /sys/class/tty for serial ports
 final class LinuxSysfsTty {
 	static final Path SysClassTty = Path.of("/sys/class/tty");
-
-	private static final System.Logger logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
 
 	private LinuxSysfsTty() {}
 
@@ -70,7 +69,7 @@ final class LinuxSysfsTty {
 						LinuxSerialPortInfo.read(resolveSysfsDevicePath(classPath), driverOpt.get())));
 		}
 		catch (IOException | RuntimeException e) {
-			logger.log(System.Logger.Level.DEBUG, "error inspecting " + classPath, e);
+			slogger().log(System.Logger.Level.DEBUG, "error inspecting " + classPath, e);
 		}
 		return Optional.empty();
 	}

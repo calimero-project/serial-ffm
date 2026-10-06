@@ -45,6 +45,13 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 		return debug;
 	}
 
+	static Logger slogger() {
+		class Holder {
+			static final Logger logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
+		}
+		return Holder.logger;
+	}
+
 	// special cases for wakeup interval:
 	// 0: WaitForSingleObject (Windows) and poll (Unix) always return immediately
 	// 4294967295, i.e., -1: infinite timeout; WaitForSingleObject and poll return only when the object/fd is signaled/ready
@@ -56,11 +63,11 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 		if (val != null && !val.isEmpty()) {
 			try {
 				final int i = Integer.parseUnsignedInt(val);
-				System.getLogger("serial.ffm").log(DEBUG, "set wakeup interval to {0} ms", i);
+				slogger().log(DEBUG, "set wakeup interval to {0} ms", i);
 				return i;
 			}
 			catch (final NumberFormatException e) {
-				System.getLogger("serial.ffm").log(WARNING, "error reading property ''{0}'' (default to {1} ms): {2}",
+				slogger().log(WARNING, "error reading property ''{0}'' (default to {1} ms): {2}",
 						wakeupIntervalKey, defaultWakeupInterval, e.getMessage());
 			}
 		}

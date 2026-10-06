@@ -25,11 +25,12 @@ package serial.ffm;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static serial.ffm.ReadWritePort.slogger;
 
 public interface SerialPort extends AutoCloseable {
 	enum StopBits {
@@ -101,8 +102,7 @@ public interface SerialPort extends AutoCloseable {
 			throw e;
 		}
 		catch (IOException | RuntimeException e) {
-			final var logger = System.getLogger(MethodHandles.lookup().lookupClass().getPackageName());
-			logger.log(System.Logger.Level.WARNING, "error enumerating serial ports", e);
+			slogger().log(System.Logger.Level.WARNING, "error enumerating serial ports", e);
 			return Set.of();
 		}
 	}

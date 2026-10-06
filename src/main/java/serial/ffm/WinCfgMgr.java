@@ -42,6 +42,7 @@ import serial.ffm.win._GUID;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.INFO;
 import static java.nio.charset.StandardCharsets.UTF_16LE;
+import static serial.ffm.ReadWritePort.slogger;
 import static serial.ffm.win.Windows.CR_BUFFER_SMALL;
 import static serial.ffm.win.Windows.CR_SUCCESS;
 
@@ -75,8 +76,6 @@ final class WinCfgMgr {
 	private static final DevPropKey Device_FriendlyName = new DevPropKey(DeviceFmtid, 14);
 
 	private static final Pattern UsbVidPidPattern = Pattern.compile("USB\\\\VID_([0-9A-Fa-f]{4})&PID_([0-9A-Fa-f]{4})");
-
-	private static final System.Logger logger = System.getLogger("serial.ffm");
 
 
 	private WinCfgMgr() {}
@@ -129,7 +128,7 @@ final class WinCfgMgr {
 			final var devInstSeg = arena.allocate(ValueLayout.JAVA_INT);
 			final int status = Windows.CM_Locate_DevNodeW(devInstSeg, devInstIdValue.data(), Windows.CM_LOCATE_DEVNODE_NORMAL());
 			if (status != CR_SUCCESS()) {
-				logger.log(DEBUG, "locating device node for {0} failed: {1}", interfacePath, configRetMessage(status));
+				slogger().log(DEBUG, "locating device node for {0} failed: {1}", interfacePath, configRetMessage(status));
 				return Optional.empty();
 			}
 			final int devInst = devInstSeg.get(ValueLayout.JAVA_INT, 0);
@@ -154,7 +153,7 @@ final class WinCfgMgr {
 			return Optional.of(new DefaultSerialPortId(portName, "\\\\.\\" + portName, info));
 		}
 		catch (final RuntimeException e) {
-			logger.log(INFO, "error inspecting {0}", interfacePath, e);
+			slogger().log(INFO, "error inspecting {0}", interfacePath, e);
 			return Optional.empty();
 		}
 	}
@@ -164,7 +163,7 @@ final class WinCfgMgr {
 		int status = Windows.CM_Open_DevNode_Key(devInst, Windows.KEY_READ(), 0,
 				Windows.RegDisposition_OpenExisting(), phKey, Windows.CM_REGISTRY_HARDWARE());
 		if (status != CR_SUCCESS() || phKey.get(ValueLayout.ADDRESS, 0).equals(MemorySegment.NULL)) {
-			logger.log(INFO, "opening registry for querying port name failed: {0}", configRetMessage(status));
+			slogger().log(INFO, "opening registry for querying port name failed: {0}", configRetMessage(status));
 			return null;
 		}
 		final var hKey = phKey.get(ValueLayout.ADDRESS, 0);
@@ -181,7 +180,7 @@ final class WinCfgMgr {
 				if (status == Windows.ERROR_SUCCESS())
 					return buffer.getString(0, UTF_16LE);
 			}
-			logger.log(INFO, "querying port name failed: {0}", WinSerialPort.formatWinError(status));
+			slogger().log(INFO, "querying port name failed: {0}", WinSerialPort.formatWinError(status));
 		}
 		finally {
 			Windows.RegCloseKey(hKey);
@@ -309,7 +308,7 @@ final class WinCfgMgr {
 		// query required buffer size
 		int status = getter.get(propertyType, MemorySegment.NULL, propertySize);
 		if (status != CR_SUCCESS() && status != CR_BUFFER_SMALL()) {
-			logger.log(DEBUG, "querying size of property value failed: {0}", configRetMessage(status));
+			slogger().log(DEBUG, "querying size of property value failed: {0}", configRetMessage(status));
 			return null;
 		}
 
