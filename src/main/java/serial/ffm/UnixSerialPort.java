@@ -40,7 +40,6 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import serial.ffm.linux.Linux;
@@ -133,47 +132,6 @@ final class UnixSerialPort extends ReadWritePort {
 
 	static Set<SerialPortId> availablePortsMac() throws IOException {
 		return MacIOKit.enumerate();
-	}
-
-	static Set<String> portIdentifiers() {
-		return checkPortsDir("/dev");
-	}
-
-	private static Set<String> checkPortsDir(final String dir) {
-		try (var arena = Arena.ofConfined()) {
-			var /*DIR*/ addr = Linux.opendir(arena.allocateFrom(dir));
-			if (addr.equals(Linux.NULL())) {
-				slogger().log(WARNING, "cannot open ''{0}'': ", dir, errnoMsg());
-				return Set.of();
-			}
-
-			final var ports = new TreeSet<String>();
-			final var dirp = addr;
-			while (!(addr = Linux.readdir(dirp)).equals(Linux.NULL())) {
-				final MemorySegment entry = dirent.reinterpret(addr, arena, null);
-				final String name = dirent.d_name(entry).getString(0);
-				// ignore entries '.' and '..'
-				if (name.charAt(0) == '.' && name.length() <= 2)
-					continue;
-
-				if (debug())
-					slogger().log(TRACE, LayoutFormatter.format(entry, dirent.layout()));
-
-				final String filename = dir + "/" + name;
-				slogger().log(TRACE, "test {0}", filename);
-				final var cfilename = arena.allocateFrom(filename);
-				final var stbuf = stat.allocate(arena);
-				if (Linux.stat(cfilename, stbuf) == -1) {
-					slogger().log(WARNING, "stat failed for ''{0}'': {1}", filename, errnoMsg());
-					continue;
-				}
-				if (SerialPort.portExists(filename))
-					ports.add(filename);
-			}
-
-			Linux.closedir(dirp);
-			return ports;
-		}
 	}
 
 

@@ -23,8 +23,6 @@
 package serial.ffm;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.BufferedReader;
@@ -86,14 +84,6 @@ class UnixSerialPortTests {
 		finally {
 			port.releaseLock();
 		}
-	}
-
-	@Test
-	void portIdentifiers() {
-		final var ports = UnixSerialPort.portIdentifiers();
-		assertNotNull(ports);
-		assertFalse(ports.isEmpty());
-		System.out.println("found serial ports = " + ports);
 	}
 
 	@Test
