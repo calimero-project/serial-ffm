@@ -410,12 +410,14 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 
 	abstract boolean isClosed();
 
+	Thread.Builder threadBuilder() { return Thread.ofVirtual(); }
+
 	void enableEventLooper(final boolean enable) {
 		lock.lock();
 		try {
 			if (enable) {
 				if (eventLooper == null)
-					eventLooper = Thread.ofVirtual().name("Serial Port Event Monitor").start(this::waitEventLoop);
+					eventLooper = threadBuilder().name("Serial Port Event Monitor").start(this::waitEventLoop);
 			}
 			else if (eventLooper != null) {
 				eventLooper.interrupt();

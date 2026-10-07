@@ -486,6 +486,15 @@ public class Linux extends Linux$shared {
     public static int POLLNVAL() {
         return POLLNVAL;
     }
+    private static final int SIGUSR1 = (int)10L;
+    /**
+     * {@snippet lang=c :
+     * #define SIGUSR1 10
+     * }
+     */
+    public static int SIGUSR1() {
+        return SIGUSR1;
+    }
     private static final int PATH_MAX = (int)4096L;
     /**
      * {@snippet lang=c :
@@ -865,6 +874,64 @@ public class Linux extends Linux$shared {
            throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class gettid {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Linux.C_INT    );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("gettid");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * extern __pid_t gettid(void)
+     * }
+     */
+    public static FunctionDescriptor gettid$descriptor() {
+        return gettid.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * extern __pid_t gettid(void)
+     * }
+     */
+    public static MethodHandle gettid$handle() {
+        return gettid.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern __pid_t gettid(void)
+     * }
+     */
+    public static MemorySegment gettid$address() {
+        return gettid.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern __pid_t gettid(void)
+     * }
+     */
+    public static int gettid() {
+        var mh$ = gettid.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("gettid");
+            }
+            return (int)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+            throw ex;
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
         }
     }
 
@@ -1807,6 +1874,130 @@ public class Linux extends Linux$shared {
                 traceDowncall("kill", __pid, __sig);
             }
             return (int)mh$.invokeExact(__pid, __sig);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class sigaction {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+                Linux.C_INT,
+                Linux.C_INT,
+                Linux.C_POINTER,
+                Linux.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("sigaction");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * extern int sigaction(int __sig, const struct sigaction *restrict __act, struct sigaction *restrict __oact)
+     * }
+     */
+    public static FunctionDescriptor sigaction$descriptor() {
+        return sigaction.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * extern int sigaction(int __sig, const struct sigaction *restrict __act, struct sigaction *restrict __oact)
+     * }
+     */
+    public static MethodHandle sigaction$handle() {
+        return sigaction.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int sigaction(int __sig, const struct sigaction *restrict __act, struct sigaction *restrict __oact)
+     * }
+     */
+    public static MemorySegment sigaction$address() {
+        return sigaction.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern int sigaction(int __sig, const struct sigaction *restrict __act, struct sigaction *restrict __oact)
+     * }
+     */
+    public static int sigaction(int __sig, MemorySegment __act, MemorySegment __oact) {
+        var mh$ = sigaction.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("sigaction", __sig, __act, __oact);
+            }
+            return (int)mh$.invokeExact(__sig, __act, __oact);
+        } catch (Error | RuntimeException ex) {
+            throw ex;
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class tgkill {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Linux.C_INT,
+            Linux.C_INT,
+            Linux.C_INT,
+            Linux.C_INT
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("tgkill");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * extern int tgkill(__pid_t __tgid, __pid_t __tid, int __signal)
+     * }
+     */
+    public static FunctionDescriptor tgkill$descriptor() {
+        return tgkill.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * extern int tgkill(__pid_t __tgid, __pid_t __tid, int __signal)
+     * }
+     */
+    public static MethodHandle tgkill$handle() {
+        return tgkill.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern int tgkill(__pid_t __tgid, __pid_t __tid, int __signal)
+     * }
+     */
+    public static MemorySegment tgkill$address() {
+        return tgkill.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern int tgkill(__pid_t __tgid, __pid_t __tid, int __signal)
+     * }
+     */
+    public static int tgkill(int __tgid, int __tid, int __signal) {
+        var mh$ = tgkill.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("tgkill", __tgid, __tid, __signal);
+            }
+            return (int)mh$.invokeExact(__tgid, __tid, __signal);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {

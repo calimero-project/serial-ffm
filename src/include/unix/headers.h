@@ -5,7 +5,11 @@
 // not necessary for macOS Tahoe 26
 //#define __DARWIN_64_BIT_INO_T 0
 
-#include <unistd.h> // write
+#ifdef __linux__
+#define _GNU_SOURCE // gettid, tgkill
+#endif // __linux__
+
+#include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <termios.h>

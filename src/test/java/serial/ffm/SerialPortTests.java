@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.condition.OS.LINUX;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -42,6 +43,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.api.util.RestoreSystemProperties;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -347,6 +349,7 @@ class SerialPortTests {
 	}
 
 	@Test
+	@DisabledOnOs(value = LINUX, disabledReason = "interrupt doesn't wake up thread waiting in TIOCMIWAIT")
 	void interruptWaitEvent() throws IOException {
 		port.events(EnumSet.of(SerialPort.SerialEvent.DataAvailable), true);
 		final var waitEventThread = Thread.currentThread();

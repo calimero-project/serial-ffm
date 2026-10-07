@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import serial.ffm.linux.Linux;
 import serial.ffm.linux.serial_icounter_struct;
 import serial.ffm.linux.serial_struct;
+import serial.ffm.linux.sigaction;
 import serial.ffm.unix.dirent;
 import serial.ffm.unix.flock;
 import serial.ffm.unix.pollfd;
@@ -104,8 +105,16 @@ final class UnixSerialPort extends ReadWritePort {
 	private String lockedPort = "";
 
 	private final Set<SerialEvent> enabledEvents = Collections.synchronizedSet(EnumSet.noneOf(SerialEvent.class));
-	private volatile int ioctlEventMask;
 
+	// TIOCMIWAIT event handling (Linux-specific)
+	private static final boolean usePlatformThread = switch (OS.current()) {
+		case OS.Linux -> installSignalHandler();
+		default -> false;
+	};
+	private volatile int signalThreadId;
+	private volatile int ioctlEventMask; // TIOCMIWAIT: ClearToSend, DataSetReady, CarrierDetect, Ring
+
+	// event polling: previous statuses, used for comparison
 	private volatile int polledLineStatus;
 	private volatile int polledErrorStatus;
 	private volatile int polledAvailableStatus;
@@ -304,6 +313,35 @@ final class UnixSerialPort extends ReadWritePort {
 	@Override
 	boolean isClosed() {
 		return fd == fd_t.Invalid;
+	}
+
+	@Override
+	Thread.Builder threadBuilder() {
+		return usePlatformThread ? Thread.ofPlatform() : super.threadBuilder();
+	}
+
+	@Override
+	void enableEventLooper(final boolean enable) {
+		lock.lock();
+		try {
+			super.enableEventLooper(enable);
+			if (!enable && signalThreadId != 0) {
+				final int id = signalThreadId;
+				signalThreadId = 0;
+				if (Linux.tgkill(Linux.getpid(), id, Linux.SIGUSR1()) == -1)
+					logger.log(WARNING, "tgkill failed: " + errnoMsg());
+			}
+		}
+		finally {
+			lock.unlock();
+		}
+	}
+
+	@Override
+	void waitEventLoop() {
+		if (usePlatformThread)
+			signalThreadId = Linux.gettid();
+		super.waitEventLoop();
 	}
 
 	// this will open the port, alternatives might be to use /dev/serial or /proc/tty
@@ -1246,10 +1284,8 @@ final class UnixSerialPort extends ReadWritePort {
 	public EnumSet<SerialEvent> waitEvent() throws IOException, InterruptedException {
 		logger.log(TRACE, "enter wait event");
 		try {
-			if (OS.current() == OS.Mac || OS.current() == OS.Linux) {
-				logger.log(DEBUG, "use polledWaitEvent, waitEvent not working yet");
+			if (OS.current() == OS.Mac || !usePlatformThread)
 				return polledWaitEvent();
-			}
 
 			// the following code is Linux-specific
 			final int mask = ioctlEventMask;
@@ -1260,8 +1296,13 @@ final class UnixSerialPort extends ReadWritePort {
 					logger.log(TRACE, "waitEvent interrupted");
 			}
 			while (ret == -1 && errno() == Unix.EINTR);
-			if (ret == -1)
+			if (ret == -1) {
+				if (isClosed())
+					throwIOException(Unix.EBADF);
+				if (signalThreadId == 0)
+					throw new InterruptedException();
 				throwIOException(errno());
+			}
 
 			final var events = EnumSet.noneOf(SerialEvent.class);
 			if (lsr())
@@ -1421,5 +1462,26 @@ final class UnixSerialPort extends ReadWritePort {
 		//String str = strerror_r(error, msg, 100);
 		final MemorySegment str = Linux.strerror(error);
 		return str.getString(0);
+	}
+
+	private static boolean installSignalHandler() {
+		final var arena = Arena.global();
+
+		final var action = arena.allocate(sigaction.layout());
+		final var upcallStub = sigaction.union.sa_handler.allocate(UnixSerialPort::signalHandler, arena);
+		sigaction.union.sa_handler(sigaction.__sigaction_handler(action), upcallStub);
+
+		if (Linux.sigaction(Linux.SIGUSR1(), action, MemorySegment.NULL) != 0) {
+			slogger().log(WARNING, "installing signal handler failed: {0}, using event polling instead of TIOCMIWAIT",
+					errnoMsg());
+			return false;
+		}
+		slogger().log(TRACE, "installed signal handler");
+		return true;
+	}
+
+	// Linux: dummy signal handler required for SIGUSR1
+	private static void signalHandler(final int signal) {
+		slogger().log(TRACE, "received {0}", signal == Linux.SIGUSR1() ? "SIGUSR1" : "signal " + signal);
 	}
 }

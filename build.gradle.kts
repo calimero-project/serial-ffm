@@ -164,9 +164,9 @@ tasks.jextract {
             tgtPkg = "serial.ffm.linux"
             clsName = "Linux"
             paths = listOf("/usr/include")
-            funcFilter = funcFilter + listOf("__errno_location")
-            structFilter = structFilter + listOf("serial_icounter_struct", "serial_struct")
-            constantFilter = constantFilter + listOf("PORT_UNKNOWN",
+            funcFilter = funcFilter + listOf("__errno_location", "sigaction", "gettid", "tgkill")
+            structFilter = structFilter + listOf("serial_icounter_struct", "serial_struct", "__sigset_t", "sigaction")
+            constantFilter = constantFilter + listOf("PORT_UNKNOWN", "SIGUSR1",
                 "TIOCMIWAIT", "TIOCGICOUNT", "TIOCSERGETLSR", "TIOCSER_TEMT", "TIOCGSERIAL")
         }
         os.contains("mac") -> {
