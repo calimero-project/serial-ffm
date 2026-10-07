@@ -107,6 +107,11 @@ public interface SerialPort extends AutoCloseable {
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link #availablePorts()}.
+	 * @return set of port identifiers
+	 */
+	@Deprecated(forRemoval = true)
 	static Set<String> portIdentifiers() {
 		return availablePorts().stream().map(SerialPortId::port).collect(Collectors.toUnmodifiableSet());
 	}
