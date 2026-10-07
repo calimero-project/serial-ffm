@@ -430,7 +430,7 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 	}
 
 	void waitEventLoop() {
-		logger.log(TRACE, "serial port event monitoring started");
+		logger.log(TRACE, "started event monitoring");
 		while (!isClosed()) {
 			try {
 				final var events = waitEvent();
@@ -444,7 +444,7 @@ abstract sealed class ReadWritePort implements SerialPort permits UnixSerialPort
 				break;
 			}
 		}
-		logger.log(TRACE, "serial port event monitoring stopped");
+		logger.log(TRACE, "stopped event monitoring");
 	}
 
 	void dispatchEvents(EnumSet<SerialEvent> events) {

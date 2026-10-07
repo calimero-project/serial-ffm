@@ -1213,7 +1213,7 @@ final class UnixSerialPort extends ReadWritePort {
 
 	// Linux-specific
 	private MemorySegment queryInterruptCounters() throws IOException {
-		logger.log(TRACE, "queryInterruptCounters");
+		logger.log(TRACE, "query interrupt counters");
 		try (var arena = Arena.ofConfined()) {
 			final var icount = serial_icounter_struct.allocate(arena);
 			int ret;

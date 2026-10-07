@@ -740,7 +740,7 @@ public class stat {
      * }
      */
     public static long __glibc_reserved(MemorySegment struct, long index0) {
-        return (long)__glibc_reserved$ELEM_HANDLE.get(struct, 0L, index0);
+        return (long)__glibc_reserved$ELEM_HANDLE.get(struct, __glibc_reserved$OFFSET, index0);
     }
 
     /**
@@ -750,7 +750,7 @@ public class stat {
      * }
      */
     public static void __glibc_reserved(MemorySegment struct, long index0, long fieldValue) {
-        __glibc_reserved$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+        __glibc_reserved$ELEM_HANDLE.set(struct, __glibc_reserved$OFFSET, index0, fieldValue);
     }
 
     /**
@@ -797,4 +797,3 @@ public class stat {
         return addr.reinterpret(layout().byteSize() * elementCount, arena, cleanup);
     }
 }
-
