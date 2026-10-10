@@ -507,7 +507,7 @@ final class UnixSerialPort extends ReadWritePort {
 		if (fd.equals(fd_t.Invalid)) {
 			lastError.set(errno());
 			releaseLock();
-			throw new IOException("failed to open port '" + portId + "': " + errnoMsg());
+			throw new IOException("failed to open port '" + portId + "': " + errnoMsg(lastError.get()));
 		}
 
 		// we continue if we are not able to set exclusive mode
