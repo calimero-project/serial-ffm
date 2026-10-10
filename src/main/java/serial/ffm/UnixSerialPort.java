@@ -490,7 +490,6 @@ final class UnixSerialPort extends ReadWritePort {
 	private fd_t openPort(final Arena arena, final String portId, final boolean configurePort,
 			final AtomicInteger lastError) throws IOException {
 		fd_t fd;
-//		errno(0);
 		int error = 0;
 
 		ensureLock(portId);
@@ -721,75 +720,11 @@ final class UnixSerialPort extends ReadWritePort {
 			case 2400 -> Unix.B2400;
 			case 4800 -> Unix.B4800;
 			case 9600 -> Unix.B9600;
-//#ifdef B14400
-// undefined on Linux
-//		case 14400:
-//			return Unix.B14400)
-//#endif /* B14400 */
 			case 19200 -> Unix.B19200;
-//#ifdef B28800
-// undefined on Linux
-//		case 28800:
-//			return Unix.B28800)
-//#endif /* B28800 */
 			case 38400 -> Unix.B38400;
-//#ifdef B57600 // MacOS X does not define this Baud rate
 			case 57600 -> Unix.B57600;
-//#endif // B57600
-//#ifdef B115200
 			case 115200 -> Unix.B115200;
-//#endif /*  B115200 */
-//#ifdef B230400
 			case 230400 -> Unix.B230400;
-//#endif /* B230400 */
-//#ifdef B460800
-//    case 460800:
-//        return Unix.B460800)
-//#endif /* B460800 */
-//#ifdef B500000
-//    case 500000:
-//        return Unix.B500000)
-//#endif /* B500000 */
-//#ifdef B576000
-//    case 576000:
-//        return Unix.B576000)
-//#endif /* B57600 */
-//#ifdef B921600
-//    case 921600:
-//        return Unix.B921600)
-//#endif /* B921600 */
-//#ifdef B1000000
-//    case 1000000:
-//        return Unix.B1000000)
-//#endif /* B1000000 */
-//#ifdef B1152000
-//    case 1152000:
-//        return Unix.B1152000)
-//#endif /* B1152000 */
-//#ifdef B1500000
-//    case 1500000:
-//        return Unix.B1500000)
-//#endif /* B1500000 */
-//#ifdef B2000000
-//    case 2000000:
-//        return Unix.B2000000)
-//#endif /* B2000000 */
-//#ifdef B2500000
-//    case 2500000:
-//        return Unix.B2500000)
-//#endif /* B2500000 */
-//#ifdef B3000000
-//    case 3000000:
-//        return Unix.B3000000)
-//#endif /* B3000000 */
-//#ifdef B3500000
-//    case 3500000:
-//        return Unix.B3500000)
-//#endif /* B3500000 */
-//#ifdef B4000000
-//    case 4000000:
-//        return Unix.B4000000)
-//#endif /* B4000000 */
 			default -> -1;
 		};
 	}
@@ -825,12 +760,8 @@ final class UnixSerialPort extends ReadWritePort {
 			return 4800;
 		else if (baudrate == Unix.B9600)
 			return 9600;
-//		else if (baudrate == Unix.B14400)
-//			return 14400;
 		else if (baudrate == Unix.B19200)
 			return 19200;
-//		else if (baudrate == Unix.B28800)
-//			return 28800;
 		else if (baudrate == Unix.B38400)
 			return 38400;
 		else if (baudrate == Unix.B57600)
@@ -841,59 +772,6 @@ final class UnixSerialPort extends ReadWritePort {
 			return 230400;
 		else
 			return -1;
-
-//#endif /* B230400 */
-//#ifdef B460800
-//    case Unix.B460800():
-//        return 460800;
-//#endif /* B460800 */
-//#ifdef B500000
-//    case Unix.B500000():
-//        return 500000;
-//#endif /* B500000 */
-//#ifdef B576000
-//    case Unix.B576000():
-//        return 576000;
-//#endif /* B576000 */
-//#ifdef B921600
-//    case Unix.B921600():
-//        return 921600;
-//#endif /* B921600 */
-//#ifdef B1000000
-//    case Unix.B1000000():
-//        return 1000000;
-//#endif /* B1000000 */
-//#ifdef B1152000
-//    case Unix.B1152000():
-//        return 1152000;
-//#endif /* B1152000 */
-//#ifdef B1500000
-//    case Unix.B1500000():
-//        return 1500000;
-//#endif /* B1500000 */
-//#ifdef B2000000
-//    case Unix.B2000000():
-//        return 2000000;
-//#endif /* B2000000 */
-//#ifdef B2500000
-//    case Unix.B2500000():
-//        return 2500000;
-//#endif /* B2500000 */
-//#ifdef B3000000
-//    case Unix.B3000000():
-//        return 3000000;
-//#endif /* B3000000 */
-//#ifdef B3500000
-//    case Unix.B3500000():
-//        return 3500000;
-//#endif /* B3500000 */
-//#ifdef B4000000
-//    case Unix.B4000000():
-//        return 4000000;
-//#endif /* B4000000 */
-//    default:
-//        return -1;
-//    }
 	}
 
 	private static void setTermiosDataBits(final MemorySegment flags, /*uint8_t*/ final int databits) {
