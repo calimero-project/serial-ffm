@@ -21,7 +21,7 @@ repositories {
 }
 
 group = "io.calimero"
-version = "0.7-SNAPSHOT"
+version = "0.7"
 
 extra["junitJupiterVersion"] = "6.1.3"
 
