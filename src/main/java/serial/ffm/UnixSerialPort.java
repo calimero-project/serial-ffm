@@ -571,7 +571,7 @@ final class UnixSerialPort extends ReadWritePort {
 			final String resolved = cresolved.getString(0);
 
 			if (portId.equals(resolved)) {
-				logger.log(TRACE, "{0} -> {1}", name, resolved);
+				logger.log(TRACE, "{0} → {1}", name, resolved);
 				Linux.closedir(dirp);
 				return true;
 			}
